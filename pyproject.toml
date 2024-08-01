@@ -5,31 +5,29 @@ build-backend = "hatchling.build"
 [project]
 name = "dandisets-linkml-status"
 dynamic = ["version"]
-description = ''
+description = 'A tool for reporting the status of the translation of DANDI schemas from Pydantic definitions to LinkML definitions'
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = "MIT"  # todo: Is this the correct license?
 keywords = []
 authors = [
-  { name = "Isaac To", email = "candleindark@gmail.com" },
+  { name = "Isaac To", email = "isaac.chun.to@gmail.com" },
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = []
 
 [project.urls]
-Documentation = "https://github.com/Isaac To/dandisets-linkml-status#readme"
-Issues = "https://github.com/Isaac To/dandisets-linkml-status/issues"
-Source = "https://github.com/Isaac To/dandisets-linkml-status"
+Documentation = "https://github.com/dandi/dandisets-linkml-status#readme"
+Issues = "https://github.com/dandi/dandisets-linkml-status/issues"
+Source = "https://github.com/dandi/dandisets-linkml-status"
 
 [tool.hatch.version]
 path = "src/dandisets_linkml_status/__about__.py"
