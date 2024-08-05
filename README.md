@@ -2,6 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/dandisets-linkml-status.svg)](https://pypi.org/project/dandisets-linkml-status)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dandisets-linkml-status.svg)](https://pypi.org/project/dandisets-linkml-status)
+[![Hatch project](https://img.shields.io/badge/%F0%9F%A5%9A-Hatch-4051b5.svg)](https://github.com/pypa/hatch)
 
 -----
 
