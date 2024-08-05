@@ -22,7 +22,9 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = []
+dependencies = [
+  "pydantic2linkml @ git+https://github.com/candleindark/linkml-aind-model.git@enh"
+]
 
 [project.urls]
 Documentation = "https://github.com/dandi/dandisets-linkml-status#readme"
@@ -31,6 +33,9 @@ Source = "https://github.com/dandi/dandisets-linkml-status"
 
 [tool.hatch.version]
 path = "src/dandisets_linkml_status/__about__.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.envs.default]
 python = "3.11"
