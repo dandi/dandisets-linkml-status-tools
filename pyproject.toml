@@ -32,7 +32,11 @@ Source = "https://github.com/dandi/dandisets-linkml-status"
 [tool.hatch.version]
 path = "src/dandisets_linkml_status/__about__.py"
 
+[tool.hatch.envs.default]
+python = "3.11"
+
 [tool.hatch.envs.types]
+pyhton = "3.11"
 extra-dependencies = [
   "mypy>=1.0.0",
 ]
