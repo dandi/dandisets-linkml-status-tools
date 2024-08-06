@@ -42,7 +42,6 @@ allow-direct-references = true
 python = "3.11"
 
 [tool.hatch.envs.types]
-pyhton = "3.11"
 extra-dependencies = [
   "mypy>=1.0.0",
 ]
