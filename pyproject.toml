@@ -23,8 +23,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-  "pydantic2linkml @ git+https://github.com/candleindark/linkml-aind-model.git@enh",
+  "dandi~=0.63",
   "dandischema>=0.10.2",
+  "pydantic2linkml @ git+https://github.com/candleindark/linkml-aind-model.git@enh",
 ]
 
 [project.urls]
