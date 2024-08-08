@@ -26,12 +26,16 @@ dependencies = [
   "dandi~=0.63",
   "dandischema>=0.10.2",
   "pydantic2linkml @ git+https://github.com/candleindark/linkml-aind-model.git@enh",
+  "typer",
 ]
 
 [project.urls]
 Documentation = "https://github.com/dandi/dandisets-linkml-status#readme"
 Issues = "https://github.com/dandi/dandisets-linkml-status/issues"
 Source = "https://github.com/dandi/dandisets-linkml-status"
+
+[project.scripts]
+dandisets-linkml-status = "dandisets_linkml_status.cli:app"
 
 [tool.hatch.version]
 path = "src/dandisets_linkml_status/__about__.py"
