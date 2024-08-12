@@ -44,7 +44,7 @@ path = "src/dandisets_linkml_status/__about__.py"
 allow-direct-references = true
 
 [tool.hatch.envs.default]
-python = "3.11"
+python = "3.9"
 
 [tool.hatch.envs.types]
 extra-dependencies = [
