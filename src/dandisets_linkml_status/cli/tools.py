@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Any, Optional
 
+from dandischema.models import Dandiset
 from linkml.validator import Validator
-from linkml.validator.plugins import ValidationPlugin, JsonschemaValidationPlugin
+from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
+from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 
@@ -25,3 +27,20 @@ def get_validator(
     return Validator(
         translate_defs("dandischema.models"), validation_plugins=validation_plugins
     )
+
+
+def pydantic_validate(dandiset_metadata: dict[str, Any]) -> Optional[str]:
+    """
+    Validate the given dandiset metadata against the Pydantic dandiset metadata model
+
+    :param dandiset_metadata: The dandiset metadata to validate.
+    :return: A JSON string that is an array of errors encountered in the validation if
+        it fails, else `None`. (The JSON string returned in a case of failure is
+        one returned by the Pydantic `ValidationError.json()` method.)
+    """
+    try:
+        Dandiset.model_validate(dandiset_metadata)
+    except ValidationError as e:
+        return e.json()
+
+    return None
