@@ -26,7 +26,7 @@ def get_linkml_validator(
         validation_plugins = [JsonschemaValidationPlugin(closed=True)]
 
     return Validator(
-        translate_defs("dandischema.models"), validation_plugins=validation_plugins
+        translate_defs(["dandischema.models"]), validation_plugins=validation_plugins
     )
 
 
