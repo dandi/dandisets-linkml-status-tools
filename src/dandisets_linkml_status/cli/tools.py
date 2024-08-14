@@ -16,7 +16,7 @@ def get_validator(
     and given validation plugins.
 
     :param validation_plugins: The list of given validation plugins to set up
-        the validator with. If no validation plugins are given, a default of a list
+        the validator with. If no validation plugins are given, the default of a list
         containing a `JsonschemaValidationPlugin` instance with `closed=True` is used.
     :return: The LinkML validator instance.
     """
