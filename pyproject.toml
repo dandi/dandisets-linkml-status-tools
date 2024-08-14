@@ -47,6 +47,14 @@ allow-direct-references = true
 [tool.hatch.envs.default]
 python = "3.9"
 
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+  "pytest-xdist",
+]
+
 [tool.hatch.envs.types]
 extra-dependencies = [
   "mypy>=1.0.0",
