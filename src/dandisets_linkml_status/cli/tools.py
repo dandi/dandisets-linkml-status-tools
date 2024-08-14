@@ -3,6 +3,7 @@ from typing import Any, Optional
 from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
+from linkml.validator.report import ValidationResult
 from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
@@ -44,3 +45,18 @@ def pydantic_validate(dandiset_metadata: dict[str, Any]) -> Optional[str]:
         return e.json()
 
     return None
+
+
+def linkml_validate(
+    dandiset_metadata: dict[str, Any]
+) -> Optional[list[ValidationResult]]:
+    """
+    Validate the given dandiset metadata against the dandiset metadata model in LinkML
+
+    :param dandiset_metadata: The dandiset metadata to validate
+    :return: A list of validation errors encountered in the validation if it fails,
+        else `None`
+    """
+    validator = get_linkml_validator()
+    validation_report = validator.validate(dandiset_metadata, target_class="Dandiset")
+    return validation_report.results if validation_report.results else None
