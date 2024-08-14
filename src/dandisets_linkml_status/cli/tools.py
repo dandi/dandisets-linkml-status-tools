@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 
-def get_validator(
+def get_linkml_validator(
     validation_plugins: Optional[list[ValidationPlugin]] = None,
 ) -> Validator:
     """
