@@ -8,28 +8,6 @@ from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 
-def get_linkml_validator(
-    validation_plugins: Optional[list[ValidationPlugin]] = None,
-) -> Validator:
-    """
-    To obtain a LinkML validator instance set up with schema produced by
-    the pydantic2linkml translator, for DANDI models expressed in Pydantic,
-    and given validation plugins.
-
-    :param validation_plugins: The list of given validation plugins to set up
-        the validator with. If no validation plugins are given, the default of a list
-        containing a `JsonschemaValidationPlugin` instance with `closed=True` is used.
-    :return: The LinkML validator instance.
-    """
-
-    if validation_plugins is None:
-        validation_plugins = [JsonschemaValidationPlugin(closed=True)]
-
-    return Validator(
-        translate_defs(["dandischema.models"]), validation_plugins=validation_plugins
-    )
-
-
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> Optional[str]:
     """
     Validate the given dandiset metadata against the Pydantic dandiset metadata model
@@ -47,16 +25,50 @@ def pydantic_validate(dandiset_metadata: dict[str, Any]) -> Optional[str]:
     return None
 
 
-def linkml_validate(
-    dandiset_metadata: dict[str, Any]
-) -> Optional[list[ValidationResult]]:
+class DandisetLinkmlValidator:
     """
-    Validate the given dandiset metadata against the dandiset metadata model in LinkML
+    A class to validate dandiset metadata against the dandiset metadata model in
+    the LinkML schema produced by the pydantic2linkml translator for DANDI models
+    expressed in Pydantic
+    """
 
-    :param dandiset_metadata: The dandiset metadata to validate
-    :return: A list of validation errors encountered in the validation if it fails,
-        else `None`
-    """
-    validator = get_linkml_validator()
-    validation_report = validator.validate(dandiset_metadata, target_class="Dandiset")
-    return validation_report.results if validation_report.results else None
+    def __init__(self, validation_plugins: Optional[list[ValidationPlugin]] = None):
+        """
+        Initialize a `DandisetLinkmlValidator` instance that wraps a LinkML validator
+        instance set up with schema produced by the pydantic2linkml translator,
+        for DANDI models expressed in Pydantic, and given validation plugins.
+
+        :param validation_plugins: The list of given validation plugins to set up
+        the LinkML validator with. If no validation plugins are given, the default of a
+        list containing a `JsonschemaValidationPlugin` instance with `closed=True`.
+        """
+
+        # The names of the collection of modules in which the DANDI models are defined
+        dandiset_module_names = ["dandischema.models"]
+
+        if validation_plugins is None:
+            validation_plugins = [JsonschemaValidationPlugin(closed=True)]
+
+        self._inner_validator = Validator(
+            translate_defs(dandiset_module_names),
+            validation_plugins=validation_plugins,
+        )
+
+    def validate(
+        self, dandiset_metadata: dict[str, Any]
+    ) -> Optional[list[ValidationResult]]:
+        """
+        Validate the given dandiset metadata against the dandiset metadata model in
+        LinkML
+
+        :param dandiset_metadata: The dandiset metadata to validate
+        :return: A list of validation errors encountered in the validation if it fails,
+            else `None`
+        """
+        # The name of the class in the LinkML schema representing Dandiset metadata
+        dandiset_metadata_class = "Dandiset"
+
+        validation_report = self._inner_validator.validate(
+            dandiset_metadata, target_class=dandiset_metadata_class
+        )
+        return validation_report.results if validation_report.results else None
