@@ -32,9 +32,6 @@ def main(
         # Generate validation reports for danidsets
         for dandiset in client.get_dandisets(draft=include_unpublished, order="id"):
             dandiset_id = dandiset.identifier
-            #if int(dandiset_id) > 10: # not in ('000003',):
-            #if dandiset_id not in ('000003',):
-            #    continue
             logger.info("Processing dandiset %s", dandiset_id)
 
             most_recent_published_version = dandiset.most_recent_published_version
