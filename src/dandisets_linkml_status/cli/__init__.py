@@ -4,6 +4,7 @@ from typing import Annotated
 
 import typer
 from dandi.dandiapi import DandiAPIClient
+from pydantic import TypeAdapter
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status.cli.models import DandisetValidationReport
@@ -31,6 +32,8 @@ def main(
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
 ):
+    validation_report_list_adapter = TypeAdapter(list[DandisetValidationReport])
+
     # Set log level of the CLI
     logging.basicConfig(level=getattr(logging, log_level))
 
@@ -74,6 +77,11 @@ def main(
                     linkml_validation_errs=linkml_validation_errs,
                 )
             )
+
+    # Write the validation reports to the output file
+    with output_file.open("wb") as f:
+        f.write(validation_report_list_adapter.dump_json(validation_reports, indent=2))
+
     # import pdb; pdb.set_trace()
     print('\n'.join(f"dandiset: {r.dandiset_identifier}, linkml: {len(r.linkml_validation_errs or [])}, pydantic: {len(r.pydantic_validation_errs or [])}" for r in validation_reports))
     #pprint(validation_reports)
