@@ -52,7 +52,6 @@ def main(
 
             # Validate the raw metadata using the LinkML schema
             linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
-            linkml_validation_errs = None
             if linkml_validation_errs is not None:
                 logger.info(
                     "Captured LinkML validation errors for dandiset %s", dandiset_id
