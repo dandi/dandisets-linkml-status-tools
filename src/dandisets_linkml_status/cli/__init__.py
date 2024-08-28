@@ -25,7 +25,7 @@ def main(
         typer.Option(
             "--output-file",
             "-o",
-            help="Output file to be used to store the reports of the validation results.",
+            help="Output file to be used to store of the validation results in JSON.",
         ),
     ] = Path("validation_reports.json"),
     log_level: Annotated[
