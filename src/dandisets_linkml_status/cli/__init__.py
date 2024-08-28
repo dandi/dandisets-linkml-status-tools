@@ -32,6 +32,9 @@ def main(
         # Generate validation reports for danidsets
         for dandiset in client.get_dandisets(draft=include_unpublished, order="id"):
             dandiset_id = dandiset.identifier
+            #if int(dandiset_id) > 10: # not in ('000003',):
+            #if dandiset_id not in ('000003',):
+            #    continue
             logger.info("Processing dandiset %s", dandiset_id)
 
             most_recent_published_version = dandiset.most_recent_published_version
@@ -54,7 +57,7 @@ def main(
             # TODO: Replace the following statement with the commented statement
             #     above it once the pydantic2linkml translator is able to translate
             #     the Pydantic models to LinkML classes
-            # linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
+            linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
             linkml_validation_errs = None
             if linkml_validation_errs is not None:
                 logger.info(
@@ -69,5 +72,8 @@ def main(
                     linkml_validation_errs=linkml_validation_errs,
                 )
             )
+    # import pdb; pdb.set_trace()
+    print('\n'.join(f"dandiset: {r.dandiset_identifier}, linkml: {len(r.linkml_validation_errs or [])}, pydantic: {len(r.pydantic_validation_errs or [])}" for r in validation_reports))
+    #pprint(validation_reports)
 
     logger.info("Success!")
