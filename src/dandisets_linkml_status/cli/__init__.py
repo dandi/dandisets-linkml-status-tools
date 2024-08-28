@@ -51,9 +51,6 @@ def main(
                 )
 
             # Validate the raw metadata using the LinkML schema
-            # TODO: Replace the following statement with the commented statement
-            #     above it once the pydantic2linkml translator is able to translate
-            #     the Pydantic models to LinkML classes
             linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
             linkml_validation_errs = None
             if linkml_validation_errs is not None:
