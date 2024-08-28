@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -18,6 +19,14 @@ def main(
     include_unpublished: Annotated[
         bool, typer.Option("--include-unpublished", "-u")
     ] = False,
+    output_file: Annotated[
+        Path,
+        typer.Option(
+            "--output-file",
+            "-o",
+            help="Output file to be used to store the reports of the validation results.",
+        ),
+    ] = Path("validation_reports.json"),
     log_level: Annotated[
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
