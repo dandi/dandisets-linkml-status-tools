@@ -63,6 +63,8 @@ def main(
                 )
 
             # Validate the raw metadata using the LinkML schema
+            # TODO: the following line turns off disables further logging messages
+            #   to be printed to the console. Find out why this is the case.
             linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
             if linkml_validation_errs:
                 logger.info(
