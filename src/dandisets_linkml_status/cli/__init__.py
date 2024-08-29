@@ -56,7 +56,7 @@ def main(
 
             # Validate the raw metadata using the Pydantic model
             pydantic_validation_errs = pydantic_validate(raw_metadata)
-            if pydantic_validation_errs is not None:
+            if pydantic_validation_errs != "[]":
                 logger.info(
                     "Captured Pydantic validation errors for dandiset %s",
                     dandiset_id,
@@ -64,11 +64,12 @@ def main(
 
             # Validate the raw metadata using the LinkML schema
             linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
-            if linkml_validation_errs is not None:
+            if linkml_validation_errs:
                 logger.info(
                     "Captured LinkML validation errors for dandiset %s", dandiset_id
                 )
 
+            # noinspection PyTypeChecker
             validation_reports.append(
                 DandisetValidationReport(
                     dandiset_identifier=dandiset_id,
@@ -82,8 +83,14 @@ def main(
     with output_file.open("wb") as f:
         f.write(validation_report_list_adapter.dump_json(validation_reports, indent=2))
 
-    # import pdb; pdb.set_trace()
-    print('\n'.join(f"dandiset: {r.dandiset_identifier}, linkml: {len(r.linkml_validation_errs or [])}, pydantic: {len(r.pydantic_validation_errs or [])}" for r in validation_reports))
-    #pprint(validation_reports)
+    # Print summary of validation reports
+    print(
+        "\n".join(
+            f"dandiset: {r.dandiset_identifier}, "
+            f"linkml: {len(r.linkml_validation_errs)}, "
+            f"pydantic: {len(r.pydantic_validation_errs)}"
+            for r in validation_reports
+        )
+    )
 
     logger.info("Success!")

@@ -8,21 +8,22 @@ from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 
-def pydantic_validate(dandiset_metadata: dict[str, Any]) -> Optional[str]:
+def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
     """
     Validate the given dandiset metadata against the Pydantic dandiset metadata model
 
     :param dandiset_metadata: The dandiset metadata to validate.
-    :return: A JSON string that is an array of errors encountered in the validation if
-        it fails, else `None`. (The JSON string returned in a case of failure is
-        one returned by the Pydantic `ValidationError.json()` method.)
+    :return: A JSON string that is an array of errors encountered in the validation
+        (The JSON string returned in a case of any validation failure is one returned by
+        the Pydantic `ValidationError.json()` method. In the case of no validation
+        error, the empty array JSON expression, `"[]"`, is returned.)
     """
     try:
         Dandiset.model_validate(dandiset_metadata)
     except ValidationError as e:
         return e.json()
 
-    return None
+    return "[]"
 
 
 class DandisetLinkmlValidator:
@@ -54,16 +55,13 @@ class DandisetLinkmlValidator:
             validation_plugins=validation_plugins,
         )
 
-    def validate(
-        self, dandiset_metadata: dict[str, Any]
-    ) -> Optional[list[ValidationResult]]:
+    def validate(self, dandiset_metadata: dict[str, Any]) -> list[ValidationResult]:
         """
         Validate the given dandiset metadata against the dandiset metadata model in
         LinkML
 
         :param dandiset_metadata: The dandiset metadata to validate
-        :return: A list of validation errors encountered in the validation if it fails,
-            else `None`
+        :return: A list of validation errors encountered
         """
         # The name of the class in the LinkML schema representing Dandiset metadata
         dandiset_metadata_class = "Dandiset"
@@ -71,4 +69,4 @@ class DandisetLinkmlValidator:
         validation_report = self._inner_validator.validate(
             dandiset_metadata, target_class=dandiset_metadata_class
         )
-        return validation_report.results if validation_report.results else None
+        return validation_report.results

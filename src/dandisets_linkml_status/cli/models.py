@@ -14,7 +14,7 @@ class DandisetValidationReport(BaseModel):
     dandiset_metadata: dict[str, Any]  # The metadata of the dandiset to be validated
 
     # Error encountered in validation against the Pydantic dandiset metadata model
-    pydantic_validation_errs: Optional[Json[list[dict[str, Any]]]] = None
+    pydantic_validation_errs: Json[list[dict[str, Any]]] = []
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
-    linkml_validation_errs: Optional[list[ValidationResult]] = None
+    linkml_validation_errs: list[ValidationResult] = []
