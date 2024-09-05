@@ -82,12 +82,12 @@ class DandisetLinkmlValidator:
 def output_reports(reports: list[DandisetValidationReport]) -> None:
     """
     In the current working directory, output the given list of dandiset validation
-    reports to the subdirectory `validation-reports` and summarize the reports
-    in the `README.md` file.
+    reports to the subdirectory `reports` and summarize the reports
+    in the `reports/README.md` file.
 
     :param reports: The given list of dandiset validation reports
     """
-    reports_dir_name = "validation-reports"
+    reports_dir_name = "reports"
     reports_dir = Path(reports_dir_name)
 
     # Remove the existing report output directory if it exists
