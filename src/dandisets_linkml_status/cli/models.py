@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json
