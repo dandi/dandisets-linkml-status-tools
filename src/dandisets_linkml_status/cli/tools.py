@@ -100,31 +100,27 @@ def output_reports(reports: list[DandisetValidationReport]) -> None:
     reports_dir.mkdir()
     logger.info("Recreated report output directory: %s", reports_dir_name)
 
+    def write_data(data: Any, data_type: type, file_name: str) -> None:
+        file_path = report_dir / file_name
+        with file_path.open("wb") as f:
+            data_adapter = TypeAdapter(data_type)
+            f.write(data_adapter.dump_json(data, indent=2))
+
     # Output the individual dandiset validation reports
     for r in reports:
         report_dir = reports_dir / r.dandiset_identifier
         report_dir.mkdir()
 
-        dataset_metadata_file = report_dir / "metadata.json"
-        pydantic_validation_errs_file = report_dir / "pydantic_validation_errs.json"
-        linkml_validation_errs_file = report_dir / "linkml_validation_errs.json"
-
-        with dataset_metadata_file.open("wb") as f:
-            dandiset_metadata_adapter = TypeAdapter(dict[str, Any])
-            f.write(dandiset_metadata_adapter.dump_json(r.dandiset_metadata, indent=2))
-        with pydantic_validation_errs_file.open("wb") as f:
-            pydantic_validation_errs_adapter = TypeAdapter(list[dict[str, Any]])
-            f.write(
-                pydantic_validation_errs_adapter.dump_json(
-                    r.pydantic_validation_errs, indent=2
-                )
-            )
-        with linkml_validation_errs_file.open("wb") as f:
-            linkml_validation_errs_adapter = TypeAdapter(list[ValidationResult])
-            f.write(
-                linkml_validation_errs_adapter.dump_json(
-                    r.linkml_validation_errs, indent=2
-                )
-            )
+        write_data(r.dandiset_metadata, dict[str, Any], "metadata.json")
+        write_data(
+            r.pydantic_validation_errs,
+            list[dict[str, Any]],
+            "pydantic_validation_errs.json",
+        )
+        write_data(
+            r.linkml_validation_errs,
+            list[ValidationResult],
+            "linkml_validation_errs.json",
+        )
 
         logger.info("Output dandiset %s validation report", r.dandiset_identifier)
