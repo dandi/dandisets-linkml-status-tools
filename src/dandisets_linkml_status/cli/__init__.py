@@ -8,7 +8,11 @@ from pydantic import TypeAdapter
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status.cli.models import DandisetValidationReport
-from dandisets_linkml_status.cli.tools import DandisetLinkmlValidator, pydantic_validate
+from dandisets_linkml_status.cli.tools import (
+    DandisetLinkmlValidator,
+    output_reports,
+    pydantic_validate,
+)
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
@@ -94,5 +98,7 @@ def main(
             for r in validation_reports
         )
     )
+
+    output_reports(validation_reports)
 
     logger.info("Success!")

@@ -7,6 +7,8 @@ from linkml.validator.report import ValidationResult
 from pydantic import ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
+from dandisets_linkml_status.cli.models import DandisetValidationReport
+
 
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
     """
@@ -70,3 +72,13 @@ class DandisetLinkmlValidator:
             dandiset_metadata, target_class=dandiset_metadata_class
         )
         return validation_report.results
+
+
+def output_reports(reports: list[DandisetValidationReport]) -> None:
+    """
+    In the current working directory, output the given list of dandiset validation
+    reports to the subdirectory `validation-reports` and summarize the reports
+    in the `README.md` file.
+
+    :param reports: The given list of dandiset validation reports
+    """
