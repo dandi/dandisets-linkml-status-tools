@@ -1,7 +1,15 @@
 from typing import Any
 
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json
+from pydantic import BaseModel, Json, TypeAdapter
+
+DANDISET_METADATA_TYPE = dict[str, Any]
+PYDANTIC_VALIDATION_ERRS_TYPE = list[dict[str, Any]]
+LINKML_VALIDATION_ERRS_TYPE = list[ValidationResult]
+
+DANDISET_METADATA_ADAPTER = TypeAdapter(DANDISET_METADATA_TYPE)
+PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PYDANTIC_VALIDATION_ERRS_TYPE)
+LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LINKML_VALIDATION_ERRS_TYPE)
 
 
 class DandisetValidationReport(BaseModel):
@@ -11,10 +19,12 @@ class DandisetValidationReport(BaseModel):
     """
 
     dandiset_identifier: str
-    dandiset_metadata: dict[str, Any]  # The metadata of the dandiset to be validated
+
+    # The metadata of the dandiset to be validated
+    dandiset_metadata: DANDISET_METADATA_TYPE
 
     # Error encountered in validation against the Pydantic dandiset metadata model
-    pydantic_validation_errs: Json[list[dict[str, Any]]] = []
+    pydantic_validation_errs: Json[PYDANTIC_VALIDATION_ERRS_TYPE] = []
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
-    linkml_validation_errs: list[ValidationResult] = []
+    linkml_validation_errs: LINKML_VALIDATION_ERRS_TYPE = []
