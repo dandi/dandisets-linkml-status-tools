@@ -1,13 +1,18 @@
+import logging
+from pathlib import Path
+from shutil import rmtree
 from typing import Any, Optional
 
 from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 from dandisets_linkml_status.cli.models import DandisetValidationReport
+
+logger = logging.getLogger(__name__)
 
 
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
@@ -82,3 +87,44 @@ def output_reports(reports: list[DandisetValidationReport]) -> None:
 
     :param reports: The given list of dandiset validation reports
     """
+    reports_dir_name = "validation-reports"
+    reports_dir = Path(reports_dir_name)
+
+    # Remove the existing report output directory if it exists
+    if reports_dir.exists():
+        logger.info("Found existing report output directory: %s", reports_dir_name)
+        rmtree(reports_dir)
+        logger.info("Deleted existing report output directory: %s", reports_dir_name)
+
+    # Recreate the report output directory
+    reports_dir.mkdir()
+    logger.info("Recreated report output directory: %s", reports_dir_name)
+
+    # Output the individual dandiset validation reports
+    for r in reports:
+        report_dir = reports_dir / r.dandiset_identifier
+        report_dir.mkdir()
+
+        dataset_metadata_file = report_dir / "metadata.json"
+        pydantic_validation_errs_file = report_dir / "pydantic_validation_errs.json"
+        linkml_validation_errs_file = report_dir / "linkml_validation_errs.json"
+
+        with dataset_metadata_file.open("wb") as f:
+            dandiset_metadata_adapter = TypeAdapter(dict[str, Any])
+            f.write(dandiset_metadata_adapter.dump_json(r.dandiset_metadata, indent=2))
+        with pydantic_validation_errs_file.open("wb") as f:
+            pydantic_validation_errs_adapter = TypeAdapter(list[dict[str, Any]])
+            f.write(
+                pydantic_validation_errs_adapter.dump_json(
+                    r.pydantic_validation_errs, indent=2
+                )
+            )
+        with linkml_validation_errs_file.open("wb") as f:
+            linkml_validation_errs_adapter = TypeAdapter(list[ValidationResult])
+            f.write(
+                linkml_validation_errs_adapter.dump_json(
+                    r.linkml_validation_errs, indent=2
+                )
+            )
+
+        logger.info("Output dandiset %s validation report", r.dandiset_identifier)
