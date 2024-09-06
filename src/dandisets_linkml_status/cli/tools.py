@@ -93,26 +93,29 @@ class DandisetLinkmlValidator:
         return validation_report.results
 
 
-def output_reports(reports: list[DandisetValidationReport]) -> None:
+def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
     """
-    In the current working directory, output the given list of dandiset validation
-    reports to the subdirectory `reports` and summarize the reports
-    in the `reports/README.md` file.
+    Output the given list of dandiset validation reports and a summary of the reports
+    , as a `README.md`, to a given file path
 
     :param reports: The given list of dandiset validation reports
+    :param output_path: The given file path to output the reports to.
+        Note: In the case of the given output path already points to an existing object,
+        if the object is directory, it will be removed and replaced with a new
+        directory; Otherwise, `NotADirectoryError` will be raised.
+
+    raises NotADirectoryError: If the given output path points to a non-directory object
     """
-    reports_dir_name = "reports"
-    reports_dir = Path(reports_dir_name)
 
     # Remove the existing report output directory if it exists
-    if reports_dir.exists():
-        logger.info("Found existing report output directory: %s", reports_dir_name)
-        rmtree(reports_dir)
-        logger.info("Deleted existing report output directory: %s", reports_dir_name)
+    if output_path.exists():
+        logger.info("Found existing report output directory: %s", output_path)
+        rmtree(output_path)
+        logger.info("Deleted existing report output directory: %s", output_path)
 
     # Recreate the report output directory
-    reports_dir.mkdir()
-    logger.info("Recreated report output directory: %s", reports_dir_name)
+    output_path.mkdir()
+    logger.info("Recreated report output directory: %s", output_path)
 
     def write_data(data: Any, data_adapter: TypeAdapter, base_file_name: str) -> None:
         serializable_data = data_adapter.dump_python(data, mode="json")
@@ -129,7 +132,7 @@ def output_reports(reports: list[DandisetValidationReport]) -> None:
 
     # Output the individual dandiset validation reports
     for r in reports:
-        report_dir = reports_dir / r.dandiset_identifier
+        report_dir = output_path / r.dandiset_identifier
         report_dir.mkdir()
 
         write_data(r.dandiset_metadata, DANDISET_METADATA_ADAPTER, "metadata")

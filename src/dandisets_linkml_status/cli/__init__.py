@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -22,6 +23,15 @@ def main(
     include_unpublished: Annotated[
         bool, typer.Option("--include-unpublished", "-u")
     ] = False,
+    dandi_instance: Annotated[
+        str,
+        typer.Option(
+            "--dandi-instance",
+            "-i",
+            help="The DANDI server instance from which the dandiset metadata are "
+            "downloaded",
+        ),
+    ] = "dandi",
     log_level: Annotated[
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
@@ -29,10 +39,12 @@ def main(
     # Set log level of the CLI
     logging.basicConfig(level=getattr(logging, log_level))
 
+    output_path = Path(dandi_instance + "_reports")
+
     dandiset_linkml_validator = DandisetLinkmlValidator()
     validation_reports: list[DandisetValidationReport] = []
 
-    with DandiAPIClient.for_dandi_instance("dandi") as client:
+    with DandiAPIClient.for_dandi_instance(dandi_instance) as client:
         # Generate validation reports for danidsets
         for dandiset in client.get_dandisets(draft=include_unpublished, order="id"):
             dandiset_id = dandiset.identifier
@@ -83,6 +95,6 @@ def main(
         )
     )
 
-    output_reports(validation_reports)
+    output_reports(validation_reports, output_path)
 
     logger.info("Success!")
