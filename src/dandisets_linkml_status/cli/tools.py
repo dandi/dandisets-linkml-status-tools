@@ -106,6 +106,16 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
 
     raises NotADirectoryError: If the given output path points to a non-directory object
     """
+    summary_file_name = "summary.md"
+    summary_headers = [
+        "dandiset",
+        "version",
+        "schema_version",
+        "api_status",
+        "modified",
+        "pydantic",
+        "linkml",
+    ]
 
     # Remove the existing report output directory if it exists
     if output_path.exists():
@@ -130,21 +140,27 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
         with yaml_file_path.open("w") as f:
             yaml_dump(serializable_data, f, Dumper=SafeDumper)
 
-    # Output the individual dandiset validation reports
-    for r in reports:
-        report_dir = output_path / r.dandiset_identifier
-        report_dir.mkdir()
+    with (output_path / summary_file_name).open("w") as summary_f:
+        # === Write the headers of the summary table ===
+        header_row = f'|{"|".join(f" {h} " for h in summary_headers)}|\n'
+        alignment_row = f'|{"|".join("-" * (len(h) + 2) for h in summary_headers)}|\n'
+        summary_f.write(header_row + alignment_row)
 
-        write_data(r.dandiset_metadata, DANDISET_METADATA_ADAPTER, "metadata")
-        write_data(
-            r.pydantic_validation_errs,
-            PYDANTIC_VALIDATION_ERRS_ADAPTER,
-            "pydantic_validation_errs",
-        )
-        write_data(
-            r.linkml_validation_errs,
-            LINKML_VALIDATION_ERRS_ADAPTER,
-            "linkml_validation_errs",
-        )
+        # Output the individual dandiset validation reports
+        for r in reports:
+            report_dir = output_path / r.dandiset_identifier
+            report_dir.mkdir()
 
-        logger.info("Output dandiset %s validation report", r.dandiset_identifier)
+            write_data(r.dandiset_metadata, DANDISET_METADATA_ADAPTER, "metadata")
+            write_data(
+                r.pydantic_validation_errs,
+                PYDANTIC_VALIDATION_ERRS_ADAPTER,
+                "pydantic_validation_errs",
+            )
+            write_data(
+                r.linkml_validation_errs,
+                LINKML_VALIDATION_ERRS_ADAPTER,
+                "linkml_validation_errs",
+            )
+
+            logger.info("Output dandiset %s validation report", r.dandiset_identifier)
