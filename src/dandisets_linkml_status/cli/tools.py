@@ -96,7 +96,7 @@ class DandisetLinkmlValidator:
 def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
     """
     Output the given list of dandiset validation reports and a summary of the reports
-    , as a `README.md`, to a given file path
+    , as a `summary.md`, to a given file path
 
     :param reports: The given list of dandiset validation reports
     :param output_path: The given file path to output the reports to.
