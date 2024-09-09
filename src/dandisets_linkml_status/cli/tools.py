@@ -183,5 +183,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                 # For the version column
                 f"[{r.dandiset_version}](./{r.dandiset_identifier}/{r.dandiset_version}"
                 "/metadata.yaml)",
+                # For schema_version column
+                r.schema_version,
             ]
             summary_f.write(gen_row(row_cells))
