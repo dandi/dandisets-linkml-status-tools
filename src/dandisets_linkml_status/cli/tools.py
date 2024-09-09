@@ -178,7 +178,12 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
 
             # === Write the summary table row for the dandiset validation report ===
-            version_dir = f"./{r.dandiset_identifier}/{r.dandiset_version}"
+            # Directory for storing all metadata validation results of the dandiset
+            dandiset_dir = f"./{r.dandiset_identifier}"
+            # Directory for storing all metadata validation results of the dandiset
+            # at a particular version
+            version_dir = f"{dandiset_dir}/{r.dandiset_version}"
+
             # noinspection PyTypeChecker
             pydantic_err_counts = Counter(
                 sorted(
@@ -187,7 +192,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             )
             row_cells = [
                 # For the dandiset column
-                f"[{r.dandiset_identifier}](./{r.dandiset_identifier}/)",
+                f"[{r.dandiset_identifier}]({dandiset_dir}/)",
                 # For the version column
                 f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
                 # For schema_version column
