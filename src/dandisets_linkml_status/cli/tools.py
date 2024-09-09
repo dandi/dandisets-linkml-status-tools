@@ -202,8 +202,12 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                 # For the modified column
                 r.dandiset_version_modified.isoformat(),
                 # For the pydantic column
-                f"[{len(r.pydantic_validation_errs)} "
-                f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
-                f"({version_dir}/pydantic_validation_errs.yaml)",
+                (
+                    f"[{len(r.pydantic_validation_errs)} "
+                    f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
+                    f"({version_dir}/pydantic_validation_errs.yaml)"
+                    if r.pydantic_validation_errs
+                    else "0"
+                ),
             ]
             summary_f.write(gen_row(row_cells))
