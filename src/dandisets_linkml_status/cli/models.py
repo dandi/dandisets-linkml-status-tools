@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import Any
 
+from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json, TypeAdapter, computed_field
 
@@ -41,6 +43,12 @@ class DandisetValidationReport(BaseModel):
             version = ""
 
         return version
+
+    # Dandiset version status as provided by the DANDI API
+    dandiset_version_status: VersionStatus
+
+    # Dandiset version modified datetime as provided by the DANDI API
+    dandiset_version_modified: datetime
 
     # The metadata of the dandiset to be validated
     dandiset_metadata: DANDISET_METADATA_TYPE

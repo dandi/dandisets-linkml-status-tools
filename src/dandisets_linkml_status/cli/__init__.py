@@ -58,6 +58,13 @@ def main(
 
             raw_metadata = dandiset.get_raw_metadata()
 
+            # === Fetch dandiset version info ===
+            dandiset_version_info = dandiset.get_version(dandiset.version_id)
+            # Get dandiset version status
+            dandiset_version_status = dandiset_version_info.status
+            # Get dandiset version modified datetime
+            dandiset_version_modified = dandiset_version_info.modified
+
             # Validate the raw metadata using the Pydantic model
             pydantic_validation_errs = pydantic_validate(raw_metadata)
             if pydantic_validation_errs != "[]":
@@ -80,6 +87,8 @@ def main(
                 DandisetValidationReport(
                     dandiset_identifier=dandiset_id,
                     dandiset_version=dandiset.version_id,
+                    dandiset_version_status=dandiset_version_status,
+                    dandiset_version_modified=dandiset_version_modified,
                     dandiset_metadata=raw_metadata,
                     pydantic_validation_errs=pydantic_validation_errs,
                     linkml_validation_errs=linkml_validation_errs,
