@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
 from shutil import rmtree
@@ -177,17 +178,27 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
 
             # === Write the summary table row for the dandiset validation report ===
+            version_dir = f"./{r.dandiset_identifier}/{r.dandiset_version}"
+            # noinspection PyTypeChecker
+            pydantic_err_counts = Counter(
+                sorted(
+                    (e["type"] for e in r.pydantic_validation_errs), key=str.casefold
+                )
+            )
             row_cells = [
                 # For the dandiset column
                 f"[{r.dandiset_identifier}](./{r.dandiset_identifier}/)",
                 # For the version column
-                f"[{r.dandiset_version}](./{r.dandiset_identifier}/{r.dandiset_version}"
-                "/metadata.yaml)",
+                f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
                 # For schema_version column
                 r.dandiset_schema_version,
                 # For the api_status column
                 r.dandiset_version_status.value,
                 # For the modified column
                 r.dandiset_version_modified.isoformat(),
+                # For the pydantic column
+                f"[{len(r.pydantic_validation_errs)} "
+                f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
+                f"({version_dir}/pydantic_validation_errs.yaml)",
             ]
             summary_f.write(gen_row(row_cells))
