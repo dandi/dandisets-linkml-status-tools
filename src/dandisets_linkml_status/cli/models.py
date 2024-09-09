@@ -19,6 +19,7 @@ class DandisetValidationReport(BaseModel):
     """
 
     dandiset_identifier: str
+    dandiset_version: str  # The version of the dandiset being validated
 
     # The metadata of the dandiset to be validated
     dandiset_metadata: DANDISET_METADATA_TYPE

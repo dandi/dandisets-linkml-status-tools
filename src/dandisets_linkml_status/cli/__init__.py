@@ -79,6 +79,7 @@ def main(
             validation_reports.append(
                 DandisetValidationReport(
                     dandiset_identifier=dandiset_id,
+                    dandiset_version=dandiset.version_id,
                     dandiset_metadata=raw_metadata,
                     pydantic_validation_errs=pydantic_validation_errs,
                     linkml_validation_errs=linkml_validation_errs,
