@@ -177,11 +177,11 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
 
             # === Write the summary table row for the dandiset validation report ===
-            summary_f.write(
-                gen_row(
-                    [
-                        f"[{r.dandiset_identifier}](./{r.dandiset_identifier}/)",
-                        f"[{r.dandiset_version}](./{r.dandiset_identifier}/{r.dandiset_version}/metadata.yaml)",
-                    ]
-                )
-            )
+            row_cells = [
+                # For the dandiset column
+                f"[{r.dandiset_identifier}](./{r.dandiset_identifier}/)",
+                # For the version column
+                f"[{r.dandiset_version}](./{r.dandiset_identifier}/{r.dandiset_version}"
+                "/metadata.yaml)",
+            ]
+            summary_f.write(gen_row(row_cells))
