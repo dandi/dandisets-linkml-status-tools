@@ -1,7 +1,7 @@
 from typing import Any
 
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json, TypeAdapter
+from pydantic import BaseModel, Json, TypeAdapter, computed_field
 
 DANDISET_METADATA_TYPE = dict[str, Any]
 PYDANTIC_VALIDATION_ERRS_TYPE = list[dict[str, Any]]
@@ -20,6 +20,27 @@ class DandisetValidationReport(BaseModel):
 
     dandiset_identifier: str
     dandiset_version: str  # The version of the dandiset being validated
+
+    @computed_field
+    @property
+    def schema_version(self) -> str:
+        """
+        The schema version of the dandiset metadata being validated as specified in the
+        metadata itself
+
+        :return: The schema version of the dandiset metadata being validated. An empty
+            indicates that no valid schema version is found in the metadata.
+        """
+        version = self.dandiset_metadata.get("schemaVersion", "")
+
+        # Since there is no guarantee that the dandiset metadata is valid,
+        # there is no guarantee the obtained version is a valid string.
+        # If the fetched version is not a string, return an empty string to indicate,
+        # there is no valid version.
+        if not isinstance(version, str):
+            version = ""
+
+        return version
 
     # The metadata of the dandiset to be validated
     dandiset_metadata: DANDISET_METADATA_TYPE
