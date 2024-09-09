@@ -3,7 +3,7 @@ from typing import Any
 
 from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json, TypeAdapter, computed_field
+from pydantic import BaseModel, Json, TypeAdapter
 
 DANDISET_METADATA_TYPE = dict[str, Any]
 PYDANTIC_VALIDATION_ERRS_TYPE = list[dict[str, Any]]
@@ -23,7 +23,6 @@ class DandisetValidationReport(BaseModel):
     dandiset_identifier: str
     dandiset_version: str  # The version of the dandiset being validated
 
-    @computed_field
     @property
     def dandiset_schema_version(self) -> str:
         """
