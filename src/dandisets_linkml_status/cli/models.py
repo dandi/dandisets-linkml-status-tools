@@ -23,7 +23,7 @@ class DandisetValidationReport(BaseModel):
 
     @computed_field
     @property
-    def schema_version(self) -> str:
+    def dandiset_schema_version(self) -> str:
         """
         The schema version of the dandiset metadata being validated as specified in the
         metadata itself
