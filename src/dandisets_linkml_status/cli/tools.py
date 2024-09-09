@@ -159,8 +159,8 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
 
         # Output the individual dandiset validation reports
         for r in reports:
-            report_dir = output_path / r.dandiset_identifier
-            report_dir.mkdir()
+            report_dir = output_path / r.dandiset_identifier / r.dandiset_version
+            report_dir.mkdir(parents=True)
 
             write_data(r.dandiset_metadata, DANDISET_METADATA_ADAPTER, "metadata")
             write_data(
