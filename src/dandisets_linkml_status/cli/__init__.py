@@ -39,7 +39,7 @@ def main(
     # Set log level of the CLI
     logging.basicConfig(level=getattr(logging, log_level))
 
-    output_path = Path(dandi_instance + "_reports")
+    output_path = Path(dandi_instance + "-reports")
 
     dandiset_linkml_validator = DandisetLinkmlValidator()
     validation_reports: list[DandisetValidationReport] = []
