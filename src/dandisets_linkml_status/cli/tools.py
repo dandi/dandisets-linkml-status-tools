@@ -27,7 +27,7 @@ from dandisets_linkml_status.cli.models import (
     LINKML_VALIDATION_ERRS_ADAPTER,
     LINKML_VALIDATION_ERRS_TYPE,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
-    PYDANTIC_VALIDATION_ERRS_TYPE,
+    PydanticValidationErrsType,
     DandisetValidationReport,
 )
 
@@ -215,7 +215,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             summary_f.write(gen_row(row_cells))
 
 
-def get_pydantic_err_counts(errs: PYDANTIC_VALIDATION_ERRS_TYPE) -> Counter[str]:
+def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
     """
     Get a `Counter` object that counts the Pydantic validation errors by type
 
