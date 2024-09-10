@@ -148,20 +148,10 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
         with yaml_file_path.open("w") as f:
             yaml_dump(serializable_data, f, Dumper=SafeDumper)
 
-    def gen_row(cell_str_values: Iterable[str]) -> str:
-        """
-        Construct a row of a Markdown table with given cell string values
-        :param cell_str_values: The given iterable of cell string values
-        :return: The constructed row of a Markdown table
-
-        Note: The given iterable of cell string values are `str` values
-        """
-        return f'|{"|".join(cell_str_values)}|\n'
-
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Write the headers of the summary table ===
-        header_row = gen_row(f" {h} " for h in summary_headers)
-        alignment_row = gen_row("-" * (len(h) + 2) for h in summary_headers)
+        header_row = _gen_row(f" {h} " for h in summary_headers)
+        alignment_row = _gen_row("-" * (len(h) + 2) for h in summary_headers)
         summary_f.write(header_row + alignment_row)
 
         # Output the individual dandiset validation reports
@@ -212,7 +202,19 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                     else "0"
                 ),
             ]
-            summary_f.write(gen_row(row_cells))
+            summary_f.write(_gen_row(row_cells))
+
+
+def _gen_row(cell_str_values: Iterable[str]) -> str:
+    """
+    Construct a row of a Markdown table with given cell string values
+    :param cell_str_values: The given iterable of cell string values
+    :return: The constructed row of a Markdown table
+
+    Note: The given iterable of cell string values are `str` values
+    Note: This function is meant to be used by the `output_reports` function
+    """
+    return f'|{"|".join(cell_str_values)}|\n'
 
 
 def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
