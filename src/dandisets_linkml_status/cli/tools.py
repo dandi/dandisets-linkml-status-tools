@@ -23,6 +23,7 @@ except ImportError:
     from yaml import SafeDumper  # type: ignore
 
 from dandisets_linkml_status.cli.models import (
+    PYDANTIC_VALIDATION_ERRS_TYPE,
     DANDISET_METADATA_ADAPTER,
     LINKML_VALIDATION_ERRS_ADAPTER,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
@@ -188,9 +189,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             # at a particular version
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
-            pydantic_err_counts = Counter(
-                isorted(e["type"] for e in r.pydantic_validation_errs)
-            )
+            pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
             row_cells = [
                 # For the dandiset column
                 f"[{r.dandiset_identifier}]({dandiset_dir}/)",
@@ -212,3 +211,13 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                 ),
             ]
             summary_f.write(gen_row(row_cells))
+
+
+def get_pydantic_err_counts(errs: PYDANTIC_VALIDATION_ERRS_TYPE) -> Counter[str]:
+    """
+    Get a `Counter` object that counts the Pydantic validation errors by type
+
+    :param errs: The list of Pydantic validation errors to be counted
+    :return: The `Counter` object
+    """
+    return Counter(isorted(e["type"] for e in errs))
