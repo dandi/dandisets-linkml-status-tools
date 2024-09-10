@@ -5,11 +5,11 @@ from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json, TypeAdapter
 
-DANDISET_METADATA_TYPE = dict[str, Any]
+DandisetMetadataType = dict[str, Any]
 PYDANTIC_VALIDATION_ERRS_TYPE = list[dict[str, Any]]
 LINKML_VALIDATION_ERRS_TYPE = list[ValidationResult]
 
-DANDISET_METADATA_ADAPTER = TypeAdapter(DANDISET_METADATA_TYPE)
+DANDISET_METADATA_ADAPTER = TypeAdapter(DandisetMetadataType)
 PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PYDANTIC_VALIDATION_ERRS_TYPE)
 LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LINKML_VALIDATION_ERRS_TYPE)
 
@@ -50,7 +50,7 @@ class DandisetValidationReport(BaseModel):
     dandiset_version_modified: datetime
 
     # The metadata of the dandiset to be validated
-    dandiset_metadata: DANDISET_METADATA_TYPE
+    dandiset_metadata: DandisetMetadataType
 
     # Error encountered in validation against the Pydantic dandiset metadata model
     pydantic_validation_errs: Json[PYDANTIC_VALIDATION_ERRS_TYPE] = []
