@@ -7,11 +7,11 @@ from pydantic import BaseModel, Json, TypeAdapter
 
 DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
-LINKML_VALIDATION_ERRS_TYPE = list[ValidationResult]
+LinkmlValidationErrsType = list[ValidationResult]
 
 DANDISET_METADATA_ADAPTER = TypeAdapter(DandisetMetadataType)
 PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
-LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LINKML_VALIDATION_ERRS_TYPE)
+LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
 
 
 class DandisetValidationReport(BaseModel):
@@ -56,4 +56,4 @@ class DandisetValidationReport(BaseModel):
     pydantic_validation_errs: Json[PydanticValidationErrsType] = []
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
-    linkml_validation_errs: LINKML_VALIDATION_ERRS_TYPE = []
+    linkml_validation_errs: LinkmlValidationErrsType = []

@@ -25,7 +25,7 @@ except ImportError:
 from dandisets_linkml_status.cli.models import (
     DANDISET_METADATA_ADAPTER,
     LINKML_VALIDATION_ERRS_ADAPTER,
-    LINKML_VALIDATION_ERRS_TYPE,
+    LinkmlValidationErrsType,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
     PydanticValidationErrsType,
     DandisetValidationReport,
@@ -225,7 +225,7 @@ def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
     return Counter(isorted(e["type"] for e in errs))
 
 
-def get_linkml_err_counts(errs: LINKML_VALIDATION_ERRS_TYPE) -> Counter[str]:
+def get_linkml_err_counts(errs: LinkmlValidationErrsType) -> Counter[str]:
     """
     Get a `Counter` object that counts the LinkML validation errors by type
     :param errs: The list of LinkML validation errors to be counted
