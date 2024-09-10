@@ -2,6 +2,7 @@ import json
 import logging
 from collections import Counter
 from collections.abc import Iterable
+from functools import partial
 from pathlib import Path
 from shutil import rmtree
 from typing import Any, Optional
@@ -29,6 +30,9 @@ from dandisets_linkml_status.cli.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+# A callable that sorts a given iterable of strings in a case-insensitive manner
+isorted = partial(sorted, key=str.casefold)
 
 
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
@@ -184,11 +188,8 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             # at a particular version
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
-            # noinspection PyTypeChecker
             pydantic_err_counts = Counter(
-                sorted(
-                    (e["type"] for e in r.pydantic_validation_errs), key=str.casefold
-                )
+                isorted(e["type"] for e in r.pydantic_validation_errs)
             )
             row_cells = [
                 # For the dandiset column
