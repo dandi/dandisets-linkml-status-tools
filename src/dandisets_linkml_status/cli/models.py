@@ -10,7 +10,7 @@ PydanticValidationErrsType = list[dict[str, Any]]
 LinkmlValidationErrsType = list[ValidationResult]
 
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
-PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
+pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
 
 

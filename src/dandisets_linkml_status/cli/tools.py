@@ -26,7 +26,7 @@ from dandisets_linkml_status.cli.models import (
     dandiset_metadata_adapter,
     LINKML_VALIDATION_ERRS_ADAPTER,
     LinkmlValidationErrsType,
-    PYDANTIC_VALIDATION_ERRS_ADAPTER,
+    pydantic_validation_errs_adapter,
     PydanticValidationErrsType,
     DandisetValidationReport,
 )
@@ -172,7 +172,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             write_data(r.dandiset_metadata, dandiset_metadata_adapter, "metadata")
             write_data(
                 r.pydantic_validation_errs,
-                PYDANTIC_VALIDATION_ERRS_ADAPTER,
+                pydantic_validation_errs_adapter,
                 "pydantic_validation_errs",
             )
             write_data(
