@@ -23,10 +23,11 @@ except ImportError:
     from yaml import SafeDumper  # type: ignore
 
 from dandisets_linkml_status.cli.models import (
-    PYDANTIC_VALIDATION_ERRS_TYPE,
     DANDISET_METADATA_ADAPTER,
     LINKML_VALIDATION_ERRS_ADAPTER,
+    LINKML_VALIDATION_ERRS_TYPE,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
+    PYDANTIC_VALIDATION_ERRS_TYPE,
     DandisetValidationReport,
 )
 
@@ -190,6 +191,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
             pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
+
             row_cells = [
                 # For the dandiset column
                 f"[{r.dandiset_identifier}]({dandiset_dir}/)",
@@ -221,3 +223,17 @@ def get_pydantic_err_counts(errs: PYDANTIC_VALIDATION_ERRS_TYPE) -> Counter[str]
     :return: The `Counter` object
     """
     return Counter(isorted(e["type"] for e in errs))
+
+
+def get_linkml_err_counts(errs: LINKML_VALIDATION_ERRS_TYPE) -> Counter[str]:
+    """
+    Get a `Counter` object that counts the LinkML validation errors by type
+    :param errs: The list of LinkML validation errors to be counted
+    :return: The `Counter` object
+
+    Notes: The determination of the type of a LinkML validation error is rather
+        rudimentary at this point.
+    """
+    linkml_err_msgs = [e.message for e in errs]
+    linkml_err_types = []  # TODO: more to be done here
+    return Counter(isorted(linkml_err_types))
