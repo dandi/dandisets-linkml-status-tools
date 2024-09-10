@@ -23,12 +23,12 @@ except ImportError:
     from yaml import SafeDumper  # type: ignore
 
 from dandisets_linkml_status.cli.models import (
-    dandiset_metadata_adapter,
-    LINKML_VALIDATION_ERRS_ADAPTER,
-    LinkmlValidationErrsType,
-    pydantic_validation_errs_adapter,
-    PydanticValidationErrsType,
     DandisetValidationReport,
+    LinkmlValidationErrsType,
+    PydanticValidationErrsType,
+    dandiset_metadata_adapter,
+    linkml_validation_errs_adapter,
+    pydantic_validation_errs_adapter,
 )
 
 logger = logging.getLogger(__name__)
@@ -177,7 +177,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             )
             write_data(
                 r.linkml_validation_errs,
-                LINKML_VALIDATION_ERRS_ADAPTER,
+                linkml_validation_errs_adapter,
                 "linkml_validation_errs",
             )
 

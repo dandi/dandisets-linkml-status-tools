@@ -11,7 +11,7 @@ LinkmlValidationErrsType = list[ValidationResult]
 
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
-LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
+linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
 
 class DandisetValidationReport(BaseModel):
