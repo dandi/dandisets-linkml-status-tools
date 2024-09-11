@@ -175,34 +175,37 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
             linkml_err_counts = get_linkml_err_counts(r.linkml_validation_errs)
 
-            row_cells = [
-                # For the dandiset column
-                f"[{r.dandiset_identifier}]({dandiset_dir}/)",
-                # For the version column
-                f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
-                # For schema_version column
-                r.dandiset_schema_version,
-                # For the api_status column
-                r.dandiset_version_status.value,
-                # For the modified column
-                r.dandiset_version_modified.isoformat(),
-                # For the pydantic column
-                (
-                    f"[{len(r.pydantic_validation_errs)} "
-                    f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
-                    f"({version_dir}/pydantic_validation_errs.yaml)"
-                    if r.pydantic_validation_errs
-                    else "0"
-                ),
-                # For the linkml column
-                (
-                    f"[{len(r.linkml_validation_errs)} "
-                    f"({' + '.join(str(v) for v in linkml_err_counts.values())})]"
-                    f"({version_dir}/linkml_validation_errs.yaml)"
-                    if r.linkml_validation_errs
-                    else "0"
-                ),
-            ]
+            row_cells = (
+                f" {c} "  # Add spaces around the cell content for better readability
+                for c in [
+                    # For the dandiset column
+                    f"[{r.dandiset_identifier}]({dandiset_dir}/)",
+                    # For the version column
+                    f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
+                    # For schema_version column
+                    r.dandiset_schema_version,
+                    # For the api_status column
+                    r.dandiset_version_status.value,
+                    # For the modified column
+                    r.dandiset_version_modified.isoformat(),
+                    # For the pydantic column
+                    (
+                        f"[{len(r.pydantic_validation_errs)} "
+                        f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
+                        f"({version_dir}/pydantic_validation_errs.yaml)"
+                        if r.pydantic_validation_errs
+                        else "0"
+                    ),
+                    # For the linkml column
+                    (
+                        f"[{len(r.linkml_validation_errs)} "
+                        f"({' + '.join(str(v) for v in linkml_err_counts.values())})]"
+                        f"({version_dir}/linkml_validation_errs.yaml)"
+                        if r.linkml_validation_errs
+                        else "0"
+                    ),
+                ]
+            )
             summary_f.write(_gen_row(row_cells))
 
 
