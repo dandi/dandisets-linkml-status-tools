@@ -135,19 +135,6 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     output_path.mkdir()
     logger.info("Recreated report output directory: %s", output_path)
 
-    def write_data(data: Any, data_adapter: TypeAdapter, base_file_name: str) -> None:
-        serializable_data = data_adapter.dump_python(data, mode="json")
-
-        # Output data to a JSON file
-        json_file_path = report_dir / (base_file_name + ".json")
-        with json_file_path.open("w") as f:
-            json.dump(serializable_data, f, indent=2)
-
-        # Output data to a YAML file
-        yaml_file_path = report_dir / (base_file_name + ".yaml")
-        with yaml_file_path.open("w") as f:
-            yaml_dump(serializable_data, f, Dumper=SafeDumper)
-
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Write the headers of the summary table ===
         header_row = _gen_row(f" {h} " for h in summary_headers)
@@ -159,16 +146,20 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             report_dir = output_path / r.dandiset_identifier / r.dandiset_version
             report_dir.mkdir(parents=True)
 
-            write_data(r.dandiset_metadata, dandiset_metadata_adapter, "metadata")
-            write_data(
+            _write_data(
+                r.dandiset_metadata, dandiset_metadata_adapter, "metadata", report_dir
+            )
+            _write_data(
                 r.pydantic_validation_errs,
                 pydantic_validation_errs_adapter,
                 "pydantic_validation_errs",
+                report_dir,
             )
-            write_data(
+            _write_data(
                 r.linkml_validation_errs,
                 linkml_validation_errs_adapter,
                 "linkml_validation_errs",
+                report_dir,
             )
 
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
@@ -203,6 +194,30 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                 ),
             ]
             summary_f.write(_gen_row(row_cells))
+
+
+def _write_data(
+    data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
+) -> None:
+    """
+    Output given data to a JSON file and a YAML file in a given output directory
+
+    :param data: The data to be output
+    :param data_adapter: The type adapter used to serialize the data
+    :param base_file_name: The base file name for the output files
+    :param output_dir: The output directory to write the files to
+    """
+    serializable_data = data_adapter.dump_python(data, mode="json")
+
+    # Output data to a JSON file
+    json_file_path = output_dir / (base_file_name + ".json")
+    with json_file_path.open("w") as f:
+        json.dump(serializable_data, f, indent=2)
+
+    # Output data to a YAML file
+    yaml_file_path = output_dir / (base_file_name + ".yaml")
+    with yaml_file_path.open("w") as f:
+        yaml_dump(serializable_data, f, Dumper=SafeDumper)
 
 
 def _gen_row(cell_str_values: Iterable[str]) -> str:
