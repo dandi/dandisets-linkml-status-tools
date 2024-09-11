@@ -212,7 +212,6 @@ def _gen_row(cell_str_values: Iterable[str]) -> str:
     :return: The constructed row of a Markdown table
 
     Note: The given iterable of cell string values are `str` values
-    Note: This function is meant to be used by the `output_reports` function
     """
     return f'|{"|".join(cell_str_values)}|\n'
 
