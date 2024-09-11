@@ -173,6 +173,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
             pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
+            linkml_err_counts = get_linkml_err_counts(r.linkml_validation_errs)
 
             row_cells = [
                 # For the dandiset column
@@ -191,6 +192,14 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                     f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
                     f"({version_dir}/pydantic_validation_errs.yaml)"
                     if r.pydantic_validation_errs
+                    else "0"
+                ),
+                # For the linkml column
+                (
+                    f"[{len(r.linkml_validation_errs)} "
+                    f"({' + '.join(str(v) for v in linkml_err_counts.values())})]"
+                    f"({version_dir}/linkml_validation_errs.yaml)"
+                    if r.linkml_validation_errs
                     else "0"
                 ),
             ]
