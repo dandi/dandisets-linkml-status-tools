@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from collections import Counter
 from collections.abc import Iterable
 from functools import partial
@@ -250,6 +251,7 @@ def get_linkml_err_counts(errs: LinkmlValidationErrsType) -> Counter[str]:
     Notes: The determination of the type of a LinkML validation error is rather
         rudimentary at this point.
     """
-    linkml_err_msgs = [e.message for e in errs]
-    linkml_err_types = []  # TODO: more to be done here
+    linkml_err_types = [
+        re.sub(r".*(is .*) in \S.*", r"\1", e.message, count=1) for e in errs
+    ]
     return Counter(isorted(linkml_err_types))
