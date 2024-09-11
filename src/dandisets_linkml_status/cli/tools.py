@@ -208,6 +208,8 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             )
             summary_f.write(_gen_row(row_cells))
 
+    logger.info("Output of dandiset validation reports completed")
+
 
 def _write_data(
     data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
