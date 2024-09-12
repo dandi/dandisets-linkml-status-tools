@@ -8,6 +8,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any, Optional
 
+from dandi.dandiapi import RemoteDandiset
 from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
@@ -100,6 +101,56 @@ class DandisetLinkmlValidator:
             dandiset_metadata, target_class=dandiset_metadata_class
         )
         return validation_report.results
+
+
+def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationReport:
+    """
+    Compile a validation report of the metadata of a given dandiset
+
+    :param dandiset: The given dandiset
+    :return: The compiled validation report
+
+    Note: This function should only be called in the context of a `DandiAPIClient`
+        context manager associated with the given dandiset.
+    """
+    dandiset_linkml_validator = DandisetLinkmlValidator()
+
+    dandiset_id = dandiset.identifier
+
+    raw_metadata = dandiset.get_raw_metadata()
+
+    # === Fetch dandiset version info ===
+    dandiset_version_info = dandiset.get_version(dandiset.version_id)
+    # Get dandiset version status
+    dandiset_version_status = dandiset_version_info.status
+    # Get dandiset version modified datetime
+    dandiset_version_modified = dandiset_version_info.modified
+
+    # Validate the raw metadata using the Pydantic model
+    pydantic_validation_errs = pydantic_validate(raw_metadata)
+    if pydantic_validation_errs != "[]":
+        logger.info(
+            "Captured Pydantic validation errors for dandiset %s",
+            dandiset_id,
+        )
+
+    # Validate the raw metadata using the LinkML schema
+    # TODO: the following line turns off disables further logging messages
+    #   to be printed to the console. Find out why this is the case.
+    linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
+    if linkml_validation_errs:
+        logger.info("Captured LinkML validation errors for dandiset %s", dandiset_id)
+
+    # noinspection PyTypeChecker
+    return DandisetValidationReport(
+        dandiset_identifier=dandiset_id,
+        dandiset_version=dandiset.version_id,
+        dandiset_version_status=dandiset_version_status,
+        dandiset_version_modified=dandiset_version_modified,
+        dandiset_metadata=raw_metadata,
+        pydantic_validation_errs=pydantic_validation_errs,
+        linkml_validation_errs=linkml_validation_errs,
+    )
 
 
 def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:

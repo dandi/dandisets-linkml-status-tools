@@ -1,17 +1,15 @@
 import logging
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from dandi.dandiapi import DandiAPIClient
 from pydantic2linkml.cli.tools import LogLevel
 
-from dandisets_linkml_status.cli.models import DandisetValidationReport
-from dandisets_linkml_status.cli.tools import (
-    DandisetLinkmlValidator,
-    output_reports,
-    pydantic_validate,
-)
+from dandisets_linkml_status.cli.tools import compile_validation_report, output_reports
+
+if TYPE_CHECKING:
+    from dandisets_linkml_status.cli.models import DandisetValidationReport
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
@@ -41,7 +39,6 @@ def main(
 
     output_path = Path(dandi_instance + "-reports")
 
-    dandiset_linkml_validator = DandisetLinkmlValidator()
     validation_reports: list[DandisetValidationReport] = []
 
     with DandiAPIClient.for_dandi_instance(dandi_instance) as client:
@@ -56,44 +53,7 @@ def main(
                 # Make sure a published dandiset is at its latest version
                 dandiset = dandiset.for_version(most_recent_published_version)
 
-            raw_metadata = dandiset.get_raw_metadata()
-
-            # === Fetch dandiset version info ===
-            dandiset_version_info = dandiset.get_version(dandiset.version_id)
-            # Get dandiset version status
-            dandiset_version_status = dandiset_version_info.status
-            # Get dandiset version modified datetime
-            dandiset_version_modified = dandiset_version_info.modified
-
-            # Validate the raw metadata using the Pydantic model
-            pydantic_validation_errs = pydantic_validate(raw_metadata)
-            if pydantic_validation_errs != "[]":
-                logger.info(
-                    "Captured Pydantic validation errors for dandiset %s",
-                    dandiset_id,
-                )
-
-            # Validate the raw metadata using the LinkML schema
-            # TODO: the following line turns off disables further logging messages
-            #   to be printed to the console. Find out why this is the case.
-            linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
-            if linkml_validation_errs:
-                logger.info(
-                    "Captured LinkML validation errors for dandiset %s", dandiset_id
-                )
-
-            # noinspection PyTypeChecker
-            validation_reports.append(
-                DandisetValidationReport(
-                    dandiset_identifier=dandiset_id,
-                    dandiset_version=dandiset.version_id,
-                    dandiset_version_status=dandiset_version_status,
-                    dandiset_version_modified=dandiset_version_modified,
-                    dandiset_metadata=raw_metadata,
-                    pydantic_validation_errs=pydantic_validation_errs,
-                    linkml_validation_errs=linkml_validation_errs,
-                )
-            )
+            validation_reports.append(compile_validation_report(dandiset))
 
     # Print summary of validation reports
     print(
