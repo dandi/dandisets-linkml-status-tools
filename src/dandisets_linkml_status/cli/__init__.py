@@ -50,10 +50,30 @@ def main(
             most_recent_published_version = dandiset.most_recent_published_version
 
             if most_recent_published_version is not None:
-                # Make sure a published dandiset is at its latest version
-                dandiset = dandiset.for_version(most_recent_published_version)
+                # === The dandiset has been published ===
+                dandiset_latest = dandiset.for_version(most_recent_published_version)
+                dandiset_draft = dandiset.for_version(dandiset.draft_version)
 
-            validation_reports.append(compile_validation_report(dandiset))
+                report_on_latest = compile_validation_report(dandiset_latest)
+                report_on_draft = compile_validation_report(dandiset_draft)
+
+                validation_reports.append(report_on_latest)
+
+                # Only attach the report on the draft version if it is different from
+                # the latest version in modification time or status
+                if (
+                    report_on_draft.dandiset_version_modified
+                    != report_on_latest.dandiset_version_modified
+                    or report_on_draft.dandiset_version_status
+                    is not report_on_latest.dandiset_version_status
+                ):
+                    validation_reports.append(report_on_draft)
+            else:
+                # === The dandiset has never been published ===
+                # === Only a draft version is available ===
+                dandiset_draft = dandiset
+                report_on_draft = compile_validation_report(dandiset_draft)
+                validation_reports.append(report_on_draft)
 
     # Print summary of validation reports
     print(
