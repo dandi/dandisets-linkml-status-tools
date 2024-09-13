@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dandisets-linkml-status"
+name = "dandisets-linkml-status-tools"
 dynamic = ["version"]
-description = 'A tool for reporting the status of the translation of DANDI schemas from Pydantic definitions to LinkML definitions'
+description = 'Tools for reporting the status of the translation of DANDI schemas from Pydantic definitions to LinkML definitions'
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"  # todo: Is this the correct license?
@@ -32,15 +32,15 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/dandi/dandisets-linkml-status#readme"
-Issues = "https://github.com/dandi/dandisets-linkml-status/issues"
-Source = "https://github.com/dandi/dandisets-linkml-status"
+Documentation = "https://github.com/dandi/dandisets-linkml-status-tools#readme"
+Issues = "https://github.com/dandi/dandisets-linkml-status-tools/issues"
+Source = "https://github.com/dandi/dandisets-linkml-status-tools"
 
 [project.scripts]
-dandisets-linkml-status = "dandisets_linkml_status.cli:app"
+dandisets-linkml-status = "dandisets_linkml_status_tools.cli:app"
 
 [tool.hatch.version]
-path = "src/dandisets_linkml_status/__about__.py"
+path = "src/dandisets_linkml_status_tools/__about__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -61,19 +61,19 @@ extra-dependencies = [
   "mypy>=1.0.0",
 ]
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/dandisets_linkml_status tests}"
+check = "mypy --install-types --non-interactive {args:src/dandisets_linkml_status_tools tests}"
 
 [tool.coverage.run]
-source_pkgs = ["dandisets_linkml_status", "tests"]
+source_pkgs = ["dandisets_linkml_status_tools", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/dandisets_linkml_status/__about__.py",
+  "src/dandisets_linkml_status_tools/__about__.py",
 ]
 
 [tool.coverage.paths]
-dandisets_linkml_status = ["src/dandisets_linkml_status", "*/dandisets-linkml-status/src/dandisets_linkml_status"]
-tests = ["tests", "*/dandisets-linkml-status/tests"]
+dandisets_linkml_status_tools = ["src/dandisets_linkml_status_tools", "*/dandisets-linkml-status-tools/src/dandisets_linkml_status_tools"]
+tests = ["tests", "*/dandisets-linkml-status-tools/tests"]
 
 [tool.coverage.report]
 exclude_lines = [
