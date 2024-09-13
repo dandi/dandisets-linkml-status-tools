@@ -24,7 +24,7 @@ except ImportError:
     # Otherwise, import the Python-based YAML dumper
     from yaml import SafeDumper  # type: ignore
 
-from dandisets_linkml_status.cli.models import (
+from dandisets_linkml_status_tools.cli.models import (
     DandisetValidationReport,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,

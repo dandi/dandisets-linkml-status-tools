@@ -6,10 +6,10 @@ import typer
 from dandi.dandiapi import DandiAPIClient
 from pydantic2linkml.cli.tools import LogLevel
 
-from dandisets_linkml_status.cli.tools import compile_validation_report, output_reports
+from dandisets_linkml_status_tools.cli.tools import compile_validation_report, output_reports
 
 if TYPE_CHECKING:
-    from dandisets_linkml_status.cli.models import DandisetValidationReport
+    from dandisets_linkml_status_tools.cli.models import DandisetValidationReport
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()

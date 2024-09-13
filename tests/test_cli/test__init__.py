@@ -1,7 +1,7 @@
 import pytest
 from typer.testing import CliRunner
 
-from dandisets_linkml_status.cli import app
+from dandisets_linkml_status_tools.cli import app
 
 runner = CliRunner()
 
