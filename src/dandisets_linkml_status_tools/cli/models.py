@@ -4,6 +4,7 @@ from typing import Any
 from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json, TypeAdapter
+from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
 DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
@@ -12,6 +13,17 @@ LinkmlValidationErrsType = list[ValidationResult]
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
+
+# A `TypedDict` that has a key corresponding to each field in `ValidationResult`
+# except for the `instance` field
+TrimmedValidationResult = TypedDict(
+    "TrimmedValidationResult",
+    {
+        name: info.annotation
+        for name, info in ValidationResult.model_fields.items()
+        if name != "instance"
+    },
+)
 
 
 class DandisetValidationReport(BaseModel):
