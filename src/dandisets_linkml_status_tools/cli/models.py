@@ -1,13 +1,47 @@
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
 from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json, TypeAdapter
+from pydantic import BaseModel, Json, PlainSerializer, TypeAdapter
+from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
+
+# A `TypedDict` that has a key corresponding to each field in `ValidationResult`
+# except for the `instance` field
+TrimmedValidationResult = TypedDict(
+    "TrimmedValidationResult",
+    {
+        name: info.annotation
+        for name, info in ValidationResult.model_fields.items()
+        if name != "instance"
+    },
+)
+
+
+def trim_validation_results(
+    errs: list[ValidationResult],
+) -> list[TrimmedValidationResult]:
+    """
+    Trim the `ValidationResult` objects in a list to exclude their `instance` field.
+
+    :param errs: The list of `ValidationResult` objects to be trimmed.
+
+    :return: The list of `TrimmedValidationResult` objects representing the trimmed
+        `ValidationResult` objects.
+    """
+    trimmed_errs = []
+    for err in errs:
+        err_as_dict = err.model_dump()
+        del err_as_dict["instance"]
+        trimmed_errs.append(err_as_dict)
+    return trimmed_errs
+
 
 DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
-LinkmlValidationErrsType = list[ValidationResult]
+LinkmlValidationErrsType = Annotated[
+    list[ValidationResult], PlainSerializer(trim_validation_results)
+]
 
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
