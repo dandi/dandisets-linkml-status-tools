@@ -11,7 +11,7 @@ runner = CliRunner()
     "when there is an option in the app to limit the number of "
     "dandisets to validate."
 )
-def test_smoke_cli(tmp_path):
-    validation_report_file_path = tmp_path / "validation_reports.json"
-    result = runner.invoke(app, ["--output-file", str(validation_report_file_path)])
+def test_smoke_cli(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app)
     assert result.exit_code == 0
