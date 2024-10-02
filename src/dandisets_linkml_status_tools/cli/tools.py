@@ -118,11 +118,12 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
     dandiset_linkml_validator = DandisetLinkmlValidator()
 
     dandiset_id = dandiset.identifier
+    dandiset_version = dandiset.version_id
 
     raw_metadata = dandiset.get_raw_metadata()
 
     # === Fetch dandiset version info ===
-    dandiset_version_info = dandiset.get_version(dandiset.version_id)
+    dandiset_version_info = dandiset.get_version(dandiset_version)
     # Get dandiset version status
     dandiset_version_status = dandiset_version_info.status
     # Get dandiset version modified datetime
@@ -132,19 +133,24 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
     pydantic_validation_errs = pydantic_validate(raw_metadata)
     if pydantic_validation_errs != "[]":
         logger.info(
-            "Captured Pydantic validation errors for dandiset %s",
+            "Captured Pydantic validation errors for dandiset %s @ %s",
             dandiset_id,
+            dandiset_version,
         )
 
     # Validate the raw metadata using the LinkML schema
     linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
     if linkml_validation_errs:
-        logger.info("Captured LinkML validation errors for dandiset %s", dandiset_id)
+        logger.info(
+            "Captured LinkML validation errors for dandiset %s @ %s",
+            dandiset_id,
+            dandiset_version,
+        )
 
     # noinspection PyTypeChecker
     return DandisetValidationReport(
         dandiset_identifier=dandiset_id,
-        dandiset_version=dandiset.version_id,
+        dandiset_version=dandiset_version,
         dandiset_version_status=dandiset_version_status,
         dandiset_version_modified=dandiset_version_modified,
         dandiset_metadata=raw_metadata,
