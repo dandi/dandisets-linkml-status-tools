@@ -6,7 +6,10 @@ import typer
 from dandi.dandiapi import DandiAPIClient
 from pydantic2linkml.cli.tools import LogLevel
 
-from dandisets_linkml_status_tools.cli.tools import compile_validation_report, output_reports
+from dandisets_linkml_status_tools.cli.tools import (
+    compile_validation_report,
+    output_reports,
+)
 
 if TYPE_CHECKING:
     from dandisets_linkml_status_tools.cli.models import DandisetValidationReport
@@ -35,7 +38,10 @@ def main(
     ] = LogLevel.WARNING,
 ):
     # Set log level of the CLI
-    logging.basicConfig(level=getattr(logging, log_level))
+    logging.basicConfig(
+        format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
+        level=getattr(logging, log_level),
+    )
 
     output_path = Path(dandi_instance + "-reports")
 
