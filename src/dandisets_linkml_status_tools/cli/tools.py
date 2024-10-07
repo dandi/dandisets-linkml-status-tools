@@ -190,7 +190,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     raises NotADirectoryError: If the given output path points to a non-directory object
     """
     summary_file_name = "summary.md"
-    dandi_linkml_schema_file_name = "dandi_linkml_schema.yml"
+    dandi_linkml_schema_file_name = "dandi-linkml-schema.yml"
     summary_headers = [
         "dandiset",
         "version",
@@ -215,11 +215,21 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     dandi_linkml_schema_yml = yaml_dumper.dumps(
         DandisetLinkmlValidator.get_dandi_linkml_schema()
     )
-    with open(output_path / dandi_linkml_schema_file_name, "w") as f:
+    dandi_linkml_schema_file_path = output_path / dandi_linkml_schema_file_name
+    with dandi_linkml_schema_file_path.open("w") as f:
         f.write(dandi_linkml_schema_yml)
-    logger.info("Output the DANDI LinkML schema to %s", dandi_linkml_schema_file_name)
+    logger.info("Output the DANDI LinkML schema to %s", dandi_linkml_schema_file_path)
 
     with (output_path / summary_file_name).open("w") as summary_f:
+        # === Provide a reference to the DANDI LinkML schema in the summary ===
+        summary_f.write(
+            f"[DANDI LinkML schema](./{dandi_linkml_schema_file_name}) "
+            f"(LinkML schema used in the LinkML validations)\n"
+        )
+
+        # Write line break before the start of the summary table
+        summary_f.write("\n")
+
         # === Write the headers of the summary table ===
         header_row = _gen_row(f" {h} " for h in summary_headers)
         alignment_row = _gen_row("-" * (len(h) + 2) for h in summary_headers)
