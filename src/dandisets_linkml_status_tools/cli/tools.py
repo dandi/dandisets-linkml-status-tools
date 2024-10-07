@@ -177,6 +177,8 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     Output the given list of dandiset validation reports and a summary of the reports
     , as a `summary.md`, to a given file path
 
+    Note: This function will replace the output directory if it already exists.
+
     :param reports: The given list of dandiset validation reports
     :param output_path: The given file path to output the reports to.
         Note: In the case of the given output path already points to an existing object,
