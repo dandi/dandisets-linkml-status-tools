@@ -3,6 +3,7 @@ import logging
 import re
 from collections import Counter
 from collections.abc import Iterable
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
@@ -86,7 +87,9 @@ class DandisetLinkmlValidator:
             validation_plugins = [JsonschemaValidationPlugin(closed=True)]
 
         self._inner_validator = Validator(
-            self.get_dandi_linkml_schema(),
+            # TODO: The deep copying may not be needed if
+            #  https://github.com/linkml/linkml/issues/2359 is resolved
+            deepcopy(self.get_dandi_linkml_schema()),
             validation_plugins=validation_plugins,
         )
 
