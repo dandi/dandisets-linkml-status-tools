@@ -13,6 +13,7 @@ from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
+from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
@@ -39,10 +40,24 @@ logger = logging.getLogger(__name__)
 DANDI_MODULE_NAMES = ["dandischema.models"]
 
 # The LinkML schema produced by the pydantic2linkml translator for DANDI models
-_DANDI_LINKML_SCHEMA = translate_defs(DANDI_MODULE_NAMES)
+_DANDI_LINKML_SCHEMA: Optional[SchemaDefinition] = None
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
+
+
+def get_dandi_linkml_schema() -> SchemaDefinition:
+    """
+    Get the LinkML schema produced by the pydantic2linkml translator for DANDI models
+
+    :return: The LinkML schema
+    """
+    global _DANDI_LINKML_SCHEMA
+
+    if _DANDI_LINKML_SCHEMA is None:
+        _DANDI_LINKML_SCHEMA = translate_defs(DANDI_MODULE_NAMES)
+
+    return _DANDI_LINKML_SCHEMA
 
 
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
@@ -84,7 +99,7 @@ class DandisetLinkmlValidator:
             validation_plugins = [JsonschemaValidationPlugin(closed=True)]
 
         self._inner_validator = Validator(
-            _DANDI_LINKML_SCHEMA,
+            get_dandi_linkml_schema(),
             validation_plugins=validation_plugins,
         )
 
