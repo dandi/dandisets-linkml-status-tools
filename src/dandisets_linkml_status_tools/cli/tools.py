@@ -39,25 +39,8 @@ logger = logging.getLogger(__name__)
 # The names of the collection of modules in which the DANDI models are defined
 DANDI_MODULE_NAMES = ["dandischema.models"]
 
-# The LinkML schema produced by the pydantic2linkml translator for DANDI models
-_DANDI_LINKML_SCHEMA: Optional[SchemaDefinition] = None
-
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
-
-
-def get_dandi_linkml_schema() -> SchemaDefinition:
-    """
-    Get the LinkML schema produced by the pydantic2linkml translator for DANDI models
-
-    :return: The LinkML schema
-    """
-    global _DANDI_LINKML_SCHEMA
-
-    if _DANDI_LINKML_SCHEMA is None:
-        _DANDI_LINKML_SCHEMA = translate_defs(DANDI_MODULE_NAMES)
-
-    return _DANDI_LINKML_SCHEMA
 
 
 def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
@@ -85,6 +68,9 @@ class DandisetLinkmlValidator:
     expressed in Pydantic
     """
 
+    # The LinkML schema produced by the pydantic2linkml translator for DANDI models
+    _dandi_linkml_schema: Optional[SchemaDefinition] = None
+
     def __init__(self, validation_plugins: Optional[list[ValidationPlugin]] = None):
         """
         Initialize a `DandisetLinkmlValidator` instance that wraps a LinkML validator
@@ -99,9 +85,21 @@ class DandisetLinkmlValidator:
             validation_plugins = [JsonschemaValidationPlugin(closed=True)]
 
         self._inner_validator = Validator(
-            get_dandi_linkml_schema(),
+            self.get_dandi_linkml_schema(),
             validation_plugins=validation_plugins,
         )
+
+    @classmethod
+    def get_dandi_linkml_schema(cls) -> SchemaDefinition:
+        """
+        Get the LinkML schema produced by the pydantic2linkml translator for DANDI models
+
+        :return: The LinkML schema
+        """
+        if cls._dandi_linkml_schema is None:
+            cls._dandi_linkml_schema = translate_defs(DANDI_MODULE_NAMES)
+
+        return cls._dandi_linkml_schema
 
     def validate(self, dandiset_metadata: dict[str, Any]) -> list[ValidationResult]:
         """
