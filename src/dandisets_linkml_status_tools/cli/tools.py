@@ -13,6 +13,7 @@ from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
+from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
@@ -174,8 +175,9 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
 
 def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
     """
-    Output the given list of dandiset validation reports and a summary of the reports
-    , as a `summary.md`, to a given file path
+    Output the given list of dandiset validation reports, a summary of the reports
+    , as a `summary.md`, and the schema used in the LinkML validations,
+    as a `dandi_linkml_schema.yml`, to a given file path
 
     Note: This function will replace the output directory if it already exists.
 
@@ -188,6 +190,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     raises NotADirectoryError: If the given output path points to a non-directory object
     """
     summary_file_name = "summary.md"
+    dandi_linkml_schema_file_name = "dandi_linkml_schema.yml"
     summary_headers = [
         "dandiset",
         "version",
@@ -207,6 +210,14 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     # Recreate the report output directory
     output_path.mkdir()
     logger.info("Recreated report output directory: %s", output_path)
+
+    # Output the LinkML schema used in the validations
+    dandi_linkml_schema_yml = yaml_dumper.dumps(
+        DandisetLinkmlValidator.get_dandi_linkml_schema()
+    )
+    with open(output_path / dandi_linkml_schema_file_name, "w") as f:
+        f.write(dandi_linkml_schema_yml)
+    logger.info("Output the DANDI LinkML schema to %s", dandi_linkml_schema_file_name)
 
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Write the headers of the summary table ===
