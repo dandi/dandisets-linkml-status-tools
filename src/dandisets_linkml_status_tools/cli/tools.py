@@ -3,6 +3,7 @@ import logging
 import re
 from collections import Counter
 from collections.abc import Iterable
+from copy import deepcopy
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
@@ -13,6 +14,7 @@ from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
+from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
@@ -85,7 +87,9 @@ class DandisetLinkmlValidator:
             validation_plugins = [JsonschemaValidationPlugin(closed=True)]
 
         self._inner_validator = Validator(
-            self.get_dandi_linkml_schema(),
+            # TODO: The deep copying may not be needed if
+            #  https://github.com/linkml/linkml/issues/2359 is resolved
+            deepcopy(self.get_dandi_linkml_schema()),
             validation_plugins=validation_plugins,
         )
 
@@ -174,8 +178,11 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
 
 def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
     """
-    Output the given list of dandiset validation reports and a summary of the reports
-    , as a `summary.md`, to a given file path
+    Output the given list of dandiset validation reports, a summary of the reports
+    , as a `summary.md`, and the schema used in the LinkML validations,
+    as a `dandi_linkml_schema.yml`, to a given file path
+
+    Note: This function will replace the output directory if it already exists.
 
     :param reports: The given list of dandiset validation reports
     :param output_path: The given file path to output the reports to.
@@ -186,6 +193,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     raises NotADirectoryError: If the given output path points to a non-directory object
     """
     summary_file_name = "summary.md"
+    dandi_linkml_schema_file_name = "dandi-linkml-schema.yml"
     summary_headers = [
         "dandiset",
         "version",
@@ -206,7 +214,18 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     output_path.mkdir()
     logger.info("Recreated report output directory: %s", output_path)
 
+    output_dandi_linkml_schema(output_path / dandi_linkml_schema_file_name)
+
     with (output_path / summary_file_name).open("w") as summary_f:
+        # === Provide a reference to the DANDI LinkML schema in the summary ===
+        summary_f.write(
+            f"[DANDI LinkML schema](./{dandi_linkml_schema_file_name}) "
+            f"(LinkML schema used in the LinkML validations)\n"
+        )
+
+        # Write line break before the start of the summary table
+        summary_f.write("\n")
+
         # === Write the headers of the summary table ===
         header_row = _gen_row(f" {h} " for h in summary_headers)
         alignment_row = _gen_row("-" * (len(h) + 2) for h in summary_headers)
@@ -279,6 +298,21 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
             summary_f.write(_gen_row(row_cells))
 
     logger.info("Output of dandiset validation reports completed")
+
+
+def output_dandi_linkml_schema(output_path: Path) -> None:
+    """
+    Output the DANDI LinkML schema, in YAML, to a file
+
+    :param output_path: The path specifying the location of the file
+    """
+    # Output the LinkML schema used in the validations
+    dandi_linkml_schema_yml = yaml_dumper.dumps(
+        DandisetLinkmlValidator.get_dandi_linkml_schema()
+    )
+    with output_path.open("w") as f:
+        f.write(dandi_linkml_schema_yml)
+    logger.info("Output the DANDI LinkML schema to %s", output_path)
 
 
 def _write_data(
