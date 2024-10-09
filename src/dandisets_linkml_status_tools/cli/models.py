@@ -54,14 +54,14 @@ def polish_validation_results(
         `jsonschema.exceptions.ValidationError` object.
     """
     polished_errs = []
-    for err in results:
-        err_as_dict = err.model_dump()
+    for result in results:
+        err_as_dict = result.model_dump()
 
         # Remove the `instance` field
         del err_as_dict["instance"]
 
         # Include the `source` field as a `JsonValidationErrorView` object
-        result_source = err.source
+        result_source = result.source
         if not isinstance(result_source, ValidationError):
             msg = (
                 f"Expected `source` field of a `ValidationResult` object to be "
