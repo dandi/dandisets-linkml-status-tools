@@ -1,20 +1,34 @@
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Union
 
 from dandi.dandiapi import VersionStatus
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json, PlainSerializer, TypeAdapter
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
-# A `TypedDict` that has a key corresponding to each field in `ValidationResult`
-# except for the `instance` field
+
+class JsonValidationErrorView(BaseModel):
+    """
+    A Pydantic model to represent a `jsonschema.exceptions.ValidationError` object,
+    by including selective fields or properties of the original object,
+    for serialization
+    """
+
+    absolute_path: Sequence[Union[str, int]]
+    absolute_schema_path: Sequence[Union[str, int]]
+
+
+# Build a `TypedDict` for representing a polished version of `ValidationResult`
+field_annotations = {
+    name: info.annotation
+    for name, info in ValidationResult.model_fields.items()
+    if name not in {"instance", "source"}
+}
+field_annotations["source"] = JsonValidationErrorView
 PolishedValidationResult = TypedDict(
     "PolishedValidationResult",
-    {
-        name: info.annotation
-        for name, info in ValidationResult.model_fields.items()
-        if name != "instance"
-    },
+    field_annotations,
 )
 
 
@@ -34,7 +48,10 @@ def polish_validation_results(
     for err in errs:
         err_as_dict = err.model_dump()
         del err_as_dict["instance"]
-        err_as_dict["source"] = err.source
+        err_as_dict["source"] = JsonValidationErrorView(
+            absolute_path=err.source.absolute_path,
+            absolute_schema_path=err.source.absolute_schema_path,
+        )
 
         polished_errs.append(err_as_dict)
     return polished_errs
