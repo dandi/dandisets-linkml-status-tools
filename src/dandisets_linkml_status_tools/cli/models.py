@@ -53,7 +53,7 @@ def polish_validation_results(
     :raises ValueError: If the `source` field of a `ValidationResult` object is not a
         `jsonschema.exceptions.ValidationError` object.
     """
-    polished_errs = []
+    polished_results = []
     for result in results:
         result_as_dict = result.model_dump()
 
@@ -73,8 +73,8 @@ def polish_validation_results(
             absolute_schema_path=result_source.absolute_schema_path,
         )
 
-        polished_errs.append(result_as_dict)
-    return polished_errs
+        polished_results.append(result_as_dict)
+    return polished_results
 
 
 DandisetMetadataType = dict[str, Any]
