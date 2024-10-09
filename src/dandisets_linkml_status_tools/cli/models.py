@@ -18,29 +18,32 @@ TrimmedValidationResult = TypedDict(
 )
 
 
-def trim_validation_results(
+def polish_validation_results(
     errs: list[ValidationResult],
 ) -> list[TrimmedValidationResult]:
     """
-    Trim the `ValidationResult` objects in a list to exclude their `instance` field.
+    Polish the `ValidationResult` objects in a list to exclude their `instance` field
+    and include their `source` field for serialization.
 
-    :param errs: The list of `ValidationResult` objects to be trimmed.
+    :param errs: The list of `ValidationResult` objects to be polished.
 
-    :return: The list of `TrimmedValidationResult` objects representing the trimmed
+    :return: The list of `TrimmedValidationResult` objects representing the polished
         `ValidationResult` objects.
     """
-    trimmed_errs = []
+    polished_errs = []
     for err in errs:
         err_as_dict = err.model_dump()
         del err_as_dict["instance"]
-        trimmed_errs.append(err_as_dict)
-    return trimmed_errs
+        err_as_dict["source"] = err.source
+
+        polished_errs.append(err_as_dict)
+    return polished_errs
 
 
 DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
 LinkmlValidationErrsType = Annotated[
-    list[ValidationResult], PlainSerializer(trim_validation_results)
+    list[ValidationResult], PlainSerializer(polish_validation_results)
 ]
 
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
