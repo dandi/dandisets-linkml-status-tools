@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Annotated, Any, Union
 
 from dandi.dandiapi import VersionStatus
+from jsonschema.exceptions import ValidationError
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json, PlainSerializer, TypeAdapter
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
@@ -39,18 +40,37 @@ def polish_validation_results(
     Polish the `ValidationResult` objects in a list to exclude their `instance` field
     and include their `source` field for serialization.
 
+    Note: This function is intended to be used to handle `ValidationResult` objects
+    produced by `linkml.validator.plugins.JsonschemaValidationPlugin`. The `source`
+    field of these `ValidationResult` objects is expected to be a
+    `jsonschema.exceptions.ValidationError` object.
+
     :param errs: The list of `ValidationResult` objects to be polished.
 
     :return: The list of `PolishedValidationResult` objects representing the polished
         `ValidationResult` objects.
+
+    :raises ValueError: If the `source` field of a `ValidationResult` object is not a
+        `jsonschema.exceptions.ValidationError` object.
     """
     polished_errs = []
     for err in errs:
         err_as_dict = err.model_dump()
+
+        # Remove the `instance` field
         del err_as_dict["instance"]
+
+        # Include the `source` field as a `JsonValidationErrorView` object
+        result_source = err.source
+        if not isinstance(result_source, ValidationError):
+            msg = (
+                f"Expected `source` field of a `ValidationResult` object to be "
+                f"a {ValidationError!r} object, but got {result_source!r}"
+            )
+            raise ValueError(msg)  # noqa: TRY004
         err_as_dict["source"] = JsonValidationErrorView(
-            absolute_path=err.source.absolute_path,
-            absolute_schema_path=err.source.absolute_schema_path,
+            absolute_path=result_source.absolute_path,
+            absolute_schema_path=result_source.absolute_schema_path,
         )
 
         polished_errs.append(err_as_dict)
