@@ -55,10 +55,10 @@ def polish_validation_results(
     """
     polished_errs = []
     for result in results:
-        err_as_dict = result.model_dump()
+        result_as_dict = result.model_dump()
 
         # Remove the `instance` field
-        del err_as_dict["instance"]
+        del result_as_dict["instance"]
 
         # Include the `source` field as a `JsonValidationErrorView` object
         result_source = result.source
@@ -68,12 +68,12 @@ def polish_validation_results(
                 f"a {ValidationError!r} object, but got {result_source!r}"
             )
             raise ValueError(msg)  # noqa: TRY004
-        err_as_dict["source"] = JsonValidationErrorView(
+        result_as_dict["source"] = JsonValidationErrorView(
             absolute_path=result_source.absolute_path,
             absolute_schema_path=result_source.absolute_schema_path,
         )
 
-        polished_errs.append(err_as_dict)
+        polished_errs.append(result_as_dict)
     return polished_errs
 
 
