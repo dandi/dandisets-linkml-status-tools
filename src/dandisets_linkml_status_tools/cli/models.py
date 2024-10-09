@@ -34,7 +34,7 @@ PolishedValidationResult = TypedDict(
 
 
 def polish_validation_results(
-    errs: list[ValidationResult],
+    results: list[ValidationResult],
 ) -> list[PolishedValidationResult]:
     """
     Polish the `ValidationResult` objects in a list to exclude their `instance` field
@@ -45,7 +45,7 @@ def polish_validation_results(
     field of these `ValidationResult` objects is expected to be a
     `jsonschema.exceptions.ValidationError` object.
 
-    :param errs: The list of `ValidationResult` objects to be polished.
+    :param results: The list of `ValidationResult` objects to be polished.
 
     :return: The list of `PolishedValidationResult` objects representing the polished
         `ValidationResult` objects.
@@ -54,7 +54,7 @@ def polish_validation_results(
         `jsonschema.exceptions.ValidationError` object.
     """
     polished_errs = []
-    for err in errs:
+    for err in results:
         err_as_dict = err.model_dump()
 
         # Remove the `instance` field
