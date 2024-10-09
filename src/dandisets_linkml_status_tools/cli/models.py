@@ -8,8 +8,8 @@ from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydanti
 
 # A `TypedDict` that has a key corresponding to each field in `ValidationResult`
 # except for the `instance` field
-TrimmedValidationResult = TypedDict(
-    "TrimmedValidationResult",
+PolishedValidationResult = TypedDict(
+    "PolishedValidationResult",
     {
         name: info.annotation
         for name, info in ValidationResult.model_fields.items()
@@ -20,14 +20,14 @@ TrimmedValidationResult = TypedDict(
 
 def polish_validation_results(
     errs: list[ValidationResult],
-) -> list[TrimmedValidationResult]:
+) -> list[PolishedValidationResult]:
     """
     Polish the `ValidationResult` objects in a list to exclude their `instance` field
     and include their `source` field for serialization.
 
     :param errs: The list of `ValidationResult` objects to be polished.
 
-    :return: The list of `TrimmedValidationResult` objects representing the polished
+    :return: The list of `PolishedValidationResult` objects representing the polished
         `ValidationResult` objects.
     """
     polished_errs = []
