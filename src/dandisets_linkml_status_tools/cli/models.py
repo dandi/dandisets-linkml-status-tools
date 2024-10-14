@@ -16,6 +16,7 @@ class JsonValidationErrorView(BaseModel):
     for serialization
     """
 
+    message: str
     absolute_path: Sequence[Union[str, int]]
     absolute_schema_path: Sequence[Union[str, int]]
     validator: str
@@ -72,6 +73,7 @@ def polish_validation_results(
             raise ValueError(msg)  # noqa: TRY004
         # noinspection PyTypeChecker
         result_as_dict["source"] = JsonValidationErrorView(
+            message=result_source.message,
             absolute_path=result_source.absolute_path,
             absolute_schema_path=result_source.absolute_schema_path,
             validator=result_source.validator,
