@@ -18,6 +18,8 @@ class JsonValidationErrorView(BaseModel):
 
     absolute_path: Sequence[Union[str, int]]
     absolute_schema_path: Sequence[Union[str, int]]
+    validator: str
+    validator_value: Any
 
 
 # Build a `TypedDict` for representing a polished version of `ValidationResult`
@@ -68,9 +70,12 @@ def polish_validation_results(
                 f"a {ValidationError!r} object, but got {result_source!r}"
             )
             raise ValueError(msg)  # noqa: TRY004
+        # noinspection PyTypeChecker
         result_as_dict["source"] = JsonValidationErrorView(
             absolute_path=result_source.absolute_path,
             absolute_schema_path=result_source.absolute_schema_path,
+            validator=result_source.validator,
+            validator_value=result_source.validator_value,
         )
 
         polished_results.append(result_as_dict)
