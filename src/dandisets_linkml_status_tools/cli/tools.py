@@ -1,13 +1,13 @@
 import json
 import logging
-import re
 from collections import Counter
 from collections.abc import Iterable
 from copy import deepcopy
 from functools import partial
+from itertools import chain
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
 
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import Dandiset
@@ -29,6 +29,7 @@ except ImportError:
 
 from dandisets_linkml_status_tools.cli.models import (
     DandisetValidationReport,
+    JsonschemaValidationErrorType,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     dandiset_metadata_adapter,
@@ -288,7 +289,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                     # For the linkml column
                     (
                         f"[{len(r.linkml_validation_errs)} "
-                        f"({' + '.join(str(v) for v in linkml_err_counts.values())})]"
+                        f"({' + '.join(str(c) for _, c in linkml_err_counts)})]"
                         f"({version_dir}/linkml_validation_errs.yaml)"
                         if r.linkml_validation_errs
                         else "0"
@@ -360,16 +361,69 @@ def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
     return Counter(isorted(e["type"] for e in errs))
 
 
-def get_linkml_err_counts(errs: LinkmlValidationErrsType) -> Counter[str]:
+class _JsonschemaValidationErrorCounts(NamedTuple):
     """
-    Get a `Counter` object that counts the LinkML validation errors by type
-    :param errs: The list of LinkML validation errors to be counted
-    :return: The `Counter` object
+    A record of the counts of individual types of JSON schema validation error
+    """
 
-    Notes: The determination of the type of a LinkML validation error is rather
-        rudimentary at this point.
+    types: list[JsonschemaValidationErrorType]
     """
-    linkml_err_types = [
-        re.sub(r".*(is .*) in \S.*", r"\1", e.message, count=1) for e in errs
-    ]
-    return Counter(isorted(linkml_err_types))
+    The unique types of JSON schema validation errors
+    """
+
+    counts: list[int]
+    """
+    The corresponding counts, by index, of the types of JSON schema validation errors
+    """
+
+
+def get_linkml_err_counts(
+    errs: LinkmlValidationErrsType,
+) -> list[tuple[JsonschemaValidationErrorType, int]]:
+    """
+    Counts given LinkML validation errors by type
+
+    :param errs: A list of LinkML validation errors to be counted
+    :return: A list of tuples where each tuple contains a
+        `JsonschemaValidationErrorType` object and the count of the errors of the type
+        represented by that object
+    """
+
+    def count_err(e_: ValidationResult) -> None:
+        validator = e_.source.validator
+        err_type = JsonschemaValidationErrorType(validator, e_.source.validator_value)
+
+        if validator in counter:
+            for i, t in enumerate(counter[validator].types):
+                if t == err_type:
+                    counter[validator].counts[i] += 1
+                    break
+            else:
+                counter[validator].types.append(err_type)
+                counter[validator].counts.append(1)
+        else:
+            counter[validator] = _JsonschemaValidationErrorCounts(
+                types=[err_type], counts=[1]
+            )
+
+    def compile_counts() -> list[tuple[JsonschemaValidationErrorType, int]]:
+        def sorting_key(
+            c: tuple[JsonschemaValidationErrorType, int]
+        ) -> tuple[str, int]:
+            return c[0].validator, -c[1]
+
+        return sorted(
+            chain.from_iterable(zip(t, c) for t, c in counter.values()), key=sorting_key
+        )
+
+    # A dictionary that keeps the counts of individual types of JSON schema validation
+    # errors. The keys of the dictionary are the `validator` of
+    # the `JsonschemaValidationErrorType` objects, and the values are
+    # the `_JsonschemaValidationErrorCounts` that tallies the errors represented by
+    # `JsonschemaValidationErrorType` objects with the same `validator` value.
+    counter: dict[str, _JsonschemaValidationErrorCounts] = {}
+
+    for e in errs:
+        count_err(e)
+
+    return compile_counts()
