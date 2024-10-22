@@ -134,7 +134,7 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
     Note: This function should only be called in the context of a `DandiAPIClient`
         context manager associated with the given dandiset.
     """
-    dandiset_linkml_validator = DandiModelLinkmlValidator()
+    dandi_model_linkml_validator = DandiModelLinkmlValidator()
 
     dandiset_id = dandiset.identifier
     dandiset_version = dandiset.version_id
@@ -158,7 +158,7 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
         )
 
     # Validate the raw metadata using the LinkML schema
-    linkml_validation_errs = dandiset_linkml_validator.validate(raw_metadata)
+    linkml_validation_errs = dandi_model_linkml_validator.validate(raw_metadata)
     if linkml_validation_errs:
         logger.info(
             "Captured LinkML validation errors for dandiset %s @ %s",
