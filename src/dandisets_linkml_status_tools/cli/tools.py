@@ -107,19 +107,19 @@ class DandiModelLinkmlValidator:
 
         return cls._dandi_linkml_schema
 
-    def validate(self, dandiset_metadata: dict[str, Any]) -> list[ValidationResult]:
+    def validate(
+        self, dandi_metadata: dict[str, Any], dandi_metadata_class: str
+    ) -> list[ValidationResult]:
         """
-        Validate the given dandiset metadata against the dandiset metadata model in
-        LinkML
+        Validate given DANDI metadata against a DANDI metadata model
+        specified by its class name in the LinkML schema
 
-        :param dandiset_metadata: The dandiset metadata to validate
+        :param dandi_metadata: The DANDI metadata to validate
+        :param dandi_metadata_class: The class name of the DANDI metadata model
         :return: A list of validation errors encountered
         """
-        # The name of the class in the LinkML schema representing Dandiset metadata
-        dandiset_metadata_class = "Dandiset"
-
         validation_report = self._inner_validator.validate(
-            dandiset_metadata, target_class=dandiset_metadata_class
+            dandi_metadata, target_class=dandi_metadata_class
         )
         return validation_report.results
 
@@ -158,7 +158,9 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
         )
 
     # Validate the raw metadata using the LinkML schema
-    linkml_validation_errs = dandi_model_linkml_validator.validate(raw_metadata)
+    linkml_validation_errs = dandi_model_linkml_validator.validate(
+        raw_metadata, "Dandiset"
+    )
     if linkml_validation_errs:
         logger.info(
             "Captured LinkML validation errors for dandiset %s @ %s",
