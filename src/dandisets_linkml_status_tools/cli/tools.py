@@ -64,9 +64,9 @@ def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
     return "[]"
 
 
-class DandisetLinkmlValidator:
+class DandiModelLinkmlValidator:
     """
-    A class to validate dandiset metadata against the dandiset metadata model in
+    A class to validate DANDI metadata against the DANDI metadata models in
     the LinkML schema produced by the pydantic2linkml translator for DANDI models
     expressed in Pydantic
     """
@@ -76,7 +76,7 @@ class DandisetLinkmlValidator:
 
     def __init__(self, validation_plugins: Optional[list[ValidationPlugin]] = None):
         """
-        Initialize a `DandisetLinkmlValidator` instance that wraps a LinkML validator
+        Initialize a `DandiModelLinkmlValidator` instance that wraps a LinkML validator
         instance set up with schema produced by the pydantic2linkml translator,
         for DANDI models expressed in Pydantic, and given validation plugins.
 
@@ -97,7 +97,8 @@ class DandisetLinkmlValidator:
     @classmethod
     def get_dandi_linkml_schema(cls) -> SchemaDefinition:
         """
-        Get the LinkML schema produced by the pydantic2linkml translator for DANDI models
+        Get the LinkML schema produced by the pydantic2linkml translator
+        for DANDI models
 
         :return: The LinkML schema
         """
@@ -133,7 +134,7 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
     Note: This function should only be called in the context of a `DandiAPIClient`
         context manager associated with the given dandiset.
     """
-    dandiset_linkml_validator = DandisetLinkmlValidator()
+    dandiset_linkml_validator = DandiModelLinkmlValidator()
 
     dandiset_id = dandiset.identifier
     dandiset_version = dandiset.version_id
@@ -309,7 +310,7 @@ def output_dandi_linkml_schema(output_path: Path) -> None:
     """
     # Output the LinkML schema used in the validations
     dandi_linkml_schema_yml = yaml_dumper.dumps(
-        DandisetLinkmlValidator.get_dandi_linkml_schema()
+        DandiModelLinkmlValidator.get_dandi_linkml_schema()
     )
     with output_path.open("w") as f:
         f.write(dandi_linkml_schema_yml)
