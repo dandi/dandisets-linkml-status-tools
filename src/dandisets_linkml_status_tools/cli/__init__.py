@@ -7,7 +7,7 @@ from dandi.dandiapi import DandiAPIClient
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status_tools.cli.tools import (
-    compile_validation_report,
+    compile_dandiset_validation_report,
     output_reports,
 )
 
@@ -64,7 +64,9 @@ def main(
                 dandiset_latest = dandiset.for_version(most_recent_published_version)
 
                 # Handle the latest published version
-                report_on_latest = compile_validation_report(dandiset_latest)
+                report_on_latest = compile_dandiset_validation_report(
+                    dandiset_latest, is_dandiset_published=True
+                )
                 validation_reports.append(report_on_latest)
             else:
                 # === The dandiset has never been published ===
@@ -72,7 +74,9 @@ def main(
                 dandiset_draft = dandiset
 
             # Handle the draft version
-            report_on_draft = compile_validation_report(dandiset_draft)
+            report_on_draft = compile_dandiset_validation_report(
+                dandiset_draft, is_dandiset_published=False
+            )
             validation_reports.append(report_on_draft)
 
     # Print summary of validation reports

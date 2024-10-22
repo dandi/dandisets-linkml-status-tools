@@ -124,11 +124,15 @@ class DandiModelLinkmlValidator:
         return validation_report.results
 
 
-def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationReport:
+def compile_dandiset_validation_report(
+    dandiset: RemoteDandiset, *, is_dandiset_published: bool
+) -> DandisetValidationReport:
     """
     Compile a validation report of the metadata of a given dandiset
 
     :param dandiset: The given dandiset
+    :param is_dandiset_published: A boolean indicating whether the given dandiset
+        is published
     :return: The compiled validation report
 
     Note: This function should only be called in the context of a `DandiAPIClient`
@@ -159,7 +163,7 @@ def compile_validation_report(dandiset: RemoteDandiset) -> DandisetValidationRep
 
     # Validate the raw metadata using the LinkML schema
     linkml_validation_errs = dandi_model_linkml_validator.validate(
-        raw_metadata, "Dandiset"
+        raw_metadata, "PublishedDandiset" if is_dandiset_published else "Dandiset"
     )
     if linkml_validation_errs:
         logger.info(
