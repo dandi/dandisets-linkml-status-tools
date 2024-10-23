@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, NamedTuple, Union
 
 from dandi.dandiapi import VersionStatus
 from jsonschema.exceptions import ValidationError
@@ -160,3 +160,26 @@ class DandisetValidationReport(BaseModel):
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
     linkml_validation_errs: LinkmlValidationErrsType = []
+
+
+class JsonschemaValidationErrorType(NamedTuple):
+    """
+    A named tuple for representing types of `jsonschema.exceptions.ValidationError`
+    objects.
+
+    The type of a `jsonschema.exceptions.ValidationError` is decided by the value of its
+    `validator` field and the value of its `validator_value` field. The values
+    of these fields are bundled in an instance of this named tuple to represent a type
+    of `jsonschema.exceptions.ValidationError` objects.
+    """
+
+    validator: str
+    validator_value: Any
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, JsonschemaValidationErrorType)
+            and self.validator == other.validator
+            and type(self.validator_value) is type(other.validator_value)  # noqa E721
+            and self.validator_value == other.validator_value
+        )
