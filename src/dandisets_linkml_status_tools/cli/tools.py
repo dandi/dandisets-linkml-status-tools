@@ -10,13 +10,12 @@ from shutil import rmtree
 from typing import Any, NamedTuple, Optional
 
 from dandi.dandiapi import RemoteDandiset
-from dandischema.models import Dandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
@@ -46,18 +45,19 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def pydantic_validate(data: dict[str, Any]) -> str:
+def pydantic_validate(data: dict[str, Any], model: type[BaseModel]) -> str:
     """
-    Validate the given dandiset metadata against the Pydantic dandiset metadata model
+    Validate the given data against a Pydantic model
 
-    :param data: The dandiset metadata to validate.
-    :return: A JSON string that is an array of errors encountered in the validation
-        (The JSON string returned in a case of any validation failure is one returned by
-        the Pydantic `ValidationError.json()` method. In the case of no validation
-        error, the empty array JSON expression, `"[]"`, is returned.)
+    :param data: The data to be validated
+    :param model: The Pydantic model to validate the data against
+    :return: A JSON string that specifies an array of errors encountered in
+        the validation (The JSON string returned in a case of any validation failure
+        is one returned by the Pydantic `ValidationError.json()` method. In the case
+        of no validation error, the empty array JSON expression, `"[]"`, is returned.)
     """
     try:
-        Dandiset.model_validate(data)
+        model.model_validate(data)
     except ValidationError as e:
         return e.json()
 
