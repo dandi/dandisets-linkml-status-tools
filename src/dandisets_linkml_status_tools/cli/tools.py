@@ -46,18 +46,18 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
+def pydantic_validate(data: dict[str, Any]) -> str:
     """
     Validate the given dandiset metadata against the Pydantic dandiset metadata model
 
-    :param dandiset_metadata: The dandiset metadata to validate.
+    :param data: The dandiset metadata to validate.
     :return: A JSON string that is an array of errors encountered in the validation
         (The JSON string returned in a case of any validation failure is one returned by
         the Pydantic `ValidationError.json()` method. In the case of no validation
         error, the empty array JSON expression, `"[]"`, is returned.)
     """
     try:
-        Dandiset.model_validate(dandiset_metadata)
+        Dandiset.model_validate(data)
     except ValidationError as e:
         return e.json()
 
