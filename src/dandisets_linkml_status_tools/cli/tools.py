@@ -10,13 +10,13 @@ from shutil import rmtree
 from typing import Any, NamedTuple, Optional
 
 from dandi.dandiapi import RemoteDandiset
-from dandischema.models import Dandiset
+from dandischema.models import Dandiset, PublishedDandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
@@ -46,18 +46,19 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def pydantic_validate(dandiset_metadata: dict[str, Any]) -> str:
+def pydantic_validate(data: dict[str, Any], model: type[BaseModel]) -> str:
     """
-    Validate the given dandiset metadata against the Pydantic dandiset metadata model
+    Validate the given data against a Pydantic model
 
-    :param dandiset_metadata: The dandiset metadata to validate.
-    :return: A JSON string that is an array of errors encountered in the validation
-        (The JSON string returned in a case of any validation failure is one returned by
-        the Pydantic `ValidationError.json()` method. In the case of no validation
-        error, the empty array JSON expression, `"[]"`, is returned.)
+    :param data: The data to be validated
+    :param model: The Pydantic model to validate the data against
+    :return: A JSON string that specifies an array of errors encountered in
+        the validation (The JSON string returned in a case of any validation failure
+        is one returned by the Pydantic `ValidationError.json()` method. In the case
+        of no validation error, the empty array JSON expression, `"[]"`, is returned.)
     """
     try:
-        Dandiset.model_validate(dandiset_metadata)
+        model.model_validate(data)
     except ValidationError as e:
         return e.json()
 
@@ -141,6 +142,14 @@ def compile_dandiset_validation_report(
     Note: This function should only be called in the context of a `DandiAPIClient`
         context manager associated with the given dandiset.
     """
+    # Determine validation targets
+    if is_dandiset_published:
+        pydantic_validation_target = PublishedDandiset  # Specified as a Pydantic model
+        linkml_validation_target = "PublishedDandiset"  # Specified as a LinkML class
+    else:
+        pydantic_validation_target = Dandiset  # Specified as a Pydantic model
+        linkml_validation_target = "Dandiset"  # Specified as a LinkML class
+
     dandi_model_linkml_validator = DandiModelLinkmlValidator()
 
     dandiset_id = dandiset.identifier
@@ -170,7 +179,9 @@ def compile_dandiset_validation_report(
     dandiset_version_modified = dandiset_version_info.modified
 
     # Validate the raw metadata using the Pydantic model
-    pydantic_validation_errs = pydantic_validate(raw_metadata)
+    pydantic_validation_errs = pydantic_validate(
+        raw_metadata, pydantic_validation_target
+    )
     if pydantic_validation_errs != "[]":
         logger.info(
             "Captured Pydantic validation errors for dandiset %s @ %s",
@@ -180,7 +191,7 @@ def compile_dandiset_validation_report(
 
     # Validate the raw metadata using the LinkML schema
     linkml_validation_errs = dandi_model_linkml_validator.validate(
-        raw_metadata, "PublishedDandiset" if is_dandiset_published else "Dandiset"
+        raw_metadata, linkml_validation_target
     )
     if linkml_validation_errs:
         logger.info(
