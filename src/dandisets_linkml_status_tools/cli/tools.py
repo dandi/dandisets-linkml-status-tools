@@ -10,6 +10,7 @@ from shutil import rmtree
 from typing import Any, NamedTuple, Optional
 
 from dandi.dandiapi import RemoteDandiset
+from dandischema.models import Dandiset, PublishedDandiset
 from linkml.validator import Validator
 from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
@@ -141,6 +142,14 @@ def compile_dandiset_validation_report(
     Note: This function should only be called in the context of a `DandiAPIClient`
         context manager associated with the given dandiset.
     """
+    # Determine validation targets
+    if is_dandiset_published:
+        pydantic_validation_target = PublishedDandiset  # Specified as a Pydantic model
+        linkml_validation_target = "PublishedDandiset"  # Specified as a LinkML class
+    else:
+        pydantic_validation_target = Dandiset  # Specified as a Pydantic model
+        linkml_validation_target = "Dandiset"  # Specified as a LinkML class
+
     dandi_model_linkml_validator = DandiModelLinkmlValidator()
 
     dandiset_id = dandiset.identifier
@@ -170,7 +179,9 @@ def compile_dandiset_validation_report(
     dandiset_version_modified = dandiset_version_info.modified
 
     # Validate the raw metadata using the Pydantic model
-    pydantic_validation_errs = pydantic_validate(raw_metadata)
+    pydantic_validation_errs = pydantic_validate(
+        raw_metadata, pydantic_validation_target
+    )
     if pydantic_validation_errs != "[]":
         logger.info(
             "Captured Pydantic validation errors for dandiset %s @ %s",
@@ -180,7 +191,7 @@ def compile_dandiset_validation_report(
 
     # Validate the raw metadata using the LinkML schema
     linkml_validation_errs = dandi_model_linkml_validator.validate(
-        raw_metadata, "PublishedDandiset" if is_dandiset_published else "Dandiset"
+        raw_metadata, linkml_validation_target
     )
     if linkml_validation_errs:
         logger.info(
