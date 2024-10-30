@@ -222,11 +222,11 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     summary_headers = [
         "dandiset",
         "version",
-        "schema_version",
-        "api_status",
-        "modified",
         "pydantic",
         "linkml",
+        "modified",
+        "api_status",
+        "schema_version",
     ]
 
     # Remove the existing report output directory if it exists
@@ -296,12 +296,6 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                     f"[{r.dandiset_identifier}]({dandiset_dir}/)",
                     # For the version column
                     f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
-                    # For schema_version column
-                    r.dandiset_schema_version,
-                    # For the api_status column
-                    r.dandiset_version_status.value,
-                    # For the modified column
-                    r.dandiset_version_modified.isoformat(),
                     # For the pydantic column
                     (
                         f"[{len(r.pydantic_validation_errs)} "
@@ -318,6 +312,12 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
                         if r.linkml_validation_errs
                         else "0"
                     ),
+                    # For the modified column
+                    r.dandiset_version_modified.isoformat(),
+                    # For the api_status column
+                    r.dandiset_version_status.value,
+                    # For schema_version column
+                    r.dandiset_schema_version,
                 ]
             )
             summary_f.write(_gen_row(row_cells))
