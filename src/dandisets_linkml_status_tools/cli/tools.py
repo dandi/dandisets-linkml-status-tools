@@ -135,6 +135,9 @@ def compile_dandiset_validation_report(
         is published
     :return: The compiled validation report
 
+    :raises KeyError: If the metadata of the given dandiset does not contain
+        a `"@context"` field
+
     Note: This function should only be called in the context of a `DandiAPIClient`
         context manager associated with the given dandiset.
     """
@@ -144,6 +147,20 @@ def compile_dandiset_validation_report(
     dandiset_version = dandiset.version_id
 
     raw_metadata = dandiset.get_raw_metadata()
+
+    if "@context" not in raw_metadata:
+        msg = (
+            f"There is no '@context' key in the metadata of "
+            f"dandiset {dandiset_id} @ version {dandiset_version}"
+        )
+        logger.critical(msg)
+        raise KeyError(msg)
+
+    # Remove the "@context" key from the metadata.
+    # This key is not part of the `Dandiset`
+    # or `PublishedDandiset` metadata model, so it shouldn't
+    # be validated as part of the model.
+    del raw_metadata["@context"]
 
     # === Fetch dandiset version info ===
     dandiset_version_info = dandiset.get_version(dandiset_version)
