@@ -7,7 +7,7 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple, Optional, Union
 
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import Dandiset, PublishedDandiset
@@ -46,19 +46,24 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def pydantic_validate(data: dict[str, Any], model: type[BaseModel]) -> str:
+def pydantic_validate(data: Union[dict[str, Any], str], model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
 
-    :param data: The data to be validated
+    :param data: The data, as a dict or JSON string, to be validated
     :param model: The Pydantic model to validate the data against
     :return: A JSON string that specifies an array of errors encountered in
         the validation (The JSON string returned in a case of any validation failure
         is one returned by the Pydantic `ValidationError.json()` method. In the case
         of no validation error, the empty array JSON expression, `"[]"`, is returned.)
     """
+    if isinstance(data, str):
+        validate_method = model.model_validate_json
+    else:
+        validate_method = model.model_validate
+
     try:
-        model.model_validate(data)
+        validate_method(data)
     except ValidationError as e:
         return e.json()
 
