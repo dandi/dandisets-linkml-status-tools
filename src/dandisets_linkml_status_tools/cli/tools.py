@@ -7,7 +7,7 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, NamedTuple, Optional, Union
+from typing import Any, NamedTuple
 
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import Dandiset, PublishedDandiset
@@ -46,7 +46,7 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def pydantic_validate(data: Union[dict[str, Any], str], model: type[BaseModel]) -> str:
+def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
 
@@ -78,9 +78,9 @@ class DandiModelLinkmlValidator:
     """
 
     # The LinkML schema produced by the pydantic2linkml translator for DANDI models
-    _dandi_linkml_schema: Optional[SchemaDefinition] = None
+    _dandi_linkml_schema: SchemaDefinition | None = None
 
-    def __init__(self, validation_plugins: Optional[list[ValidationPlugin]] = None):
+    def __init__(self, validation_plugins: list[ValidationPlugin] | None = None):
         """
         Initialize a `DandiModelLinkmlValidator` instance that wraps a LinkML validator
         instance set up with schema produced by the pydantic2linkml translator,
@@ -453,7 +453,7 @@ def get_linkml_err_counts(
             return c[0].validator, -c[1]
 
         return sorted(
-            chain.from_iterable(zip(t, c) for t, c in counter.values()), key=sorting_key
+            chain.from_iterable(zip(t, c, strict=False) for t, c in counter.values()), key=sorting_key
         )
 
     # A dictionary that keeps the counts of individual types of JSON schema validation
