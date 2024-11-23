@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Annotated, Any, NamedTuple, Union
+from typing import Annotated, Any, NamedTuple
 
 from dandi.dandiapi import VersionStatus
 from jsonschema.exceptions import ValidationError
@@ -17,8 +17,8 @@ class JsonValidationErrorView(BaseModel):
     """
 
     message: str
-    absolute_path: Sequence[Union[str, int]]
-    absolute_schema_path: Sequence[Union[str, int]]
+    absolute_path: Sequence[str | int]
+    absolute_schema_path: Sequence[str | int]
     validator: str
     validator_value: Any
 
