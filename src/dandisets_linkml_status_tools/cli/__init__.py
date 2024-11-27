@@ -19,7 +19,7 @@ app = typer.Typer()
 
 
 @app.command()
-def main(
+def linkml_translation(
     *,
     include_unpublished: Annotated[
         bool, typer.Option("--include-unpublished", "-u")
