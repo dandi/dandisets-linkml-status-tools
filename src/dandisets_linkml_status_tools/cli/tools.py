@@ -448,12 +448,13 @@ def get_linkml_err_counts(
 
     def compile_counts() -> list[tuple[JsonschemaValidationErrorType, int]]:
         def sorting_key(
-            c: tuple[JsonschemaValidationErrorType, int]
+            c: tuple[JsonschemaValidationErrorType, int],
         ) -> tuple[str, int]:
             return c[0].validator, -c[1]
 
         return sorted(
-            chain.from_iterable(zip(t, c, strict=False) for t, c in counter.values()), key=sorting_key
+            chain.from_iterable(zip(t, c, strict=False) for t, c in counter.values()),
+            key=sorting_key,
         )
 
     # A dictionary that keeps the counts of individual types of JSON schema validation
