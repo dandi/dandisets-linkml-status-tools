@@ -80,7 +80,7 @@ def main(
             validation_reports.append(report_on_draft)
 
     # Print summary of validation reports
-    print(
+    print(  # noqa: T201
         "\n".join(
             f"dandiset: {r.dandiset_identifier}, "
             f"linkml: {len(r.linkml_validation_errs)}, "
