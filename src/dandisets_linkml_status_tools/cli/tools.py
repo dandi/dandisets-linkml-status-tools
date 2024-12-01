@@ -16,9 +16,11 @@ from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugi
 from linkml.validator.report import ValidationResult
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import TypeAdapter
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
+
+from dandisets_linkml_status_tools.tools import pydantic_validate
 
 try:
     # Import the C-based YAML dumper if available
@@ -44,30 +46,6 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
-
-
-def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
-    """
-    Validate the given data against a Pydantic model
-
-    :param data: The data, as a dict or JSON string, to be validated
-    :param model: The Pydantic model to validate the data against
-    :return: A JSON string that specifies an array of errors encountered in
-        the validation (The JSON string returned in a case of any validation failure
-        is one returned by the Pydantic `ValidationError.json()` method. In the case
-        of no validation error, the empty array JSON expression, `"[]"`, is returned.)
-    """
-    if isinstance(data, str):
-        validate_method = model.model_validate_json
-    else:
-        validate_method = model.model_validate
-
-    try:
-        validate_method(data)
-    except ValidationError as e:
-        return e.json()
-
-    return "[]"
 
 
 class DandiModelLinkmlValidator:

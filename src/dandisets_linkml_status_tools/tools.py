@@ -20,7 +20,6 @@ def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     return (p for p in path.iterdir() if p.is_dir())
 
 
-# Note: this function is copied from the dandi/dandisets-linkml-status-tools repo
 def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
