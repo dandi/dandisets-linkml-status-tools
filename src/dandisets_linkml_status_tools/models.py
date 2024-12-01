@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Json
 
@@ -33,5 +33,5 @@ class AssetValidationReport(ValidationReport):
     Pydantic model and the corresponding JSON schema.
     """
 
-    asset_id: Optional[str]
-    asset_path: Optional[str]
+    asset_id: str | None
+    asset_path: str | None

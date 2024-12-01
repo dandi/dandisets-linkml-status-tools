@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -21,7 +21,7 @@ def iter_direct_subdirs(path: Path) -> Iterable[Path]:
 
 
 # Note: this function is copied from the dandi/dandisets-linkml-status-tools repo
-def pydantic_validate(data: Union[dict[str, Any], str], model: type[BaseModel]) -> str:
+def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
 
