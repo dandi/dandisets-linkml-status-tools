@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, NamedTuple
 from collections.abc import Sequence
 
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
@@ -137,3 +137,26 @@ def polish_validation_results(
 
         polished_results.append(result_as_dict)
     return polished_results
+
+
+class JsonschemaValidationErrorType(NamedTuple):
+    """
+    A named tuple for representing types of `jsonschema.exceptions.ValidationError`
+    objects.
+
+    The type of a `jsonschema.exceptions.ValidationError` is decided by the value of its
+    `validator` field and the value of its `validator_value` field. The values
+    of these fields are bundled in an instance of this named tuple to represent a type
+    of `jsonschema.exceptions.ValidationError` objects.
+    """
+
+    validator: str
+    validator_value: Any
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, JsonschemaValidationErrorType)
+            and self.validator == other.validator
+            and type(self.validator_value) is type(other.validator_value)  # noqa E721
+            and self.validator_value == other.validator_value
+        )

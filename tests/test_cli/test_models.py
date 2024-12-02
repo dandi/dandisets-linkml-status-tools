@@ -1,6 +1,6 @@
 import pytest
 
-from dandisets_linkml_status_tools.cli.models import JsonschemaValidationErrorType
+from dandisets_linkml_status_tools.models import JsonschemaValidationErrorType
 
 
 @pytest.mark.parametrize(

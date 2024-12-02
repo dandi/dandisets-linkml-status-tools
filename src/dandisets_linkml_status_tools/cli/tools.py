@@ -31,13 +31,13 @@ except ImportError:
 
 from dandisets_linkml_status_tools.cli.models import (
     DandisetValidationReport,
-    JsonschemaValidationErrorType,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     dandiset_metadata_adapter,
     linkml_validation_errs_adapter,
     pydantic_validation_errs_adapter,
 )
+from dandisets_linkml_status_tools.models import JsonschemaValidationErrorType
 
 logger = logging.getLogger(__name__)
 
