@@ -1,9 +1,17 @@
 from collections.abc import Iterable
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from linkml.validator import JsonschemaValidationPlugin, Validator
+from linkml.validator.plugins import ValidationPlugin
+from linkml.validator.report import ValidationResult
+from linkml_runtime.linkml_model import SchemaDefinition
 
+from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic2linkml.gen_linkml import translate_defs
+
+from .cli.tools import DANDI_MODULE_NAMES
 from .models import ValidationReport
 
 
@@ -55,3 +63,63 @@ def write_reports(
     :param type_adapter: The type adapter to use for serializing the list of reports
     """
     file_path.write_bytes(type_adapter.dump_json(reports, indent=2))
+
+
+class DandiModelLinkmlValidator:
+    """
+    A class to validate DANDI metadata against the DANDI metadata models in
+    the LinkML schema produced by the pydantic2linkml translator for DANDI models
+    expressed in Pydantic
+    """
+
+    # The LinkML schema produced by the pydantic2linkml translator for DANDI models
+    _dandi_linkml_schema: SchemaDefinition | None = None
+
+    def __init__(self, validation_plugins: list[ValidationPlugin] | None = None):
+        """
+        Initialize a `DandiModelLinkmlValidator` instance that wraps a LinkML validator
+        instance set up with schema produced by the pydantic2linkml translator,
+        for DANDI models expressed in Pydantic, and given validation plugins.
+
+        :param validation_plugins: The list of given validation plugins to set up
+        the LinkML validator with. If no validation plugins are given, the default of a
+        list containing a `JsonschemaValidationPlugin` instance with `closed=True`.
+        """
+        if validation_plugins is None:
+            validation_plugins = [JsonschemaValidationPlugin(closed=True)]
+
+        self._inner_validator = Validator(
+            # TODO: The deep copying may not be needed if
+            #  https://github.com/linkml/linkml/issues/2359 is resolved
+            deepcopy(self.get_dandi_linkml_schema()),
+            validation_plugins=validation_plugins,
+        )
+
+    @classmethod
+    def get_dandi_linkml_schema(cls) -> SchemaDefinition:
+        """
+        Get the LinkML schema produced by the pydantic2linkml translator
+        for DANDI models
+
+        :return: The LinkML schema
+        """
+        if cls._dandi_linkml_schema is None:
+            cls._dandi_linkml_schema = translate_defs(DANDI_MODULE_NAMES)
+
+        return cls._dandi_linkml_schema
+
+    def validate(
+        self, dandi_metadata: dict[str, Any], dandi_metadata_class: str
+    ) -> list[ValidationResult]:
+        """
+        Validate given DANDI metadata against a DANDI metadata model
+        specified by its class name in the LinkML schema
+
+        :param dandi_metadata: The DANDI metadata to validate
+        :param dandi_metadata_class: The class name of the DANDI metadata model
+        :return: A list of validation errors encountered
+        """
+        validation_report = self._inner_validator.validate(
+            dandi_metadata, target_class=dandi_metadata_class
+        )
+        return validation_report.results
