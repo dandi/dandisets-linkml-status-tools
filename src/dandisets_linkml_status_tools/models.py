@@ -4,7 +4,6 @@ from collections.abc import Sequence
 
 from dandi.dandiapi import VersionStatus
 from dandisets_linkml_status_tools.cli.models import (
-    DandisetMetadataType,
     LinkmlValidationErrsType,
 )
 
@@ -14,6 +13,7 @@ from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
 from pydantic import BaseModel, Json
 
+DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
 
 

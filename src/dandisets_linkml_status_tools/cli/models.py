@@ -6,9 +6,9 @@ from pydantic import AfterValidator, PlainSerializer, TypeAdapter
 from dandisets_linkml_status_tools.models import (
     check_source_jsonschema_validation_error,
     polish_validation_results,
+    DandisetMetadataType,
 )
 
-DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]
 LinkmlValidationErrsType = Annotated[
     list[ValidationResult],
