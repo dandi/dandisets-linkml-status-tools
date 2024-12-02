@@ -1,7 +1,11 @@
+import logging
 from collections.abc import Iterable
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
+
+from dandi.dandiapi import RemoteDandiset
+from dandischema.models import PublishedDandiset, Dandiset
 
 from linkml.validator import JsonschemaValidationPlugin, Validator
 from linkml.validator.plugins import ValidationPlugin
@@ -12,7 +16,10 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 from .cli.tools import DANDI_MODULE_NAMES
-from .models import ValidationReport
+from .models import ValidationReport, DandisetLinkmlTranslationReport
+
+
+logger = logging.getLogger(__name__)
 
 
 def iter_direct_subdirs(path: Path) -> Iterable[Path]:
@@ -123,3 +130,90 @@ class DandiModelLinkmlValidator:
             dandi_metadata, target_class=dandi_metadata_class
         )
         return validation_report.results
+
+
+def compile_dandiset_validation_report(
+    dandiset: RemoteDandiset, *, is_dandiset_published: bool
+) -> DandisetLinkmlTranslationReport:
+    """
+    Compile a validation report of the metadata of a given dandiset
+
+    :param dandiset: The given dandiset
+    :param is_dandiset_published: A boolean indicating whether the given dandiset
+        is published
+    :return: The compiled validation report
+
+    :raises KeyError: If the metadata of the given dandiset does not contain
+        a `"@context"` field
+
+    Note: This function should only be called in the context of a `DandiAPIClient`
+        context manager associated with the given dandiset.
+    """
+    # Determine validation targets
+    if is_dandiset_published:
+        pydantic_validation_target = PublishedDandiset  # Specified as a Pydantic model
+        linkml_validation_target = "PublishedDandiset"  # Specified as a LinkML class
+    else:
+        pydantic_validation_target = Dandiset  # Specified as a Pydantic model
+        linkml_validation_target = "Dandiset"  # Specified as a LinkML class
+
+    dandi_model_linkml_validator = DandiModelLinkmlValidator()
+
+    dandiset_id = dandiset.identifier
+    dandiset_version = dandiset.version_id
+
+    raw_metadata = dandiset.get_raw_metadata()
+
+    if "@context" not in raw_metadata:
+        msg = (
+            f"There is no '@context' key in the metadata of "
+            f"dandiset {dandiset_id} @ version {dandiset_version}"
+        )
+        logger.critical(msg)
+        raise KeyError(msg)
+
+    # Remove the "@context" key from the metadata.
+    # This key is not part of the `Dandiset`
+    # or `PublishedDandiset` metadata model, so it shouldn't
+    # be validated as part of the model.
+    del raw_metadata["@context"]
+
+    # === Fetch dandiset version info ===
+    dandiset_version_info = dandiset.get_version(dandiset_version)
+    # Get dandiset version status
+    dandiset_version_status = dandiset_version_info.status
+    # Get dandiset version modified datetime
+    dandiset_version_modified = dandiset_version_info.modified
+
+    # Validate the raw metadata using the Pydantic model
+    pydantic_validation_errs = pydantic_validate(
+        raw_metadata, pydantic_validation_target
+    )
+    if pydantic_validation_errs != "[]":
+        logger.info(
+            "Captured Pydantic validation errors for dandiset %s @ %s",
+            dandiset_id,
+            dandiset_version,
+        )
+
+    # Validate the raw metadata using the LinkML schema
+    linkml_validation_errs = dandi_model_linkml_validator.validate(
+        raw_metadata, linkml_validation_target
+    )
+    if linkml_validation_errs:
+        logger.info(
+            "Captured LinkML validation errors for dandiset %s @ %s",
+            dandiset_id,
+            dandiset_version,
+        )
+
+    # noinspection PyTypeChecker
+    return DandisetLinkmlTranslationReport(
+        dandiset_identifier=dandiset_id,
+        dandiset_version=dandiset_version,
+        dandiset_version_status=dandiset_version_status,
+        dandiset_version_modified=dandiset_version_modified,
+        dandiset_metadata=raw_metadata,
+        pydantic_validation_errs=pydantic_validation_errs,
+        linkml_validation_errs=linkml_validation_errs,
+    )

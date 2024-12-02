@@ -8,15 +8,12 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any, NamedTuple
 
-from dandi.dandiapi import RemoteDandiset
-from dandischema.models import Dandiset, PublishedDandiset
 from linkml.validator.report import ValidationResult
 from linkml_runtime.dumpers import yaml_dumper
 from pydantic import TypeAdapter
 from yaml import dump as yaml_dump
 
 from dandisets_linkml_status_tools.tools import (
-    pydantic_validate,
     DandiModelLinkmlValidator,
 )
 
@@ -44,93 +41,6 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
-
-
-def compile_dandiset_validation_report(
-    dandiset: RemoteDandiset, *, is_dandiset_published: bool
-) -> DandisetLinkmlTranslationReport:
-    """
-    Compile a validation report of the metadata of a given dandiset
-
-    :param dandiset: The given dandiset
-    :param is_dandiset_published: A boolean indicating whether the given dandiset
-        is published
-    :return: The compiled validation report
-
-    :raises KeyError: If the metadata of the given dandiset does not contain
-        a `"@context"` field
-
-    Note: This function should only be called in the context of a `DandiAPIClient`
-        context manager associated with the given dandiset.
-    """
-    # Determine validation targets
-    if is_dandiset_published:
-        pydantic_validation_target = PublishedDandiset  # Specified as a Pydantic model
-        linkml_validation_target = "PublishedDandiset"  # Specified as a LinkML class
-    else:
-        pydantic_validation_target = Dandiset  # Specified as a Pydantic model
-        linkml_validation_target = "Dandiset"  # Specified as a LinkML class
-
-    dandi_model_linkml_validator = DandiModelLinkmlValidator()
-
-    dandiset_id = dandiset.identifier
-    dandiset_version = dandiset.version_id
-
-    raw_metadata = dandiset.get_raw_metadata()
-
-    if "@context" not in raw_metadata:
-        msg = (
-            f"There is no '@context' key in the metadata of "
-            f"dandiset {dandiset_id} @ version {dandiset_version}"
-        )
-        logger.critical(msg)
-        raise KeyError(msg)
-
-    # Remove the "@context" key from the metadata.
-    # This key is not part of the `Dandiset`
-    # or `PublishedDandiset` metadata model, so it shouldn't
-    # be validated as part of the model.
-    del raw_metadata["@context"]
-
-    # === Fetch dandiset version info ===
-    dandiset_version_info = dandiset.get_version(dandiset_version)
-    # Get dandiset version status
-    dandiset_version_status = dandiset_version_info.status
-    # Get dandiset version modified datetime
-    dandiset_version_modified = dandiset_version_info.modified
-
-    # Validate the raw metadata using the Pydantic model
-    pydantic_validation_errs = pydantic_validate(
-        raw_metadata, pydantic_validation_target
-    )
-    if pydantic_validation_errs != "[]":
-        logger.info(
-            "Captured Pydantic validation errors for dandiset %s @ %s",
-            dandiset_id,
-            dandiset_version,
-        )
-
-    # Validate the raw metadata using the LinkML schema
-    linkml_validation_errs = dandi_model_linkml_validator.validate(
-        raw_metadata, linkml_validation_target
-    )
-    if linkml_validation_errs:
-        logger.info(
-            "Captured LinkML validation errors for dandiset %s @ %s",
-            dandiset_id,
-            dandiset_version,
-        )
-
-    # noinspection PyTypeChecker
-    return DandisetLinkmlTranslationReport(
-        dandiset_identifier=dandiset_id,
-        dandiset_version=dandiset_version,
-        dandiset_version_status=dandiset_version_status,
-        dandiset_version_modified=dandiset_version_modified,
-        dandiset_metadata=raw_metadata,
-        pydantic_validation_errs=pydantic_validation_errs,
-        linkml_validation_errs=linkml_validation_errs,
-    )
 
 
 def output_reports(

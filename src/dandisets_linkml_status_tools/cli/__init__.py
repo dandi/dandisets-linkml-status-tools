@@ -9,7 +9,6 @@ from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status_tools.cli.tools import (
-    compile_dandiset_validation_report,
     output_reports,
 )
 
@@ -107,6 +106,7 @@ from dandisets_linkml_status_tools.tools import (
     iter_direct_subdirs,
     pydantic_validate,
     write_reports,
+    compile_dandiset_validation_report,
 )
 
 # Directory containing dandiset manifests
