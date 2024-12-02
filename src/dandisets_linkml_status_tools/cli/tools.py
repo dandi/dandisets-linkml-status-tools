@@ -2,7 +2,6 @@ import json
 import logging
 from collections import Counter
 from collections.abc import Iterable
-from functools import partial
 from itertools import chain
 from pathlib import Path
 from shutil import rmtree
@@ -14,7 +13,7 @@ from pydantic import TypeAdapter
 from yaml import dump as yaml_dump
 
 from dandisets_linkml_status_tools.tools import (
-    DandiModelLinkmlValidator,
+    DandiModelLinkmlValidator, isorted,
 )
 
 try:
@@ -38,9 +37,6 @@ logger = logging.getLogger(__name__)
 
 # The names of the collection of modules in which the DANDI models are defined
 DANDI_MODULE_NAMES = ["dandischema.models"]
-
-# A callable that sorts a given iterable of strings in a case-insensitive manner
-isorted = partial(sorted, key=str.casefold)
 
 
 def output_reports(

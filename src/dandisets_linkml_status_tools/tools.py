@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Iterable
 from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -18,9 +19,10 @@ from pydantic2linkml.gen_linkml import translate_defs
 from .cli.tools import DANDI_MODULE_NAMES
 from .models import ValidationReport, DandisetLinkmlTranslationReport
 
-
 logger = logging.getLogger(__name__)
 
+# A callable that sorts a given iterable of strings in a case-insensitive manner
+isorted = partial(sorted, key=str.casefold)
 
 def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     """
