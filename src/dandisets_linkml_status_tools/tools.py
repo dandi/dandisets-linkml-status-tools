@@ -12,8 +12,8 @@ from typing import Any, NamedTuple
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import PublishedDandiset, Dandiset
 
-from linkml.validator import JsonschemaValidationPlugin, Validator
-from linkml.validator.plugins import ValidationPlugin
+from linkml.validator import Validator
+from linkml.validator.plugins import JsonschemaValidationPlugin, ValidationPlugin
 from linkml.validator.report import ValidationResult
 from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
