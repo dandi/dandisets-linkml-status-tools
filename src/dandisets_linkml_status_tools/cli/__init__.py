@@ -14,7 +14,7 @@ from dandisets_linkml_status_tools.cli.tools import (
 )
 
 if TYPE_CHECKING:
-    from dandisets_linkml_status_tools.cli.models import DandisetLinkmlTranslationReport
+    from dandisets_linkml_status_tools.models import DandisetLinkmlTranslationReport
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
