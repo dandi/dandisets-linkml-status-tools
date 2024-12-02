@@ -8,7 +8,7 @@ from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydanti
 
 from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json, AfterValidator, PlainSerializer
+from pydantic import BaseModel, Json, AfterValidator, PlainSerializer, TypeAdapter
 
 DandisetMetadataType = dict[str, Any]
 
@@ -115,6 +115,11 @@ LinkmlValidationErrsType = Annotated[
     AfterValidator(check_source_jsonschema_validation_error),
     PlainSerializer(polish_validation_results),
 ]
+
+
+dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
+pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
+linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
 
 class ValidationReport(BaseModel):
