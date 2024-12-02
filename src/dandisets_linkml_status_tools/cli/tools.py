@@ -30,7 +30,6 @@ except ImportError:
     from yaml import SafeDumper  # type: ignore
 
 from dandisets_linkml_status_tools.cli.models import (
-    LinkmlValidationErrsType,
     PydanticValidationErrsType,
     dandiset_metadata_adapter,
     linkml_validation_errs_adapter,
@@ -38,7 +37,7 @@ from dandisets_linkml_status_tools.cli.models import (
 )
 from dandisets_linkml_status_tools.models import (
     JsonschemaValidationErrorType,
-    DandisetLinkmlTranslationReport,
+    DandisetLinkmlTranslationReport, LinkmlValidationErrsType,
 )
 
 logger = logging.getLogger(__name__)

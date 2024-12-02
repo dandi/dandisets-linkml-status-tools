@@ -1,52 +1,45 @@
 from datetime import datetime
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Annotated
 from collections.abc import Sequence
 
 from dandi.dandiapi import VersionStatus
-from dandisets_linkml_status_tools.cli.models import (
-    LinkmlValidationErrsType,
-)
 
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
 from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json
+from pydantic import BaseModel, Json, AfterValidator, PlainSerializer
 
 DandisetMetadataType = dict[str, Any]
+
 PydanticValidationErrsType = list[dict[str, Any]]
 
 
-class ValidationReport(BaseModel):
+class JsonValidationErrorView(BaseModel):
     """
-    A report of validation results of a data instance against a Pydantic model and
-    the JSON schema generated from the model.
-    """
-
-    dandiset_identifier: str
-    dandiset_version: str  # The version of the dandiset being validated
-
-    # Error encountered in validation against a Pydantic model
-    pydantic_validation_errs: Json[PydanticValidationErrsType] = []
-
-
-class DandisetValidationReport(ValidationReport):
-    """
-    A report of validation results of a dandiset metadata instance against the
-    `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset`
-    Pydantic model and the corresponding JSON schema.
+    A Pydantic model to represent a `jsonschema.exceptions.ValidationError` object,
+    by including selective fields or properties of the original object,
+    for serialization
     """
 
+    message: str
+    absolute_path: Sequence[str | int]
+    absolute_schema_path: Sequence[str | int]
+    validator: str
+    validator_value: Any
 
-class AssetValidationReport(ValidationReport):
-    """
-    A report of validation results of an asset metadata instance against the
-    `dandischema.models.Asset` or `dandischema.models.PublishedAsset`
-    Pydantic model and the corresponding JSON schema.
-    """
 
-    asset_id: str | None
-    asset_path: str | None
+# Build a `TypedDict` for representing a polished version of `ValidationResult`
+field_annotations = {
+    name: info.annotation
+    for name, info in ValidationResult.model_fields.items()
+    if name not in {"instance", "source"}
+}
+field_annotations["source"] = JsonValidationErrorView
+PolishedValidationResult = TypedDict(
+    "PolishedValidationResult",
+    field_annotations,
+)
 
 
 def check_source_jsonschema_validation_error(
@@ -73,35 +66,6 @@ def check_source_jsonschema_validation_error(
             )
             raise ValueError(msg)  # noqa: TRY004
     return results
-
-
-# Build a `TypedDict` for representing a polished version of `ValidationResult`
-field_annotations = {
-    name: info.annotation
-    for name, info in ValidationResult.model_fields.items()
-    if name not in {"instance", "source"}
-}
-
-
-class JsonValidationErrorView(BaseModel):
-    """
-    A Pydantic model to represent a `jsonschema.exceptions.ValidationError` object,
-    by including selective fields or properties of the original object,
-    for serialization
-    """
-
-    message: str
-    absolute_path: Sequence[str | int]
-    absolute_schema_path: Sequence[str | int]
-    validator: str
-    validator_value: Any
-
-
-field_annotations["source"] = JsonValidationErrorView
-PolishedValidationResult = TypedDict(
-    "PolishedValidationResult",
-    field_annotations,
-)
 
 
 def polish_validation_results(
@@ -144,6 +108,45 @@ def polish_validation_results(
 
         polished_results.append(result_as_dict)
     return polished_results
+
+
+LinkmlValidationErrsType = Annotated[
+    list[ValidationResult],
+    AfterValidator(check_source_jsonschema_validation_error),
+    PlainSerializer(polish_validation_results),
+]
+
+
+class ValidationReport(BaseModel):
+    """
+    A report of validation results of a data instance against a Pydantic model and
+    the JSON schema generated from the model.
+    """
+
+    dandiset_identifier: str
+    dandiset_version: str  # The version of the dandiset being validated
+
+    # Error encountered in validation against a Pydantic model
+    pydantic_validation_errs: Json[PydanticValidationErrsType] = []
+
+
+class DandisetValidationReport(ValidationReport):
+    """
+    A report of validation results of a dandiset metadata instance against the
+    `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset`
+    Pydantic model and the corresponding JSON schema.
+    """
+
+
+class AssetValidationReport(ValidationReport):
+    """
+    A report of validation results of an asset metadata instance against the
+    `dandischema.models.Asset` or `dandischema.models.PublishedAsset`
+    Pydantic model and the corresponding JSON schema.
+    """
+
+    asset_id: str | None
+    asset_path: str | None
 
 
 class JsonschemaValidationErrorType(NamedTuple):
