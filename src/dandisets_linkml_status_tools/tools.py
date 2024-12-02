@@ -13,6 +13,7 @@ from dandischema.models import PublishedDandiset, Dandiset
 from linkml.validator import JsonschemaValidationPlugin, Validator
 from linkml.validator.plugins import ValidationPlugin
 from linkml.validator.report import ValidationResult
+from linkml_runtime.dumpers import yaml_dumper
 from linkml_runtime.linkml_model import SchemaDefinition
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
@@ -22,7 +23,9 @@ from .cli.tools import DANDI_MODULE_NAMES
 from .models import (
     ValidationReport,
     DandisetLinkmlTranslationReport,
-    PydanticValidationErrsType, JsonschemaValidationErrorType, LinkmlValidationErrsType,
+    PydanticValidationErrsType,
+    JsonschemaValidationErrorType,
+    LinkmlValidationErrsType,
 )
 
 logger = logging.getLogger(__name__)
@@ -305,3 +308,18 @@ def get_linkml_err_counts(
         count_err(e)
 
     return compile_counts()
+
+
+def output_dandi_linkml_schema(output_path: Path) -> None:
+    """
+    Output the DANDI LinkML schema, in YAML, to a file
+
+    :param output_path: The path specifying the location of the file
+    """
+    # Output the LinkML schema used in the validations
+    dandi_linkml_schema_yml = yaml_dumper.dumps(
+        DandiModelLinkmlValidator.get_dandi_linkml_schema()
+    )
+    with output_path.open("w") as f:
+        f.write(dandi_linkml_schema_yml)
+    logger.info("Output the DANDI LinkML schema to %s", output_path)

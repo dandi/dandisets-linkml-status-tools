@@ -5,13 +5,13 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any
 
-from linkml_runtime.dumpers import yaml_dumper
 from pydantic import TypeAdapter
 from yaml import dump as yaml_dump
 
 from dandisets_linkml_status_tools.tools import (
-    DandiModelLinkmlValidator,
-    get_pydantic_err_counts, get_linkml_err_counts,
+    get_pydantic_err_counts,
+    get_linkml_err_counts,
+    output_dandi_linkml_schema,
 )
 
 try:
@@ -160,21 +160,6 @@ def output_reports(
     logger.info("Output of dandiset validation reports completed")
 
 
-def output_dandi_linkml_schema(output_path: Path) -> None:
-    """
-    Output the DANDI LinkML schema, in YAML, to a file
-
-    :param output_path: The path specifying the location of the file
-    """
-    # Output the LinkML schema used in the validations
-    dandi_linkml_schema_yml = yaml_dumper.dumps(
-        DandiModelLinkmlValidator.get_dandi_linkml_schema()
-    )
-    with output_path.open("w") as f:
-        f.write(dandi_linkml_schema_yml)
-    logger.info("Output the DANDI LinkML schema to %s", output_path)
-
-
 def _write_data(
     data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
 ) -> None:
@@ -208,5 +193,3 @@ def _gen_row(cell_str_values: Iterable[str]) -> str:
     Note: The given iterable of cell string values are `str` values
     """
     return f'|{"|".join(cell_str_values)}|\n'
-
-
