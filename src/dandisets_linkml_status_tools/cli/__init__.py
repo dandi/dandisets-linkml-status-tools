@@ -8,10 +8,6 @@ from dandischema.models import Asset, Dandiset, PublishedAsset, PublishedDandise
 from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.cli.tools import LogLevel
 
-from dandisets_linkml_status_tools.cli.tools import (
-    output_reports,
-)
-
 if TYPE_CHECKING:
     from dandisets_linkml_status_tools.models import DandisetLinkmlTranslationReport
 
@@ -107,6 +103,7 @@ from dandisets_linkml_status_tools.tools import (
     pydantic_validate,
     write_reports,
     compile_dandiset_linkml_translation_report,
+    output_reports,
 )
 
 # Directory containing dandiset manifests
