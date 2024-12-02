@@ -1,6 +1,5 @@
 import json
 import logging
-from collections import Counter
 from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
@@ -13,7 +12,8 @@ from pydantic import TypeAdapter
 from yaml import dump as yaml_dump
 
 from dandisets_linkml_status_tools.tools import (
-    DandiModelLinkmlValidator, isorted,
+    DandiModelLinkmlValidator,
+    get_pydantic_err_counts,
 )
 
 try:
@@ -30,7 +30,6 @@ from dandisets_linkml_status_tools.models import (
     dandiset_metadata_adapter,
     pydantic_validation_errs_adapter,
     linkml_validation_errs_adapter,
-    PydanticValidationErrsType,
 )
 
 logger = logging.getLogger(__name__)
@@ -213,16 +212,6 @@ def _gen_row(cell_str_values: Iterable[str]) -> str:
     Note: The given iterable of cell string values are `str` values
     """
     return f'|{"|".join(cell_str_values)}|\n'
-
-
-def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
-    """
-    Get a `Counter` object that counts the Pydantic validation errors by type
-
-    :param errs: The list of Pydantic validation errors to be counted
-    :return: The `Counter` object
-    """
-    return Counter(isorted(e["type"] for e in errs))
 
 
 class _JsonschemaValidationErrorCounts(NamedTuple):

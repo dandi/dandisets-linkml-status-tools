@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from collections.abc import Iterable
 from copy import deepcopy
 from functools import partial
@@ -17,12 +18,17 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
 from .cli.tools import DANDI_MODULE_NAMES
-from .models import ValidationReport, DandisetLinkmlTranslationReport
+from .models import (
+    ValidationReport,
+    DandisetLinkmlTranslationReport,
+    PydanticValidationErrsType,
+)
 
 logger = logging.getLogger(__name__)
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
+
 
 def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     """
@@ -219,3 +225,13 @@ def compile_dandiset_linkml_translation_report(
         pydantic_validation_errs=pydantic_validation_errs,
         linkml_validation_errs=linkml_validation_errs,
     )
+
+
+def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
+    """
+    Get a `Counter` object that counts the Pydantic validation errors by type
+
+    :param errs: The list of Pydantic validation errors to be counted
+    :return: The `Counter` object
+    """
+    return Counter(isorted(e["type"] for e in errs))
