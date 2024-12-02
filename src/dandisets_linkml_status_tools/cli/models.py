@@ -1,4 +1,3 @@
-from collections.abc import Sequence
 from datetime import datetime
 from typing import Annotated, Any, NamedTuple
 
@@ -10,21 +9,6 @@ from dandisets_linkml_status_tools.models import (
     check_source_jsonschema_validation_error,
     polish_validation_results,
 )
-
-
-class JsonValidationErrorView(BaseModel):
-    """
-    A Pydantic model to represent a `jsonschema.exceptions.ValidationError` object,
-    by including selective fields or properties of the original object,
-    for serialization
-    """
-
-    message: str
-    absolute_path: Sequence[str | int]
-    absolute_schema_path: Sequence[str | int]
-    validator: str
-    validator_value: Any
-
 
 DandisetMetadataType = dict[str, Any]
 PydanticValidationErrsType = list[dict[str, Any]]

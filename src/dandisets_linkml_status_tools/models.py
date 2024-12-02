@@ -1,6 +1,6 @@
 from typing import Any
+from collections.abc import Sequence
 
-from dandisets_linkml_status_tools.cli.models import JsonValidationErrorView
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
 from jsonschema import ValidationError
@@ -74,6 +74,22 @@ field_annotations = {
     for name, info in ValidationResult.model_fields.items()
     if name not in {"instance", "source"}
 }
+
+
+class JsonValidationErrorView(BaseModel):
+    """
+    A Pydantic model to represent a `jsonschema.exceptions.ValidationError` object,
+    by including selective fields or properties of the original object,
+    for serialization
+    """
+
+    message: str
+    absolute_path: Sequence[str | int]
+    absolute_schema_path: Sequence[str | int]
+    validator: str
+    validator_value: Any
+
+
 field_annotations["source"] = JsonValidationErrorView
 PolishedValidationResult = TypedDict(
     "PolishedValidationResult",
