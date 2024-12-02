@@ -29,9 +29,6 @@ except ImportError:
     # Otherwise, import the Python-based YAML dumper
     from yaml import SafeDumper  # type: ignore
 
-from dandisets_linkml_status_tools.cli.models import (
-    PydanticValidationErrsType,
-)
 from dandisets_linkml_status_tools.models import (
     JsonschemaValidationErrorType,
     DandisetLinkmlTranslationReport,
@@ -39,6 +36,7 @@ from dandisets_linkml_status_tools.models import (
     dandiset_metadata_adapter,
     pydantic_validation_errs_adapter,
     linkml_validation_errs_adapter,
+    PydanticValidationErrsType,
 )
 
 logger = logging.getLogger(__name__)
