@@ -8,10 +8,27 @@ from dandischema.models import Asset, Dandiset, PublishedAsset, PublishedDandise
 from pydantic import TypeAdapter, ValidationError
 from pydantic2linkml.cli.tools import LogLevel
 
+from dandisets_linkml_status_tools.models import (
+    AssetValidationReport,
+    DandisetValidationReport,
+)
+from dandisets_linkml_status_tools.tools import (
+    compile_dandiset_linkml_translation_report,
+    iter_direct_subdirs,
+    output_reports,
+    pydantic_validate,
+    write_reports,
+)
+
 if TYPE_CHECKING:
     from dandisets_linkml_status_tools.models import DandisetLinkmlTranslationReport
 
 logger = logging.getLogger(__name__)
+
+# Pydantic type adapters
+DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
+ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
+
 app = typer.Typer()
 
 
@@ -92,18 +109,6 @@ def linkml_translation(
 
 
 # === temporary setup ===
-from dandisets_linkml_status_tools.models import (
-    AssetValidationReport,
-    DandisetValidationReport,
-)
-from dandisets_linkml_status_tools.tools import (
-    compile_dandiset_linkml_translation_report,
-    iter_direct_subdirs,
-    output_reports,
-    pydantic_validate,
-    write_reports,
-)
-
 # Directory containing dandiset manifests
 MANIFEST_DIR = Path("/Users/isaac/Downloads/mnt/backup/dandi/dandiset-manifests-s3cmd")
 
@@ -119,10 +124,6 @@ DANDISET_PYDANTIC_REPORTS_FILE_PATH = (
 ASSET_PYDANTIC_REPORTS_FILE_PATH = (
     REPORTS_DIR_PATH / "asset_pydantic_validation_reports.json"
 )
-
-# Pydantic type adapters
-DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
-ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
 
 
 @app.command()
