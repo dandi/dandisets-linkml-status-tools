@@ -30,9 +30,6 @@ from dandisets_linkml_status_tools.models import (
 
 logger = logging.getLogger(__name__)
 
-# The names of the collection of modules in which the DANDI models are defined
-DANDI_MODULE_NAMES = ["dandischema.models"]
-
 
 def output_reports(
     reports: list[DandisetLinkmlTranslationReport], output_path: Path

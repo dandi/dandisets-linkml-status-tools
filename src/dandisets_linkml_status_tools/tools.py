@@ -19,7 +19,6 @@ from linkml_runtime.linkml_model import SchemaDefinition
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 
-from .cli.tools import DANDI_MODULE_NAMES
 from .models import (
     ValidationReport,
     DandisetLinkmlTranslationReport,
@@ -29,6 +28,9 @@ from .models import (
 )
 
 logger = logging.getLogger(__name__)
+
+# The names of the collection of modules in which the DANDI models are defined
+DANDI_MODULE_NAMES = ["dandischema.models"]
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
