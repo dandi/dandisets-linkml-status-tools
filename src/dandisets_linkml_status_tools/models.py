@@ -1,14 +1,12 @@
-from datetime import datetime
-from typing import Any, NamedTuple, Annotated
 from collections.abc import Sequence
+from datetime import datetime
+from typing import Annotated, Any, NamedTuple
 
 from dandi.dandiapi import VersionStatus
-
-from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
-
 from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
-from pydantic import BaseModel, Json, AfterValidator, PlainSerializer, TypeAdapter
+from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapter
+from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
 DandisetMetadataType = dict[str, Any]
 
