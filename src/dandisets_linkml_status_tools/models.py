@@ -120,14 +120,20 @@ pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
 
-class ValidationReport(BaseModel):
+class DandiBaseReport(BaseModel):
     """
-    A report of validation results of a data instance against a Pydantic model and
-    the JSON schema generated from the model.
+    A base class for any report related to a DANDI dataset
     """
 
     dandiset_identifier: str
     dandiset_version: str  # The version of the dandiset being validated
+
+
+class ValidationReport(DandiBaseReport):
+    """
+    A report of validation results of a data instance against a Pydantic model and
+    the JSON schema generated from the model.
+    """
 
     # Error encountered in validation against a Pydantic model
     pydantic_validation_errs: Json[PydanticValidationErrsType] = []
@@ -175,15 +181,12 @@ class JsonschemaValidationErrorType(NamedTuple):
         )
 
 
-class DandisetLinkmlTranslationReport(BaseModel):
+class DandisetLinkmlTranslationReport(DandiBaseReport):
     """
     A report of validation results of a dandiset (metadata) against the
     `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset` Pydantic
     model and the corresponding LinkML schema.
     """
-
-    dandiset_identifier: str
-    dandiset_version: str  # The version of the dandiset being validated
 
     @property
     def dandiset_schema_version(self) -> str:
