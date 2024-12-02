@@ -7,7 +7,7 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, NamedTuple, Iterable
+from typing import Any, NamedTuple
 
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import PublishedDandiset, Dandiset
