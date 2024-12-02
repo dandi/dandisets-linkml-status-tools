@@ -23,7 +23,7 @@ pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
 
-class DandisetValidationReport(BaseModel):
+class DandisetLinkmlTranslationReport(BaseModel):
     """
     A report of validation results of a dandiset (metadata) against the
     `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset` Pydantic

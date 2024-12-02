@@ -30,7 +30,7 @@ except ImportError:
     from yaml import SafeDumper  # type: ignore
 
 from dandisets_linkml_status_tools.cli.models import (
-    DandisetValidationReport,
+    DandisetLinkmlTranslationReport,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     dandiset_metadata_adapter,
@@ -110,7 +110,7 @@ class DandiModelLinkmlValidator:
 
 def compile_dandiset_validation_report(
     dandiset: RemoteDandiset, *, is_dandiset_published: bool
-) -> DandisetValidationReport:
+) -> DandisetLinkmlTranslationReport:
     """
     Compile a validation report of the metadata of a given dandiset
 
@@ -184,7 +184,7 @@ def compile_dandiset_validation_report(
         )
 
     # noinspection PyTypeChecker
-    return DandisetValidationReport(
+    return DandisetLinkmlTranslationReport(
         dandiset_identifier=dandiset_id,
         dandiset_version=dandiset_version,
         dandiset_version_status=dandiset_version_status,
@@ -195,7 +195,9 @@ def compile_dandiset_validation_report(
     )
 
 
-def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
+def output_reports(
+    reports: list[DandisetLinkmlTranslationReport], output_path: Path
+) -> None:
     """
     Output the given list of dandiset validation reports, a summary of the reports
     , as a `summary.md`, and the schema used in the LinkML validations,

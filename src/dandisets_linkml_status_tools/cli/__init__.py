@@ -14,7 +14,7 @@ from dandisets_linkml_status_tools.cli.tools import (
 )
 
 if TYPE_CHECKING:
-    from dandisets_linkml_status_tools.cli.models import DandisetValidationReport
+    from dandisets_linkml_status_tools.cli.models import DandisetLinkmlTranslationReport
 
 logger = logging.getLogger(__name__)
 app = typer.Typer()
@@ -47,7 +47,7 @@ def linkml_translation(
 
     output_path = Path(dandi_instance + "-reports")
 
-    validation_reports: list[DandisetValidationReport] = []
+    validation_reports: list[DandisetLinkmlTranslationReport] = []
 
     with DandiAPIClient.for_dandi_instance(dandi_instance) as client:
         # Generate validation reports for danidsets
