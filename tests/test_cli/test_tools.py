@@ -3,7 +3,7 @@ from jsonschema.exceptions import ValidationError
 from linkml.validator.report import Severity, ValidationResult
 
 from dandisets_linkml_status_tools.models import JsonschemaValidationErrorType
-from dandisets_linkml_status_tools.cli.tools import get_linkml_err_counts
+from dandisets_linkml_status_tools.tools import get_linkml_err_counts
 
 
 @pytest.mark.parametrize(
