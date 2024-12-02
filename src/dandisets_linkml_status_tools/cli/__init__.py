@@ -94,9 +94,7 @@ def linkml_translation(
 # === temporary setup ===
 from dandisets_linkml_status_tools.models import (
     AssetValidationReport,
-)
-from dandisets_linkml_status_tools.models import (
-    DandisetValidationReport as DandisetValidationReport_,
+    DandisetValidationReport,
 )
 from dandisets_linkml_status_tools.tools import (
     compile_dandiset_linkml_translation_report,
@@ -123,7 +121,7 @@ ASSET_PYDANTIC_REPORTS_FILE_PATH = (
 )
 
 # Pydantic type adapters
-DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport_])
+DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
 ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
 
 
@@ -142,7 +140,7 @@ def manifests(
 
     def append_dandiset_validation_report() -> None:
         """
-        Append a `DandisetValidationReport_` object to `dandiset_validation_reports`
+        Append a `DandisetValidationReport` object to `dandiset_validation_reports`
         if the current dandiset version directory contains a dandiset metadata file.
         """
         dandiset_metadata_file_path = version_dir / DANDISET_FILE_NAME
@@ -162,7 +160,7 @@ def manifests(
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
         # noinspection PyTypeChecker
         dandiset_validation_reports.append(
-            DandisetValidationReport_(
+            DandisetValidationReport(
                 dandiset_identifier=dandiset_identifier,
                 dandiset_version=dandiset_version,
                 pydantic_validation_errs=pydantic_validation_errs,
@@ -218,7 +216,7 @@ def manifests(
                 )
             )
 
-    dandiset_validation_reports: list[DandisetValidationReport_] = []
+    dandiset_validation_reports: list[DandisetValidationReport] = []
     asset_validation_reports: list[AssetValidationReport] = []
     for n, dandiset_dir in enumerate(
         sorted(iter_direct_subdirs(MANIFEST_DIR), key=lambda p: p.name)
