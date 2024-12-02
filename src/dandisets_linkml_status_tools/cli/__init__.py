@@ -65,7 +65,7 @@ def linkml_translation(
                 dandiset_latest = dandiset.for_version(most_recent_published_version)
 
                 # Handle the latest published version
-                report_on_latest = compile_dandiset_validation_report(
+                report_on_latest = compile_dandiset_linkml_translation_report(
                     dandiset_latest, is_dandiset_published=True
                 )
                 validation_reports.append(report_on_latest)
@@ -75,7 +75,7 @@ def linkml_translation(
                 dandiset_draft = dandiset
 
             # Handle the draft version
-            report_on_draft = compile_dandiset_validation_report(
+            report_on_draft = compile_dandiset_linkml_translation_report(
                 dandiset_draft, is_dandiset_published=False
             )
             validation_reports.append(report_on_draft)
@@ -106,7 +106,7 @@ from dandisets_linkml_status_tools.tools import (
     iter_direct_subdirs,
     pydantic_validate,
     write_reports,
-    compile_dandiset_validation_report,
+    compile_dandiset_linkml_translation_report,
 )
 
 # Directory containing dandiset manifests

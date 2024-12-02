@@ -132,16 +132,16 @@ class DandiModelLinkmlValidator:
         return validation_report.results
 
 
-def compile_dandiset_validation_report(
+def compile_dandiset_linkml_translation_report(
     dandiset: RemoteDandiset, *, is_dandiset_published: bool
 ) -> DandisetLinkmlTranslationReport:
     """
-    Compile a validation report of the metadata of a given dandiset
+    Compile a LinkML translation report against the metadata of a given dandiset
 
     :param dandiset: The given dandiset
     :param is_dandiset_published: A boolean indicating whether the given dandiset
         is published
-    :return: The compiled validation report
+    :return: The compiled report
 
     :raises KeyError: If the metadata of the given dandiset does not contain
         a `"@context"` field
