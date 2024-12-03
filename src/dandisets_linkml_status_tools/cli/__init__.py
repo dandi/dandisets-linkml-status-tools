@@ -51,6 +51,9 @@ def linkml_translation(
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
 ):
+    """
+    Generate reports of DANDI model translation from Pydantic to LinkML with a summary
+    """
     # Set log level of the CLI
     logging.basicConfig(
         format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
@@ -132,6 +135,9 @@ def manifests(
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
 ):
+    """
+    Generate reports of validations of metadata in dandiset manifests
+    """
     # Set log level of the CLI
     logging.basicConfig(
         format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
