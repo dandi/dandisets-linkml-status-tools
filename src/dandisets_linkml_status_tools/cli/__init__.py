@@ -32,6 +32,22 @@ ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
 app = typer.Typer()
 
 
+@app.callback()
+def main(
+    log_level: Annotated[
+        LogLevel, typer.Option("--log-level", "-l")
+    ] = LogLevel.WARNING,
+):
+    """
+    Commands for generating various reports on DANDI metadata
+    """
+    # Set log level of the CLI
+    logging.basicConfig(
+        format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
+        level=getattr(logging, log_level),
+    )
+
+
 @app.command()
 def linkml_translation(
     *,
@@ -47,19 +63,10 @@ def linkml_translation(
             "downloaded",
         ),
     ] = "dandi",
-    log_level: Annotated[
-        LogLevel, typer.Option("--log-level", "-l")
-    ] = LogLevel.WARNING,
 ):
     """
     Generate reports of DANDI model translation from Pydantic to LinkML with a summary
     """
-    # Set log level of the CLI
-    logging.basicConfig(
-        format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
-        level=getattr(logging, log_level),
-    )
-
     output_path = Path(dandi_instance + "-reports")
 
     validation_reports: list[DandisetLinkmlTranslationReport] = []
@@ -131,18 +138,10 @@ def manifests(
     manifest_path: Annotated[
         Path, typer.Argument(help="Path of the directory containing dandiset manifests")
     ],
-    log_level: Annotated[
-        LogLevel, typer.Option("--log-level", "-l")
-    ] = LogLevel.WARNING,
 ):
     """
     Generate reports of validations of metadata in dandiset manifests
     """
-    # Set log level of the CLI
-    logging.basicConfig(
-        format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
-        level=getattr(logging, log_level),
-    )
 
     def append_dandiset_validation_report() -> None:
         """
