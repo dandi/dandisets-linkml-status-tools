@@ -108,10 +108,6 @@ def linkml_translation(
     logger.info("Success!")
 
 
-# === temporary setup ===
-# Directory containing dandiset manifests
-MANIFEST_DIR = Path("/Users/isaac/Downloads/mnt/backup/dandi/dandiset-manifests-s3cmd")
-
 # metadata file names
 DANDISET_FILE_NAME = "dandiset.jsonld"  # File with dandiset metadata
 ASSETS_FILE_NAME = "assets.jsonld"  # File with assets metadata
@@ -129,6 +125,9 @@ ASSET_PYDANTIC_REPORTS_FILE_PATH = (
 @app.command()
 def manifests(
     *,
+    manifest_path: Annotated[
+        Path, typer.Argument(help="Path of the directory containing dandiset manifests")
+    ],
     log_level: Annotated[
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
@@ -220,7 +219,7 @@ def manifests(
     dandiset_validation_reports: list[DandisetValidationReport] = []
     asset_validation_reports: list[AssetValidationReport] = []
     for n, dandiset_dir in enumerate(
-        sorted(iter_direct_subdirs(MANIFEST_DIR), key=lambda p: p.name)
+        sorted(iter_direct_subdirs(manifest_path), key=lambda p: p.name)
     ):
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
