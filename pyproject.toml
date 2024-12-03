@@ -36,7 +36,7 @@ Issues = "https://github.com/dandi/dandisets-linkml-status-tools/issues"
 Source = "https://github.com/dandi/dandisets-linkml-status-tools"
 
 [project.scripts]
-dandisets-linkml-status = "dandisets_linkml_status_tools.cli:app"
+dandisets-report-tools = "dandisets_linkml_status_tools.cli:app"
 
 [tool.hatch.version]
 path = "src/dandisets_linkml_status_tools/__about__.py"

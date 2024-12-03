@@ -1,12 +1,27 @@
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Any, NamedTuple
 
 from dandi.dandiapi import VersionStatus
-from jsonschema.exceptions import ValidationError
+from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
 from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapter
+from pydantic2linkml.cli.tools import LogLevel
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
+
+DandisetMetadataType = dict[str, Any]
+
+PydanticValidationErrsType = list[dict[str, Any]]
+
+
+class Config(TypedDict):
+    """
+    A dict for storing configuration settings for this app
+    """
+
+    output_dir_path: Path
+    log_level: LogLevel
 
 
 class JsonValidationErrorView(BaseModel):
@@ -104,28 +119,85 @@ def polish_validation_results(
     return polished_results
 
 
-DandisetMetadataType = dict[str, Any]
-PydanticValidationErrsType = list[dict[str, Any]]
 LinkmlValidationErrsType = Annotated[
     list[ValidationResult],
     AfterValidator(check_source_jsonschema_validation_error),
     PlainSerializer(polish_validation_results),
 ]
 
+
 dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
 
-class DandisetValidationReport(BaseModel):
+class DandiBaseReport(BaseModel):
+    """
+    A base class for any report related to a DANDI dataset
+    """
+
+    dandiset_identifier: str
+    dandiset_version: str  # The version of the dandiset being validated
+
+
+class ValidationReport(DandiBaseReport):
+    """
+    A report of validation results of a data instance against a Pydantic model and
+    the JSON schema generated from the model.
+    """
+
+    # Error encountered in validation against a Pydantic model
+    pydantic_validation_errs: Json[PydanticValidationErrsType] = []
+
+
+class DandisetValidationReport(ValidationReport):
+    """
+    A report of validation results of a dandiset metadata instance against the
+    `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset`
+    Pydantic model and the corresponding JSON schema.
+    """
+
+
+class AssetValidationReport(ValidationReport):
+    """
+    A report of validation results of an asset metadata instance against the
+    `dandischema.models.Asset` or `dandischema.models.PublishedAsset`
+    Pydantic model and the corresponding JSON schema.
+    """
+
+    asset_id: str | None
+    asset_path: str | None
+
+
+class JsonschemaValidationErrorType(NamedTuple):
+    """
+    A named tuple for representing types of `jsonschema.exceptions.ValidationError`
+    objects.
+
+    The type of a `jsonschema.exceptions.ValidationError` is decided by the value of its
+    `validator` field and the value of its `validator_value` field. The values
+    of these fields are bundled in an instance of this named tuple to represent a type
+    of `jsonschema.exceptions.ValidationError` objects.
+    """
+
+    validator: str
+    validator_value: Any
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, JsonschemaValidationErrorType)
+            and self.validator == other.validator
+            and type(self.validator_value) is type(other.validator_value)  # noqa E721
+            and self.validator_value == other.validator_value
+        )
+
+
+class DandisetLinkmlTranslationReport(DandiBaseReport):
     """
     A report of validation results of a dandiset (metadata) against the
     `dandischema.models.Dandiset` or `dandischema.models.PublishedDandiset` Pydantic
     model and the corresponding LinkML schema.
     """
-
-    dandiset_identifier: str
-    dandiset_version: str  # The version of the dandiset being validated
 
     @property
     def dandiset_schema_version(self) -> str:
@@ -161,26 +233,3 @@ class DandisetValidationReport(BaseModel):
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
     linkml_validation_errs: LinkmlValidationErrsType = []
-
-
-class JsonschemaValidationErrorType(NamedTuple):
-    """
-    A named tuple for representing types of `jsonschema.exceptions.ValidationError`
-    objects.
-
-    The type of a `jsonschema.exceptions.ValidationError` is decided by the value of its
-    `validator` field and the value of its `validator_value` field. The values
-    of these fields are bundled in an instance of this named tuple to represent a type
-    of `jsonschema.exceptions.ValidationError` objects.
-    """
-
-    validator: str
-    validator_value: Any
-
-    def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, JsonschemaValidationErrorType)
-            and self.validator == other.validator
-            and type(self.validator_value) is type(other.validator_value)  # noqa E721
-            and self.validator_value == other.validator_value
-        )

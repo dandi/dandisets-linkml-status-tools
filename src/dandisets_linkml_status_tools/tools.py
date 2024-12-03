@@ -20,22 +20,23 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
+from .models import (
+    DandisetLinkmlTranslationReport,
+    JsonschemaValidationErrorType,
+    LinkmlValidationErrsType,
+    PydanticValidationErrsType,
+    ValidationReport,
+    dandiset_metadata_adapter,
+    linkml_validation_errs_adapter,
+    pydantic_validation_errs_adapter,
+)
+
 try:
     # Import the C-based YAML dumper if available
     from yaml import CSafeDumper as SafeDumper
 except ImportError:
     # Otherwise, import the Python-based YAML dumper
     from yaml import SafeDumper  # type: ignore
-
-from dandisets_linkml_status_tools.cli.models import (
-    DandisetValidationReport,
-    JsonschemaValidationErrorType,
-    LinkmlValidationErrsType,
-    PydanticValidationErrsType,
-    dandiset_metadata_adapter,
-    linkml_validation_errs_adapter,
-    pydantic_validation_errs_adapter,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,19 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 
 # A callable that sorts a given iterable of strings in a case-insensitive manner
 isorted = partial(sorted, key=str.casefold)
+
+
+def iter_direct_subdirs(path: Path) -> Iterable[Path]:
+    """
+    Get an iterable of the direct subdirectories of a given path.
+
+    :param path: The given path
+    :return: The iterable of the direct subdirectories of the given path
+    :raises: ValueError if the given path is not a directory
+    """
+    if not path.is_dir():
+        raise ValueError(f"The given path is not a directory: {path}")
+    return (p for p in path.iterdir() if p.is_dir())
 
 
 def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
@@ -68,6 +82,19 @@ def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str
         return e.json()
 
     return "[]"
+
+
+def write_reports(
+    file_path: Path, reports: list[ValidationReport], type_adapter: TypeAdapter
+) -> None:
+    """
+    Write a given list of validation reports to a specified file
+
+    :param file_path: The path specifying the file to write the reports to
+    :param reports: The list of validation reports to write
+    :param type_adapter: The type adapter to use for serializing the list of reports
+    """
+    file_path.write_bytes(type_adapter.dump_json(reports, indent=2))
 
 
 class DandiModelLinkmlValidator:
@@ -130,16 +157,16 @@ class DandiModelLinkmlValidator:
         return validation_report.results
 
 
-def compile_dandiset_validation_report(
+def compile_dandiset_linkml_translation_report(
     dandiset: RemoteDandiset, *, is_dandiset_published: bool
-) -> DandisetValidationReport:
+) -> DandisetLinkmlTranslationReport:
     """
-    Compile a validation report of the metadata of a given dandiset
+    Compile a LinkML translation report against the metadata of a given dandiset
 
     :param dandiset: The given dandiset
     :param is_dandiset_published: A boolean indicating whether the given dandiset
         is published
-    :return: The compiled validation report
+    :return: The compiled report
 
     :raises KeyError: If the metadata of the given dandiset does not contain
         a `"@context"` field
@@ -206,7 +233,7 @@ def compile_dandiset_validation_report(
         )
 
     # noinspection PyTypeChecker
-    return DandisetValidationReport(
+    return DandisetLinkmlTranslationReport(
         dandiset_identifier=dandiset_id,
         dandiset_version=dandiset_version,
         dandiset_version_status=dandiset_version_status,
@@ -217,7 +244,103 @@ def compile_dandiset_validation_report(
     )
 
 
-def output_reports(reports: list[DandisetValidationReport], output_path: Path) -> None:
+def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
+    """
+    Get a `Counter` object that counts the Pydantic validation errors by type
+
+    :param errs: The list of Pydantic validation errors to be counted
+    :return: The `Counter` object
+    """
+    return Counter(isorted(e["type"] for e in errs))
+
+
+class _JsonschemaValidationErrorCounts(NamedTuple):
+    """
+    A record of the counts of individual types of JSON schema validation error
+    """
+
+    types: list[JsonschemaValidationErrorType]
+    """
+    The unique types of JSON schema validation errors
+    """
+
+    counts: list[int]
+    """
+    The corresponding counts, by index, of the types of JSON schema validation errors
+    """
+
+
+def get_linkml_err_counts(
+    errs: LinkmlValidationErrsType,
+) -> list[tuple[JsonschemaValidationErrorType, int]]:
+    """
+    Counts given LinkML validation errors by type
+
+    :param errs: A list of LinkML validation errors to be counted
+    :return: A list of tuples where each tuple contains a
+        `JsonschemaValidationErrorType` object and the count of the errors of the type
+        represented by that object
+    """
+
+    def count_err(e_: ValidationResult) -> None:
+        validator = e_.source.validator
+        err_type = JsonschemaValidationErrorType(validator, e_.source.validator_value)
+
+        if validator in counter:
+            for i, t in enumerate(counter[validator].types):
+                if t == err_type:
+                    counter[validator].counts[i] += 1
+                    break
+            else:
+                counter[validator].types.append(err_type)
+                counter[validator].counts.append(1)
+        else:
+            counter[validator] = _JsonschemaValidationErrorCounts(
+                types=[err_type], counts=[1]
+            )
+
+    def compile_counts() -> list[tuple[JsonschemaValidationErrorType, int]]:
+        def sorting_key(
+            c: tuple[JsonschemaValidationErrorType, int],
+        ) -> tuple[str, int]:
+            return c[0].validator, -c[1]
+
+        return sorted(
+            chain.from_iterable(zip(t, c, strict=False) for t, c in counter.values()),
+            key=sorting_key,
+        )
+
+    # A dictionary that keeps the counts of individual types of JSON schema validation
+    # errors. The keys of the dictionary are the `validator` of
+    # the `JsonschemaValidationErrorType` objects, and the values are
+    # the `_JsonschemaValidationErrorCounts` that tallies the errors represented by
+    # `JsonschemaValidationErrorType` objects with the same `validator` value.
+    counter: dict[str, _JsonschemaValidationErrorCounts] = {}
+
+    for e in errs:
+        count_err(e)
+
+    return compile_counts()
+
+
+def output_dandi_linkml_schema(output_path: Path) -> None:
+    """
+    Output the DANDI LinkML schema, in YAML, to a file
+
+    :param output_path: The path specifying the location of the file
+    """
+    # Output the LinkML schema used in the validations
+    dandi_linkml_schema_yml = yaml_dumper.dumps(
+        DandiModelLinkmlValidator.get_dandi_linkml_schema()
+    )
+    with output_path.open("w") as f:
+        f.write(dandi_linkml_schema_yml)
+    logger.info("Output the DANDI LinkML schema to %s", output_path)
+
+
+def output_reports(
+    reports: list[DandisetLinkmlTranslationReport], output_path: Path
+) -> None:
     """
     Output the given list of dandiset validation reports, a summary of the reports
     , as a `summary.md`, and the schema used in the LinkML validations,
@@ -252,7 +375,7 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
         logger.info("Deleted existing report output directory: %s", output_path)
 
     # Recreate the report output directory
-    output_path.mkdir()
+    output_path.mkdir(parents=True)
     logger.info("Recreated report output directory: %s", output_path)
 
     output_dandi_linkml_schema(output_path / dandi_linkml_schema_file_name)
@@ -341,21 +464,6 @@ def output_reports(reports: list[DandisetValidationReport], output_path: Path) -
     logger.info("Output of dandiset validation reports completed")
 
 
-def output_dandi_linkml_schema(output_path: Path) -> None:
-    """
-    Output the DANDI LinkML schema, in YAML, to a file
-
-    :param output_path: The path specifying the location of the file
-    """
-    # Output the LinkML schema used in the validations
-    dandi_linkml_schema_yml = yaml_dumper.dumps(
-        DandiModelLinkmlValidator.get_dandi_linkml_schema()
-    )
-    with output_path.open("w") as f:
-        f.write(dandi_linkml_schema_yml)
-    logger.info("Output the DANDI LinkML schema to %s", output_path)
-
-
 def _write_data(
     data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
 ) -> None:
@@ -389,82 +497,3 @@ def _gen_row(cell_str_values: Iterable[str]) -> str:
     Note: The given iterable of cell string values are `str` values
     """
     return f'|{"|".join(cell_str_values)}|\n'
-
-
-def get_pydantic_err_counts(errs: PydanticValidationErrsType) -> Counter[str]:
-    """
-    Get a `Counter` object that counts the Pydantic validation errors by type
-
-    :param errs: The list of Pydantic validation errors to be counted
-    :return: The `Counter` object
-    """
-    return Counter(isorted(e["type"] for e in errs))
-
-
-class _JsonschemaValidationErrorCounts(NamedTuple):
-    """
-    A record of the counts of individual types of JSON schema validation error
-    """
-
-    types: list[JsonschemaValidationErrorType]
-    """
-    The unique types of JSON schema validation errors
-    """
-
-    counts: list[int]
-    """
-    The corresponding counts, by index, of the types of JSON schema validation errors
-    """
-
-
-def get_linkml_err_counts(
-    errs: LinkmlValidationErrsType,
-) -> list[tuple[JsonschemaValidationErrorType, int]]:
-    """
-    Counts given LinkML validation errors by type
-
-    :param errs: A list of LinkML validation errors to be counted
-    :return: A list of tuples where each tuple contains a
-        `JsonschemaValidationErrorType` object and the count of the errors of the type
-        represented by that object
-    """
-
-    def count_err(e_: ValidationResult) -> None:
-        validator = e_.source.validator
-        err_type = JsonschemaValidationErrorType(validator, e_.source.validator_value)
-
-        if validator in counter:
-            for i, t in enumerate(counter[validator].types):
-                if t == err_type:
-                    counter[validator].counts[i] += 1
-                    break
-            else:
-                counter[validator].types.append(err_type)
-                counter[validator].counts.append(1)
-        else:
-            counter[validator] = _JsonschemaValidationErrorCounts(
-                types=[err_type], counts=[1]
-            )
-
-    def compile_counts() -> list[tuple[JsonschemaValidationErrorType, int]]:
-        def sorting_key(
-            c: tuple[JsonschemaValidationErrorType, int],
-        ) -> tuple[str, int]:
-            return c[0].validator, -c[1]
-
-        return sorted(
-            chain.from_iterable(zip(t, c, strict=False) for t, c in counter.values()),
-            key=sorting_key,
-        )
-
-    # A dictionary that keeps the counts of individual types of JSON schema validation
-    # errors. The keys of the dictionary are the `validator` of
-    # the `JsonschemaValidationErrorType` objects, and the values are
-    # the `_JsonschemaValidationErrorCounts` that tallies the errors represented by
-    # `JsonschemaValidationErrorType` objects with the same `validator` value.
-    counter: dict[str, _JsonschemaValidationErrorCounts] = {}
-
-    for e in errs:
-        count_err(e)
-
-    return compile_counts()
