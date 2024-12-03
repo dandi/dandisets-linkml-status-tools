@@ -79,7 +79,7 @@ def linkml_translation(
     """
     Generate reports of DANDI model translation from Pydantic to LinkML with a summary
     """
-    output_path = Path(dandi_instance + "-reports")
+    output_path = config["output_dir_path"] / "linkml_translation" / dandi_instance
 
     validation_reports: list[DandisetLinkmlTranslationReport] = []
 
@@ -134,14 +134,10 @@ def linkml_translation(
 DANDISET_FILE_NAME = "dandiset.jsonld"  # File with dandiset metadata
 ASSETS_FILE_NAME = "assets.jsonld"  # File with assets metadata
 
-# Directory and file paths for reports
-REPORTS_DIR_PATH = Path("reports/validation")
-DANDISET_PYDANTIC_REPORTS_FILE_PATH = (
-    REPORTS_DIR_PATH / "dandiset_pydantic_validation_reports.json"
+DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = (
+    "dandiset_pydantic_validation_reports.json"
 )
-ASSET_PYDANTIC_REPORTS_FILE_PATH = (
-    REPORTS_DIR_PATH / "asset_pydantic_validation_reports.json"
-)
+ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "asset_pydantic_validation_reports.json"
 
 
 @app.command()
@@ -154,6 +150,15 @@ def manifests(
     """
     Generate reports of validations of metadata in dandiset manifests
     """
+
+    # Directory and file paths for reports
+    reports_dir_path = config["output_dir_path"] / "manifests"
+    dandiset_pydantic_validation_reports_file_path = (
+        reports_dir_path / DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+    )
+    asset_pydantic_validation_reports_file_path = (
+        reports_dir_path / ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+    )
 
     def append_dandiset_validation_report() -> None:
         """
@@ -251,18 +256,18 @@ def manifests(
             extend_asset_validation_reports()
 
     # Ensure directory for reports exists
-    REPORTS_DIR_PATH.mkdir(parents=True, exist_ok=True)
+    reports_dir_path.mkdir(parents=True, exist_ok=True)
 
     # Write the dandiset Pydantic validation reports to a file
     write_reports(
-        DANDISET_PYDANTIC_REPORTS_FILE_PATH,
+        dandiset_pydantic_validation_reports_file_path,
         dandiset_validation_reports,
         DANDISET_PYDANTIC_REPORT_LIST_ADAPTER,
     )
 
     # Write the asset Pydantic validation reports to a file
     write_reports(
-        ASSET_PYDANTIC_REPORTS_FILE_PATH,
+        asset_pydantic_validation_reports_file_path,
         asset_validation_reports,
         ASSET_PYDANTIC_REPORT_LIST_ADAPTER,
     )
