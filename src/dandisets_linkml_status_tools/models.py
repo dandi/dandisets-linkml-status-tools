@@ -1,16 +1,27 @@
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Any, NamedTuple
 
 from dandi.dandiapi import VersionStatus
 from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
 from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapter
+from pydantic2linkml.cli.tools import LogLevel
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
 DandisetMetadataType = dict[str, Any]
 
 PydanticValidationErrsType = list[dict[str, Any]]
+
+
+class Config(TypedDict):
+    """
+    A dict for storing configuration settings for this app
+    """
+
+    output_dir_path: Path
+    log_level: LogLevel
 
 
 class JsonValidationErrorView(BaseModel):

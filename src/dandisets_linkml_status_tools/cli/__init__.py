@@ -10,6 +10,7 @@ from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status_tools.models import (
     AssetValidationReport,
+    Config,
     DandisetValidationReport,
 )
 from dandisets_linkml_status_tools.tools import (
@@ -29,11 +30,18 @@ logger = logging.getLogger(__name__)
 DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
 ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
 
+# Configuration settings for this app (to be initialized in the main function)
+config: Config
+
 app = typer.Typer()
 
 
 @app.callback()
 def main(
+    output_dir_path: Annotated[
+        Path,
+        typer.Option("--output-dir-path", "-o", help="Path of the output directory"),
+    ] = Path("reports"),
     log_level: Annotated[
         LogLevel, typer.Option("--log-level", "-l")
     ] = LogLevel.WARNING,
@@ -41,6 +49,10 @@ def main(
     """
     Commands for generating various reports on DANDI metadata
     """
+    # Store configuration settings for this app
+    global config
+    config = Config(output_dir_path=output_dir_path, log_level=log_level)
+
     # Set log level of the CLI
     logging.basicConfig(
         format="[%(asctime)s]%(levelname)s:%(name)s:%(message)s",
