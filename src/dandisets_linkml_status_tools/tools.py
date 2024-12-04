@@ -375,9 +375,9 @@ def output_reports(
         rmtree(output_path)
         logger.info("Deleted existing report output directory: %s", output_path)
 
-    # Recreate the report output directory
+    # Create the report output directory
     output_path.mkdir(parents=True)
-    logger.info("Recreated report output directory: %s", output_path)
+    logger.info("Created report output directory: %s", output_path)
 
     output_dandi_linkml_schema(output_path / dandi_linkml_schema_file_name)
 
