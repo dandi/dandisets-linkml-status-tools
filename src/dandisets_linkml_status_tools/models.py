@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated, Any, NamedTuple
+from typing import Annotated, Any, NamedTuple, TypeAlias
 
 from dandi.dandiapi import VersionStatus
 from jsonschema import ValidationError
@@ -10,9 +10,9 @@ from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapt
 from pydantic2linkml.cli.tools import LogLevel
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
-DandisetMetadataType = dict[str, Any]
+DandisetMetadataType: TypeAlias = dict[str, Any]
 
-PydanticValidationErrsType = list[dict[str, Any]]
+PydanticValidationErrsType: TypeAlias = list[dict[str, Any]]
 
 
 class Config(TypedDict):
@@ -119,7 +119,7 @@ def polish_validation_results(
     return polished_results
 
 
-LinkmlValidationErrsType = Annotated[
+LinkmlValidationErrsType: TypeAlias = Annotated[
     list[ValidationResult],
     AfterValidator(check_source_jsonschema_validation_error),
     PlainSerializer(polish_validation_results),
