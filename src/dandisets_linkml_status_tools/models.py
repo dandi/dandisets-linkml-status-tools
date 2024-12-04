@@ -232,6 +232,6 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 
 
 # Type adapters for various types (this section should be at the end of this file)
-dandi_metadata_adapter = TypeAdapter(DandiMetadata)
-pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
-linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
+DANDI_METADATA_ADAPTER = TypeAdapter(DandiMetadata)
+PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
+LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)

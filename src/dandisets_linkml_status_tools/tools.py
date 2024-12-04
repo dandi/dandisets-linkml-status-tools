@@ -21,15 +21,15 @@ from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
 from .models import (
+    DANDI_METADATA_ADAPTER,
+    LINKML_VALIDATION_ERRS_ADAPTER,
+    PYDANTIC_VALIDATION_ERRS_ADAPTER,
     DandiMetadata,
     DandisetLinkmlTranslationReport,
     JsonschemaValidationErrorType,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     ValidationReport,
-    dandi_metadata_adapter,
-    linkml_validation_errs_adapter,
-    pydantic_validation_errs_adapter,
 )
 
 try:
@@ -402,17 +402,17 @@ def output_reports(
             report_dir.mkdir(parents=True)
 
             _write_data(
-                r.dandiset_metadata, dandi_metadata_adapter, "metadata", report_dir
+                r.dandiset_metadata, DANDI_METADATA_ADAPTER, "metadata", report_dir
             )
             _write_data(
                 r.pydantic_validation_errs,
-                pydantic_validation_errs_adapter,
+                PYDANTIC_VALIDATION_ERRS_ADAPTER,
                 "pydantic_validation_errs",
                 report_dir,
             )
             _write_data(
                 r.linkml_validation_errs,
-                linkml_validation_errs_adapter,
+                LINKML_VALIDATION_ERRS_ADAPTER,
                 "linkml_validation_errs",
                 report_dir,
             )
