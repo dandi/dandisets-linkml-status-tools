@@ -369,15 +369,8 @@ def output_reports(
         "schema_version",
     ]
 
-    # Remove the existing report output directory if it exists
-    if output_path.exists():
-        logger.info("Found existing report output directory: %s", output_path)
-        rmtree(output_path)
-        logger.info("Deleted existing report output directory: %s", output_path)
-
-    # Recreate the report output directory
-    output_path.mkdir(parents=True)
-    logger.info("Recreated report output directory: %s", output_path)
+    logger.info("Creating report directory: %s", output_path)
+    create_or_replace_dir(output_path)
 
     output_dandi_linkml_schema(output_path / dandi_linkml_schema_file_name)
 
@@ -463,6 +456,27 @@ def output_reports(
             summary_f.write(_gen_row(row_cells))
 
     logger.info("Output of dandiset validation reports completed")
+
+
+def create_or_replace_dir(dir_path: Path):
+    """
+    Create or replace a directory at a given path
+
+    :param dir_path: The path to the directory to be created or replaced. If `dir_path`
+        does not point to any existing object, a new directory will be created at the
+        path. If `dir_path` points to an existing object, this object must be a
+        directory (not a file or a symlink), and it will be removed and replaced with a
+        new directory.
+    """
+    # Remove the existing report output directory if it exists
+    if dir_path.exists():
+        logger.info("Found existing directory: %s", dir_path)
+        rmtree(dir_path)
+        logger.info("Deleted existing directory: %s", dir_path)
+
+    # Create a directory at the given path
+    dir_path.mkdir(parents=True)
+    logger.info("Created directory: %s", dir_path)
 
 
 def _write_data(

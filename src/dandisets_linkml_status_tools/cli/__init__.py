@@ -19,6 +19,7 @@ from dandisets_linkml_status_tools.models import (
 )
 from dandisets_linkml_status_tools.tools import (
     compile_dandiset_linkml_translation_report,
+    create_or_replace_dir,
     iter_direct_subdirs,
     output_reports,
     pydantic_validate,
@@ -255,7 +256,8 @@ def manifests(
             extend_asset_validation_reports()
 
     # Ensure directory for reports exists
-    reports_dir_path.mkdir(parents=True, exist_ok=True)
+    logger.info("Creating report directory: %s", reports_dir_path)
+    create_or_replace_dir(reports_dir_path)
 
     # Write the dandiset Pydantic validation reports to a file
     write_reports(
