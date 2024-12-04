@@ -116,16 +116,6 @@ def linkml_translation(
             )
             validation_reports.append(report_on_draft)
 
-    # Print summary of validation reports
-    print(  # noqa: T201
-        "\n".join(
-            f"dandiset: {r.dandiset_identifier}, "
-            f"linkml: {len(r.linkml_validation_errs)}, "
-            f"pydantic: {len(r.pydantic_validation_errs)}"
-            for r in validation_reports
-        )
-    )
-
     output_reports(validation_reports, output_path)
 
     logger.info("Success!")
