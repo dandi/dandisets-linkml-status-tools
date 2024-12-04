@@ -116,16 +116,6 @@ def linkml_translation(
             )
             validation_reports.append(report_on_draft)
 
-    # Print summary of validation reports
-    print(  # noqa: T201
-        "\n".join(
-            f"dandiset: {r.dandiset_identifier}, "
-            f"linkml: {len(r.linkml_validation_errs)}, "
-            f"pydantic: {len(r.pydantic_validation_errs)}"
-            for r in validation_reports
-        )
-    )
-
     output_reports(validation_reports, output_path)
 
     logger.info("Success!")
@@ -189,6 +179,11 @@ def manifests(
                 pydantic_validation_errs=pydantic_validation_errs,
             )
         )
+        logger.info(
+            "Dandiset %s:%s: Generated and added a dandiset validation report",
+            dandiset_identifier,
+            dandiset_version,
+        )
 
     def extend_asset_validation_reports() -> None:
         """
@@ -237,20 +232,23 @@ def manifests(
                     pydantic_validation_errs=pydantic_validation_errs,
                 )
             )
+        logger.info(
+            "Dandiset %s:%s: Generated and added asset validation reports",
+            dandiset_identifier,
+            dandiset_version,
+        )
 
     dandiset_validation_reports: list[DandisetValidationReport] = []
     asset_validation_reports: list[AssetValidationReport] = []
-    for n, dandiset_dir in enumerate(
-        sorted(iter_direct_subdirs(manifest_path), key=lambda p: p.name)
+    for dandiset_dir in sorted(
+        iter_direct_subdirs(manifest_path), key=lambda p: p.name
     ):
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
-        print(f"{n}:{dandiset_identifier}: {dandiset_dir}")
 
         for version_dir in iter_direct_subdirs(dandiset_dir):
             # === In a dandiset version directory ===
             dandiset_version = version_dir.name
-            print(f"\tdandiset_version: {dandiset_version}")
 
             append_dandiset_validation_report()
             extend_asset_validation_reports()
