@@ -10,7 +10,8 @@ from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapt
 from pydantic2linkml.cli.tools import LogLevel
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
-DandisetMetadataType: TypeAlias = dict[str, Any]
+# Dandi metadata instances are always objects in JSON
+DandiMetadata: TypeAlias = dict[str, Any]
 
 PydanticValidationErrsType: TypeAlias = list[dict[str, Any]]
 
@@ -126,7 +127,7 @@ LinkmlValidationErrsType: TypeAlias = Annotated[
 ]
 
 
-dandiset_metadata_adapter = TypeAdapter(DandisetMetadataType)
+dandiset_metadata_adapter = TypeAdapter(DandiMetadata)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
@@ -226,7 +227,7 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
     dandiset_version_modified: datetime
 
     # The metadata of the dandiset to be validated
-    dandiset_metadata: DandisetMetadataType
+    dandiset_metadata: DandiMetadata
 
     # Error encountered in validation against the Pydantic dandiset metadata model
     pydantic_validation_errs: Json[PydanticValidationErrsType] = []
