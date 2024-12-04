@@ -26,7 +26,7 @@ from .models import (
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     ValidationReport,
-    dandiset_metadata_adapter,
+    dandi_metadata_adapter,
     linkml_validation_errs_adapter,
     pydantic_validation_errs_adapter,
 )
@@ -401,7 +401,7 @@ def output_reports(
             report_dir.mkdir(parents=True)
 
             _write_data(
-                r.dandiset_metadata, dandiset_metadata_adapter, "metadata", report_dir
+                r.dandiset_metadata, dandi_metadata_adapter, "metadata", report_dir
             )
             _write_data(
                 r.pydantic_validation_errs,

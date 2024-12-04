@@ -127,7 +127,7 @@ LinkmlValidationErrsType: TypeAlias = Annotated[
 ]
 
 
-dandiset_metadata_adapter = TypeAdapter(DandiMetadata)
+dandi_metadata_adapter = TypeAdapter(DandiMetadata)
 pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
 linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
 
