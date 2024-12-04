@@ -235,3 +235,4 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 DANDI_METADATA_ADAPTER = TypeAdapter(DandiMetadata)
 PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
 LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
+DANDI_METADATA_LIST_ADAPTER = TypeAdapter(list[DandiMetadata])
