@@ -11,6 +11,7 @@ from pydantic2linkml.cli.tools import LogLevel
 from dandisets_linkml_status_tools.models import (
     AssetValidationReport,
     Config,
+    DandiMetadata,
     DandisetValidationReport,
 )
 from dandisets_linkml_status_tools.tools import (
@@ -210,10 +211,10 @@ def manifests(
         # JSON string read from the assets metadata file
         assets_metadata_json = assets_metadata_file_path.read_text()
 
-        assets_metadata_type_adapter = TypeAdapter(list[dict[str, Any]])
+        assets_metadata_type_adapter = TypeAdapter(list[DandiMetadata])
         try:
             # Assets metadata as a list of dictionaries
-            assets_metadata_python: list[dict[str, Any]] = (
+            assets_metadata_python: list[DandiMetadata] = (
                 assets_metadata_type_adapter.validate_json(assets_metadata_json)
             )
         except ValidationError as e:

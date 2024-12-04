@@ -21,6 +21,7 @@ from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
 from .models import (
+    DandiMetadata,
     DandisetLinkmlTranslationReport,
     JsonschemaValidationErrorType,
     LinkmlValidationErrsType,
@@ -60,11 +61,11 @@ def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     return (p for p in path.iterdir() if p.is_dir())
 
 
-def pydantic_validate(data: dict[str, Any] | str, model: type[BaseModel]) -> str:
+def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
 
-    :param data: The data, as a dict or JSON string, to be validated
+    :param data: The data, as a `DandiMetadata` instance or JSON string, to be validated
     :param model: The Pydantic model to validate the data against
     :return: A JSON string that specifies an array of errors encountered in
         the validation (The JSON string returned in a case of any validation failure
@@ -141,7 +142,7 @@ class DandiModelLinkmlValidator:
         return cls._dandi_linkml_schema
 
     def validate(
-        self, dandi_metadata: dict[str, Any], dandi_metadata_class: str
+        self, dandi_metadata: DandiMetadata, dandi_metadata_class: str
     ) -> list[ValidationResult]:
         """
         Validate given DANDI metadata against a DANDI metadata model
