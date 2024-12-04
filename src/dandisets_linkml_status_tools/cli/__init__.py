@@ -1,14 +1,17 @@
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from dandi.dandiapi import DandiAPIClient
 from dandischema.models import Asset, Dandiset, PublishedAsset, PublishedDandiset
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status_tools.models import (
+    ASSET_PYDANTIC_REPORT_LIST_ADAPTER,
+    DANDI_METADATA_LIST_ADAPTER,
+    DANDISET_PYDANTIC_REPORT_LIST_ADAPTER,
     AssetValidationReport,
     Config,
     DandiMetadata,
@@ -26,10 +29,6 @@ if TYPE_CHECKING:
     from dandisets_linkml_status_tools.models import DandisetLinkmlTranslationReport
 
 logger = logging.getLogger(__name__)
-
-# Pydantic type adapters
-DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
-ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
 
 # Configuration settings for this app (to be initialized in the main function)
 config: Config
@@ -211,11 +210,10 @@ def manifests(
         # JSON string read from the assets metadata file
         assets_metadata_json = assets_metadata_file_path.read_text()
 
-        assets_metadata_type_adapter = TypeAdapter(list[DandiMetadata])
         try:
             # Assets metadata as a list of dictionaries
             assets_metadata_python: list[DandiMetadata] = (
-                assets_metadata_type_adapter.validate_json(assets_metadata_json)
+                DANDI_METADATA_LIST_ADAPTER.validate_json(assets_metadata_json)
             )
         except ValidationError as e:
             msg = (
