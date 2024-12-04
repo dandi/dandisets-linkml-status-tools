@@ -127,11 +127,6 @@ LinkmlValidationErrsType: TypeAlias = Annotated[
 ]
 
 
-dandi_metadata_adapter = TypeAdapter(DandiMetadata)
-pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
-linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
-
-
 class DandiBaseReport(BaseModel):
     """
     A base class for any report related to a DANDI dataset
@@ -234,3 +229,9 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 
     # Errors encountered in validation against the dandiset metadata model in LinkML
     linkml_validation_errs: LinkmlValidationErrsType = []
+
+
+# Type adapters for various types (this section should be at the end of this file)
+dandi_metadata_adapter = TypeAdapter(DandiMetadata)
+pydantic_validation_errs_adapter = TypeAdapter(PydanticValidationErrsType)
+linkml_validation_errs_adapter = TypeAdapter(LinkmlValidationErrsType)
