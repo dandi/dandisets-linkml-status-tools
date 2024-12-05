@@ -21,7 +21,6 @@ from dandisets_linkml_status_tools.tools import (
     compile_dandiset_linkml_translation_report,
     create_or_replace_dir,
     get_direct_subdirs,
-    iter_direct_subdirs,
     output_reports,
     pydantic_validate,
     write_reports,
@@ -245,7 +244,7 @@ def manifests(
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
 
-        for version_dir in iter_direct_subdirs(dandiset_dir):
+        for version_dir in get_direct_subdirs(dandiset_dir):
             # === In a dandiset version directory ===
             dandiset_version = version_dir.name
 
