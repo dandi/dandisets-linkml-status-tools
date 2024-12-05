@@ -20,7 +20,7 @@ from dandisets_linkml_status_tools.models import (
 from dandisets_linkml_status_tools.tools import (
     compile_dandiset_linkml_translation_report,
     create_or_replace_dir,
-    iter_direct_subdirs,
+    get_direct_subdirs,
     output_reports,
     pydantic_validate,
     write_reports,
@@ -240,13 +240,11 @@ def manifests(
 
     dandiset_validation_reports: list[DandisetValidationReport] = []
     asset_validation_reports: list[AssetValidationReport] = []
-    for dandiset_dir in sorted(
-        iter_direct_subdirs(manifest_path), key=lambda p: p.name
-    ):
+    for dandiset_dir in get_direct_subdirs(manifest_path):
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
 
-        for version_dir in iter_direct_subdirs(dandiset_dir):
+        for version_dir in get_direct_subdirs(dandiset_dir):
             # === In a dandiset version directory ===
             dandiset_version = version_dir.name
 
