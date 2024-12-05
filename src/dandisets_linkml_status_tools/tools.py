@@ -48,7 +48,7 @@ DANDI_MODULE_NAMES = ["dandischema.models"]
 isorted = partial(sorted, key=str.casefold)
 
 
-def iter_direct_subdirs(path: Path) -> Iterable[Path]:
+def iter_direct_subdirs(dir_path: Path) -> Iterable[Path]:
     """
     Get an iterable of the direct subdirectories of a given path.
 
@@ -56,9 +56,9 @@ def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     :return: The iterable of the direct subdirectories of the given path
     :raises: ValueError if the given path is not a directory
     """
-    if not path.is_dir():
-        raise ValueError(f"The given path is not a directory: {path}")
-    return (p for p in path.iterdir() if p.is_dir())
+    if not dir_path.is_dir():
+        raise ValueError(f"The given path is not a directory: {dir_path}")
+    return (p for p in dir_path.iterdir() if p.is_dir())
 
 
 def get_direct_subdirs(dir_path: Path) -> list[Path]:
