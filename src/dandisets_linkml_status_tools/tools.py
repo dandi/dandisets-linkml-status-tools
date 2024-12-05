@@ -61,6 +61,18 @@ def iter_direct_subdirs(path: Path) -> Iterable[Path]:
     return (p for p in path.iterdir() if p.is_dir())
 
 
+def get_direct_subdirs(dir_path: Path) -> list[Path]:
+    """
+    Get a list of the direct subdirectories of a given directory
+
+    :param dir_path: The path of the given directory
+    :return: The list of the direct subdirectories of the given directory in sorted
+        order by the final component of their path
+    :raises: ValueError if the given path doesn't point to a directory
+    """
+    return sorted(iter_direct_subdirs(dir_path), key=lambda p: p.name)
+
+
 def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
     """
     Validate the given data against a Pydantic model
