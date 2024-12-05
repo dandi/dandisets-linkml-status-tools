@@ -50,11 +50,12 @@ isorted = partial(sorted, key=str.casefold)
 
 def iter_direct_subdirs(dir_path: Path) -> Iterable[Path]:
     """
-    Get an iterable of the direct subdirectories of a given path.
+    Get an iterable of the direct subdirectories of a given directory
 
-    :param path: The given path
-    :return: The iterable of the direct subdirectories of the given path
-    :raises: ValueError if the given path is not a directory
+    :param dir_path: The path of the given directory
+    :return: The iterable of the direct subdirectories of the given directory.
+        Note: The subdirectories are yielded in arbitrary order.
+    :raises: ValueError if the given path doesn't point to a directory
     """
     if not dir_path.is_dir():
         raise ValueError(f"The given path is not a directory: {dir_path}")
