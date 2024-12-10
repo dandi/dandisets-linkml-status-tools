@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -11,11 +12,12 @@ from pydantic2linkml.cli.tools import LogLevel
 from dandisets_linkml_status_tools.models import (
     ASSET_PYDANTIC_REPORT_LIST_ADAPTER,
     DANDI_METADATA_LIST_ADAPTER,
-    DANDISET_PYDANTIC_REPORT_LIST_ADAPTER,
+    DANDISET_VALIDATION_REPORTS_ADAPTER,
     AssetValidationReport,
     Config,
     DandiMetadata,
     DandisetValidationReport,
+    DandisetValidationReportsType,
 )
 from dandisets_linkml_status_tools.tools import (
     compile_dandiset_linkml_translation_report,
@@ -171,14 +173,16 @@ def manifests(
 
         dandiset_metadata = dandiset_metadata_file_path.read_text()
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
+
         # noinspection PyTypeChecker
-        dandiset_validation_reports.append(
+        dandiset_validation_reports[dandiset_identifier][dandiset_version] = (
             DandisetValidationReport(
                 dandiset_identifier=dandiset_identifier,
                 dandiset_version=dandiset_version,
                 pydantic_validation_errs=pydantic_validation_errs,
             )
         )
+
         logger.info(
             "Dandiset %s:%s: Generated and added a dandiset validation report",
             dandiset_identifier,
@@ -238,7 +242,7 @@ def manifests(
             dandiset_version,
         )
 
-    dandiset_validation_reports: list[DandisetValidationReport] = []
+    dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
     asset_validation_reports: list[AssetValidationReport] = []
     for dandiset_dir in get_direct_subdirs(manifest_path):
         # === In a dandiset directory ===
@@ -259,7 +263,7 @@ def manifests(
     write_reports(
         dandiset_pydantic_validation_reports_file_path,
         dandiset_validation_reports,
-        DANDISET_PYDANTIC_REPORT_LIST_ADAPTER,
+        DANDISET_VALIDATION_REPORTS_ADAPTER,
     )
 
     # Write the asset Pydantic validation reports to a file
