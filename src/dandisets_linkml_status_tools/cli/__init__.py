@@ -153,9 +153,9 @@ def manifests(
         reports_dir_path / ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
     )
 
-    def append_dandiset_validation_report() -> None:
+    def add_dandiset_validation_report() -> None:
         """
-        Append a `DandisetValidationReport` object to `dandiset_validation_reports`
+        Add a `DandisetValidationReport` object to `dandiset_validation_reports`
         if the current dandiset version directory contains a dandiset metadata file.
         """
         dandiset_metadata_file_path = version_dir / DANDISET_FILE_NAME
@@ -252,7 +252,7 @@ def manifests(
             # === In a dandiset version directory ===
             dandiset_version = version_dir.name
 
-            append_dandiset_validation_report()
+            add_dandiset_validation_report()
             extend_asset_validation_reports()
 
     # Ensure directory for reports exists
