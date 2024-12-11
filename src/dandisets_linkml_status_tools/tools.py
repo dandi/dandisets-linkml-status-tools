@@ -29,7 +29,7 @@ from .models import (
     JsonschemaValidationErrorType,
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
-    ValidationReport,
+    ValidationReportsType,
 )
 
 try:
@@ -99,14 +99,15 @@ def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
 
 
 def write_reports(
-    file_path: Path, reports: list[ValidationReport], type_adapter: TypeAdapter
+    file_path: Path, reports: ValidationReportsType, type_adapter: TypeAdapter
 ) -> None:
     """
-    Write a given list of validation reports to a specified file
+    Write a given collection of validation reports to a specified file
 
     :param file_path: The path specifying the file to write the reports to
-    :param reports: The list of validation reports to write
-    :param type_adapter: The type adapter to use for serializing the list of reports
+    :param reports: The collection of validation reports to write
+    :param type_adapter: The type adapter to use for serializing the collection of
+        reports
     """
     file_path.write_bytes(type_adapter.dump_json(reports, indent=2))
 

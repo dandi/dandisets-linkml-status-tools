@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
@@ -6,7 +7,14 @@ from typing import Annotated, Any, NamedTuple, TypeAlias
 from dandi.dandiapi import VersionStatus
 from jsonschema import ValidationError
 from linkml.validator.report import ValidationResult
-from pydantic import AfterValidator, BaseModel, Json, PlainSerializer, TypeAdapter
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    Field,
+    Json,
+    PlainSerializer,
+    TypeAdapter,
+)
 from pydantic2linkml.cli.tools import LogLevel
 from typing_extensions import TypedDict  # Required for Python < 3.12 by Pydantic
 
@@ -231,10 +239,20 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
     linkml_validation_errs: LinkmlValidationErrsType = []
 
 
+DandisetValidationReportsType: TypeAlias = defaultdict[
+    str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
+]
+AssetValidationReportsType: TypeAlias = defaultdict[
+    str, Annotated[dict[str, list[AssetValidationReport]], Field(default_factory=dict)]
+]
+ValidationReportsType: TypeAlias = (
+    DandisetValidationReportsType | AssetValidationReportsType
+)
+
 # Type adapters for various types (this section should be at the end of this file)
 DANDI_METADATA_ADAPTER = TypeAdapter(DandiMetadata)
 PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
 LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
 DANDI_METADATA_LIST_ADAPTER = TypeAdapter(list[DandiMetadata])
-DANDISET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[DandisetValidationReport])
-ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
+DANDISET_VALIDATION_REPORTS_ADAPTER = TypeAdapter(DandisetValidationReportsType)
+ASSET_VALIDATION_REPORTS_ADAPTER = TypeAdapter(AssetValidationReportsType)
