@@ -239,13 +239,15 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
     linkml_validation_errs: LinkmlValidationErrsType = []
 
 
-ValidationReportsType: TypeAlias = defaultdict[str, dict[str, ValidationReport]]
 DandisetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
 ]
 AssetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, list[AssetValidationReport]], Field(default_factory=dict)]
 ]
+ValidationReportsType: TypeAlias = (
+    DandisetValidationReportsType | AssetValidationReportsType
+)
 
 # Type adapters for various types (this section should be at the end of this file)
 DANDI_METADATA_ADAPTER = TypeAdapter(DandiMetadata)
