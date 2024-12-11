@@ -243,6 +243,9 @@ ValidationReportsType: TypeAlias = defaultdict[str, dict[str, ValidationReport]]
 DandisetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
 ]
+AssetValidationReportsType: TypeAlias = defaultdict[
+    str, Annotated[dict[str, list[AssetValidationReport]], Field(default_factory=dict)]
+]
 
 # Type adapters for various types (this section should be at the end of this file)
 DANDI_METADATA_ADAPTER = TypeAdapter(DandiMetadata)
@@ -250,4 +253,4 @@ PYDANTIC_VALIDATION_ERRS_ADAPTER = TypeAdapter(PydanticValidationErrsType)
 LINKML_VALIDATION_ERRS_ADAPTER = TypeAdapter(LinkmlValidationErrsType)
 DANDI_METADATA_LIST_ADAPTER = TypeAdapter(list[DandiMetadata])
 DANDISET_VALIDATION_REPORTS_ADAPTER = TypeAdapter(DandisetValidationReportsType)
-ASSET_PYDANTIC_REPORT_LIST_ADAPTER = TypeAdapter(list[AssetValidationReport])
+ASSET_VALIDATION_REPORTS_ADAPTER = TypeAdapter(AssetValidationReportsType)

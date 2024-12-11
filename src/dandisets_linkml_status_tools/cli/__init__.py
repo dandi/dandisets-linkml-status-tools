@@ -10,10 +10,11 @@ from pydantic import ValidationError
 from pydantic2linkml.cli.tools import LogLevel
 
 from dandisets_linkml_status_tools.models import (
-    ASSET_PYDANTIC_REPORT_LIST_ADAPTER,
+    ASSET_VALIDATION_REPORTS_ADAPTER,
     DANDI_METADATA_LIST_ADAPTER,
     DANDISET_VALIDATION_REPORTS_ADAPTER,
     AssetValidationReport,
+    AssetValidationReportsType,
     Config,
     DandiMetadata,
     DandisetValidationReport,
@@ -222,12 +223,13 @@ def manifests(
             )
             raise RuntimeError(msg) from e
 
+        reports_of_specific_dandiset_version: list[AssetValidationReport] = []
         for asset_metadata in assets_metadata_python:
             asset_id = asset_metadata.get("id")
             asset_path = asset_metadata.get("path")
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
             # noinspection PyTypeChecker
-            asset_validation_reports.append(
+            reports_of_specific_dandiset_version.append(
                 AssetValidationReport(
                     dandiset_identifier=dandiset_identifier,
                     dandiset_version=dandiset_version,
@@ -236,6 +238,13 @@ def manifests(
                     pydantic_validation_errs=pydantic_validation_errs,
                 )
             )
+
+        # Add the asset validation reports of the current dandiset version to
+        # the asset_validation_reports dictionary
+        asset_validation_reports[dandiset_identifier][
+            dandiset_version
+        ] = reports_of_specific_dandiset_version
+
         logger.info(
             "Dandiset %s:%s: Generated and added asset validation reports",
             dandiset_identifier,
@@ -243,7 +252,7 @@ def manifests(
         )
 
     dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
-    asset_validation_reports: list[AssetValidationReport] = []
+    asset_validation_reports: AssetValidationReportsType = defaultdict(dict)
     for dandiset_dir in get_direct_subdirs(manifest_path):
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
@@ -270,5 +279,5 @@ def manifests(
     write_reports(
         asset_pydantic_validation_reports_file_path,
         asset_validation_reports,
-        ASSET_PYDANTIC_REPORT_LIST_ADAPTER,
+        ASSET_VALIDATION_REPORTS_ADAPTER,
     )
