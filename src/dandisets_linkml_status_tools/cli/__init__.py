@@ -189,9 +189,9 @@ def manifests(
             dandiset_version,
         )
 
-    def extend_asset_validation_reports() -> None:
+    def add_asset_validation_reports() -> None:
         """
-        Extend `asset_validation_reports` with `AssetValidationReport` objects if the
+        Add `AssetValidationReport` objects to `asset_validation_reports` if the
         current dandiset version directory contains an assets metadata file.
         """
         assets_metadata_file_path = version_dir / ASSETS_FILE_NAME
@@ -253,7 +253,7 @@ def manifests(
             dandiset_version = version_dir.name
 
             add_dandiset_validation_report()
-            extend_asset_validation_reports()
+            add_asset_validation_reports()
 
     # Ensure directory for reports exists
     logger.info("Creating report directory: %s", reports_dir_path)
