@@ -303,3 +303,10 @@ def diff_manifests_reports_(
     """
     Generate a report of differences between two sets of reports on the same manifests
     """
+    from dandisets_linkml_status_tools.cmd_funcs.diff_manifests_reports import (
+        diff_manifests_reports,
+    )
+
+    diff_manifests_reports(
+        reports_dir1_path, reports_dir2_path, config["output_dir_path"]
+    )
