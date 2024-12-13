@@ -274,10 +274,18 @@ def manifests(
         dandiset_validation_reports,
         DANDISET_VALIDATION_REPORTS_ADAPTER,
     )
+    logger.info(
+        "Wrote dandiset validation reports to %s",
+        dandiset_pydantic_validation_reports_file_path,
+    )
 
     # Write the asset Pydantic validation reports to a file
     write_reports(
         asset_pydantic_validation_reports_file_path,
         asset_validation_reports,
         ASSET_VALIDATION_REPORTS_ADAPTER,
+    )
+    logger.info(
+        "Wrote asset validation reports to %s",
+        asset_pydantic_validation_reports_file_path,
     )
