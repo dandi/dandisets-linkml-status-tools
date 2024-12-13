@@ -124,6 +124,9 @@ def linkml_translation(
     logger.info("Success!")
 
 
+# Subdirectory for reports on manifests
+MANIFESTS_REPORTS_SUBDIR = Path("manifests")
+
 # metadata file names
 DANDISET_FILE_NAME = "dandiset.jsonld"  # File with dandiset metadata
 ASSETS_FILE_NAME = "assets.jsonld"  # File with assets metadata
@@ -132,6 +135,15 @@ DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = (
     "dandiset_pydantic_validation_reports.json"
 )
 ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "asset_pydantic_validation_reports.json"
+
+# Relative path to the dandiset Pydantic validation reports file
+DANDISET_VALIDATION_REPORTS_FILE: Path = (
+    MANIFESTS_REPORTS_SUBDIR / DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+)
+# Relative path to the asset Pydantic validation reports file
+ASSET_VALIDATION_REPORTS_FILE: Path = (
+    MANIFESTS_REPORTS_SUBDIR / ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+)
 
 
 @app.command()
@@ -146,12 +158,13 @@ def manifests(
     """
 
     # Directory and file paths for reports
-    reports_dir_path = config["output_dir_path"] / "manifests"
+    output_dir: Path = config["output_dir_path"]
+    reports_dir_path = output_dir / MANIFESTS_REPORTS_SUBDIR
     dandiset_pydantic_validation_reports_file_path = (
-        reports_dir_path / DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+        output_dir / DANDISET_VALIDATION_REPORTS_FILE
     )
     asset_pydantic_validation_reports_file_path = (
-        reports_dir_path / ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+        output_dir / ASSET_VALIDATION_REPORTS_FILE
     )
 
     def add_dandiset_validation_report() -> None:

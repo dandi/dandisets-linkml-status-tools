@@ -112,6 +112,18 @@ def write_reports(
     file_path.write_bytes(type_adapter.dump_json(reports, indent=2))
 
 
+def read_reports(file: Path, type_adapter: TypeAdapter) -> ValidationReportsType:
+    """
+    Read a collection of validation reports from a specified file
+
+    :param file: The path of the file to read the reports from
+    :param type_adapter: The type adapter to use for deserializing the collection of
+        reports
+    :return: The collection of validation reports read from the file
+    """
+    return type_adapter.validate_json(file.read_bytes())
+
+
 class DandiModelLinkmlValidator:
     """
     A class to validate DANDI metadata against the DANDI metadata models in
