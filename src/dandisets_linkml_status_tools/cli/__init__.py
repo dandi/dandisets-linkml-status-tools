@@ -131,10 +131,8 @@ MANIFESTS_REPORTS_SUBDIR = Path("manifests")
 DANDISET_FILE_NAME = "dandiset.jsonld"  # File with dandiset metadata
 ASSETS_FILE_NAME = "assets.jsonld"  # File with assets metadata
 
-DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = (
-    "dandiset_pydantic_validation_reports.json"
-)
-ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "asset_pydantic_validation_reports.json"
+DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "dandiset_validation_reports.json"
+ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "asset_validation_reports.json"
 
 # Relative path to the dandiset Pydantic validation reports file
 DANDISET_VALIDATION_REPORTS_FILE: Path = (
