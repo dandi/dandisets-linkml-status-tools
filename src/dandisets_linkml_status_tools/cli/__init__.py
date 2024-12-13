@@ -281,3 +281,25 @@ def manifests(
         asset_validation_reports,
         ASSET_VALIDATION_REPORTS_ADAPTER,
     )
+
+
+@app.command("diff-manifests-reports")
+def diff_manifests_reports_(
+    reports_dir1_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path of the directory containing the first set of reports for "
+            "contrast"
+        ),
+    ],
+    reports_dir2_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path of the directory containing the second set of reports for "
+            "contrast"
+        ),
+    ],
+):
+    """
+    Generate a report of differences between two sets of reports on the same manifests
+    """
