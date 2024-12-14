@@ -152,7 +152,7 @@ class ValidationReport(DandiBaseReport):
 
     # Error encountered in validation against a Pydantic model
     pydantic_validation_errs: Annotated[
-        Json[PydanticValidationErrsType], Field(default_factory=list)
+        PydanticValidationErrsType, Field(default_factory=list)
     ]
 
 
@@ -236,7 +236,7 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 
     # Error encountered in validation against the Pydantic dandiset metadata model
     pydantic_validation_errs: Annotated[
-        Json[PydanticValidationErrsType], Field(default_factory=list)
+        PydanticValidationErrsType, Field(default_factory=list)
     ]
 
     # Errors encountered in validation against the dandiset metadata model in LinkML

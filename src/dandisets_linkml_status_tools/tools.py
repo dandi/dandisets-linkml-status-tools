@@ -74,16 +74,16 @@ def get_direct_subdirs(dir_path: Path) -> list[Path]:
     return sorted(iter_direct_subdirs(dir_path), key=lambda p: p.name)
 
 
-def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
+def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> list:
     """
     Validate the given data against a Pydantic model
 
     :param data: The data, as a `DandiMetadata` instance or JSON string, to be validated
     :param model: The Pydantic model to validate the data against
-    :return: A JSON string that specifies an array of errors encountered in
-        the validation (The JSON string returned in a case of any validation failure
-        is one returned by the Pydantic `ValidationError.json()` method. In the case
-        of no validation error, the empty array JSON expression, `"[]"`, is returned.)
+    :return: A list of errors encountered in the validation.
+        In the case of validation failure, this is the deserialization of the JSON
+        string returned by the Pydantic `ValidationError.json()` method.
+        In the case of validation success, this is an empty list.
     """
     if isinstance(data, str):
         validate_method = model.model_validate_json
@@ -93,9 +93,9 @@ def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
     try:
         validate_method(data)
     except ValidationError as e:
-        return e.json()
+        return json.loads(e.json())
 
-    return "[]"
+    return []
 
 
 def write_reports(
@@ -241,7 +241,7 @@ def compile_dandiset_linkml_translation_report(
     pydantic_validation_errs = pydantic_validate(
         raw_metadata, pydantic_validation_target
     )
-    if pydantic_validation_errs != "[]":
+    if pydantic_validation_errs:
         logger.info(
             "Captured Pydantic validation errors for dandiset %s @ %s",
             dandiset_id,
