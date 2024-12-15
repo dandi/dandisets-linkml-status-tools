@@ -11,7 +11,6 @@ from pydantic import (
     AfterValidator,
     BaseModel,
     Field,
-    Json,
     PlainSerializer,
     TypeAdapter,
 )
