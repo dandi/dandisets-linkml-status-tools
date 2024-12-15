@@ -259,7 +259,6 @@ def compile_dandiset_linkml_translation_report(
             dandiset_version,
         )
 
-    # noinspection PyTypeChecker
     return DandisetLinkmlTranslationReport(
         dandiset_identifier=dandiset_id,
         dandiset_version=dandiset_version,

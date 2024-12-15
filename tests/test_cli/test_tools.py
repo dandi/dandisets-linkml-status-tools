@@ -63,7 +63,6 @@ def test_get_linkml_err_counts(
     """
     errs = []
     for t in error_types:
-        # noinspection PyTypeChecker
         jsonschema_validation_error = ValidationError(
             message="An artificial error",
             validator=t.validator,

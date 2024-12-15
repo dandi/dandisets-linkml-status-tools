@@ -184,7 +184,6 @@ def manifests(
         dandiset_metadata = dandiset_metadata_file_path.read_text()
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
 
-        # noinspection PyTypeChecker
         dandiset_validation_reports[dandiset_identifier][dandiset_version] = (
             DandisetValidationReport(
                 dandiset_identifier=dandiset_identifier,
@@ -237,7 +236,6 @@ def manifests(
             asset_id = asset_metadata.get("id")
             asset_path = asset_metadata.get("path")
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
-            # noinspection PyTypeChecker
             reports_of_specific_dandiset_version.append(
                 AssetValidationReport(
                     dandiset_identifier=dandiset_identifier,

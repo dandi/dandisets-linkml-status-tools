@@ -115,7 +115,6 @@ def polish_validation_results(
 
         # Include the `source` field as a `JsonValidationErrorView` object
         result_source = result.source
-        # noinspection PyTypeChecker
         result_as_dict["source"] = JsonValidationErrorView(
             message=result_source.message,
             absolute_path=result_source.absolute_path,
