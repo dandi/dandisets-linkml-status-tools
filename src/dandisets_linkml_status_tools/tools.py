@@ -537,3 +537,20 @@ def _gen_row(cell_str_values: Iterable[str]) -> str:
     Note: The given iterable of cell string values are `str` values
     """
     return f'|{"|".join(cell_str_values)}|\n'
+
+
+def get_validation_reports_entries(
+    reports: ValidationReportsType,
+) -> set[tuple[str, str]]:
+    """
+    Obtain the entries of a collection of validation reports
+
+    :param reports: The collection of validation reports
+    :return: The entries of the collection of validation reports as a set of tuples
+        where each tuple contains the dandiset identifier and the dandiset version
+    """
+    entries = set()
+    for dandiset_id, reports_of_specific_dandiset_id in reports.items():
+        for dandiset_version in reports_of_specific_dandiset_id:
+            entries.add((dandiset_id, dandiset_version))
+    return entries
