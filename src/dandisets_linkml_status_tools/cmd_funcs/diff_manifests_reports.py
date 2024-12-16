@@ -42,11 +42,9 @@ def diff_manifests_reports(
                 raise FileNotFoundError(f"File {f} not found")
 
         # Load dandiset validation reports
-        dandiset_validation_reports: DandisetValidationReportsType = (
-            read_reports(
-                dandiset_validation_reports_file,
-                DANDISET_VALIDATION_REPORTS_ADAPTER,
-            )
+        dandiset_validation_reports: DandisetValidationReportsType = read_reports(
+            dandiset_validation_reports_file,
+            DANDISET_VALIDATION_REPORTS_ADAPTER,
         )
 
         # Load asset validation reports
