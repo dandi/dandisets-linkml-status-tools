@@ -410,8 +410,8 @@ def output_reports(
         summary_f.write("\n")
 
         # === Write the headers of the summary table ===
-        header_row = _gen_row(f" {h} " for h in summary_headers)
-        alignment_row = _gen_row("-" * (len(h) + 2) for h in summary_headers)
+        header_row = gen_row(f" {h} " for h in summary_headers)
+        alignment_row = gen_row("-" * (len(h) + 2) for h in summary_headers)
         summary_f.write(header_row + alignment_row)
 
         # Output the individual dandiset validation reports
@@ -478,7 +478,7 @@ def output_reports(
                     r.dandiset_schema_version,
                 ]
             )
-            summary_f.write(_gen_row(row_cells))
+            summary_f.write(gen_row(row_cells))
 
     logger.info("Output of dandiset validation reports completed")
 
@@ -528,7 +528,7 @@ def write_data(
         yaml_dump(serializable_data, f, Dumper=SafeDumper)
 
 
-def _gen_row(cell_str_values: Iterable[str]) -> str:
+def gen_row(cell_str_values: Iterable[str]) -> str:
     """
     Construct a row of a Markdown table with given cell string values
     :param cell_str_values: The given iterable of cell string values
