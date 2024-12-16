@@ -30,9 +30,9 @@ def diff_manifests_reports(
     """
     reports_dirs = [reports_dir1, reports_dir2]
 
-    for dir in reports_dirs:
-        dandiset_validation_reports_file: Path = dir / DANDISET_VALIDATION_REPORTS_FILE
-        asset_validation_reports_file: Path = dir / ASSET_VALIDATION_REPORTS_FILE
+    for dir_ in reports_dirs:
+        dandiset_validation_reports_file: Path = dir_ / DANDISET_VALIDATION_REPORTS_FILE
+        asset_validation_reports_file: Path = dir_ / ASSET_VALIDATION_REPORTS_FILE
 
         for f in [
             dandiset_validation_reports_file,
