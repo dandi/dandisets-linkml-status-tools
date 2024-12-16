@@ -422,19 +422,19 @@ def output_reports(
             report_dir.mkdir(parents=True)
 
             write_data(
-                r.dandiset_metadata, DANDI_METADATA_ADAPTER, "metadata", report_dir
+                r.dandiset_metadata, report_dir, "metadata", DANDI_METADATA_ADAPTER
             )
             write_data(
                 r.pydantic_validation_errs,
-                PYDANTIC_VALIDATION_ERRS_ADAPTER,
-                "pydantic_validation_errs",
                 report_dir,
+                "pydantic_validation_errs",
+                PYDANTIC_VALIDATION_ERRS_ADAPTER,
             )
             write_data(
                 r.linkml_validation_errs,
-                LINKML_VALIDATION_ERRS_ADAPTER,
-                "linkml_validation_errs",
                 report_dir,
+                "linkml_validation_errs",
+                LINKML_VALIDATION_ERRS_ADAPTER,
             )
 
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
@@ -507,17 +507,24 @@ def create_or_replace_dir(dir_path: Path):
 
 
 def write_data(
-    data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
+    data: Any,
+    output_dir: Path,
+    base_file_name: str,
+    data_adapter: TypeAdapter | None = None,
 ) -> None:
     """
     Output given data to a JSON file and a YAML file in a given output directory
 
     :param data: The data to be output
-    :param data_adapter: The type adapter used to serialize the data
-    :param base_file_name: The base file name for the output files
     :param output_dir: The output directory to write the files to
+    :param base_file_name: The base file name for the output files
+    :param data_adapter: The type adapter used to serialize the data.
+        If `None`, the data is considered to be a JSON-serializable Python object.
     """
-    serializable_data = data_adapter.dump_python(data, mode="json")
+    if data_adapter is None:
+        serializable_data = data
+    else:
+        serializable_data = data_adapter.dump_python(data, mode="json")
 
     # Output data to a JSON file
     json_file_path = output_dir / (base_file_name + ".json")
