@@ -31,6 +31,7 @@ from dandisets_linkml_status_tools.models import (
     PydanticValidationErrsType,
     ValidationReportsType,
 )
+from dandisets_linkml_status_tools.tools.md import gen_row
 
 try:
     # Import the C-based YAML dumper if available
@@ -526,17 +527,6 @@ def write_data(
     yaml_file_path = output_dir / (base_file_name + ".yaml")
     with yaml_file_path.open("w") as f:
         yaml_dump(serializable_data, f, Dumper=SafeDumper)
-
-
-def gen_row(cell_str_values: Iterable[str]) -> str:
-    """
-    Construct a row of a Markdown table with given cell string values
-    :param cell_str_values: The given iterable of cell string values
-    :return: The constructed row of a Markdown table
-
-    Note: The given iterable of cell string values are `str` values
-    """
-    return f'|{"|".join(cell_str_values)}|\n'
 
 
 def get_validation_reports_entries(
