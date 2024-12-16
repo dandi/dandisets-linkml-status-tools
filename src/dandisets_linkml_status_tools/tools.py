@@ -419,16 +419,16 @@ def output_reports(
             report_dir = output_path / r.dandiset_identifier / r.dandiset_version
             report_dir.mkdir(parents=True)
 
-            _write_data(
+            write_data(
                 r.dandiset_metadata, DANDI_METADATA_ADAPTER, "metadata", report_dir
             )
-            _write_data(
+            write_data(
                 r.pydantic_validation_errs,
                 PYDANTIC_VALIDATION_ERRS_ADAPTER,
                 "pydantic_validation_errs",
                 report_dir,
             )
-            _write_data(
+            write_data(
                 r.linkml_validation_errs,
                 LINKML_VALIDATION_ERRS_ADAPTER,
                 "linkml_validation_errs",
@@ -504,7 +504,7 @@ def create_or_replace_dir(dir_path: Path):
     logger.info("Created directory: %s", dir_path)
 
 
-def _write_data(
+def write_data(
     data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
 ) -> None:
     """
