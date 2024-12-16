@@ -39,7 +39,7 @@ def diff_manifests_reports(
             asset_validation_reports_file,
         ]:
             if not f.is_file():
-                raise FileNotFoundError(f"File {f} not found")
+                raise RuntimeError(f"There is no file at {f}")
 
         # Load dandiset validation reports
         dandiset_validation_reports: DandisetValidationReportsType = read_reports(
