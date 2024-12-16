@@ -30,6 +30,8 @@ def diff_manifests_reports(
     """
     reports_dirs = [reports_dir1, reports_dir2]
 
+    dandiset_validation_reports_lst: list[DandisetValidationReportsType] = []
+    asset_validation_reports_lst: list[AssetValidationReportsType] = []
     for dir_ in reports_dirs:
         dandiset_validation_reports_file: Path = dir_ / DANDISET_VALIDATION_REPORTS_FILE
         asset_validation_reports_file: Path = dir_ / ASSET_VALIDATION_REPORTS_FILE
@@ -41,13 +43,17 @@ def diff_manifests_reports(
             if not f.is_file():
                 raise RuntimeError(f"There is no file at {f}")
 
-        # Load dandiset validation reports
-        dandiset_validation_reports: DandisetValidationReportsType = read_reports(
-            dandiset_validation_reports_file,
-            DANDISET_VALIDATION_REPORTS_ADAPTER,
+        # Load and store dandiset validation reports
+        dandiset_validation_reports_lst.append(
+            read_reports(
+                dandiset_validation_reports_file,
+                DANDISET_VALIDATION_REPORTS_ADAPTER,
+            )
         )
 
-        # Load asset validation reports
-        asset_validation_reports: AssetValidationReportsType = read_reports(
-            asset_validation_reports_file, ASSET_VALIDATION_REPORTS_ADAPTER
+        # Load and store asset validation reports
+        asset_validation_reports_lst.append(
+            read_reports(
+                asset_validation_reports_file, ASSET_VALIDATION_REPORTS_ADAPTER
+            )
         )
