@@ -31,7 +31,10 @@ from dandisets_linkml_status_tools.models import (
     PydanticValidationErrsType,
     ValidationReportsType,
 )
-from dandisets_linkml_status_tools.tools.md import gen_row
+from dandisets_linkml_status_tools.tools.md import (
+    gen_header_and_alignment_rows,
+    gen_row,
+)
 
 try:
     # Import the C-based YAML dumper if available
@@ -410,10 +413,8 @@ def output_reports(
         # Write line break before the start of the summary table
         summary_f.write("\n")
 
-        # === Write the headers of the summary table ===
-        header_row = gen_row(f" {h} " for h in summary_headers)
-        alignment_row = gen_row("-" * (len(h) + 2) for h in summary_headers)
-        summary_f.write(header_row + alignment_row)
+        # Write the header and alignment rows of the summary table
+        summary_f.write(gen_header_and_alignment_rows(summary_headers))
 
         # Output the individual dandiset validation reports
         for r in reports:
