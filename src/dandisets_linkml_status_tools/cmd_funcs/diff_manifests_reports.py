@@ -62,6 +62,8 @@ def diff_manifests_reports(
         for contrast
     :param output_dir: Path of the directory to write the report of differences to
     """
+    diff_reports_dir = output_dir / "diff_reports"
+
     reports_dirs = [reports_dir1, reports_dir2]
 
     dandiset_validation_reports_lst: list[DandisetValidationReportsType] = []
@@ -91,3 +93,9 @@ def diff_manifests_reports(
                 asset_validation_reports_file, ASSET_VALIDATION_REPORTS_ADAPTER
             )
         )
+
+    output_validation_diff_reports(
+        dandiset_validation_diff_reports_iter(*dandiset_validation_reports_lst),
+        asset_validation_diff_reports_iter(*asset_validation_reports_lst),
+        diff_reports_dir,
+    )
