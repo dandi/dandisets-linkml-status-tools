@@ -20,7 +20,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
-from .models import (
+from dandisets_linkml_status_tools.models import (
     DANDI_METADATA_ADAPTER,
     LINKML_VALIDATION_ERRS_ADAPTER,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
