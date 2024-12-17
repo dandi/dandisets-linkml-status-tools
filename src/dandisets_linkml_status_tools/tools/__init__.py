@@ -33,6 +33,7 @@ from dandisets_linkml_status_tools.models import (
 )
 from dandisets_linkml_status_tools.tools.md import (
     gen_header_and_alignment_rows,
+    gen_pydantic_validation_errs_cell,
     gen_row,
 )
 
@@ -446,7 +447,6 @@ def output_reports(
             # at a particular version
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
-            pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
             linkml_err_counts = get_linkml_err_counts(r.linkml_validation_errs)
 
             row_cells = (
@@ -457,12 +457,9 @@ def output_reports(
                     # For the version column
                     f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
                     # For the pydantic column
-                    (
-                        f"[{len(r.pydantic_validation_errs)} "
-                        f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
-                        f"({version_dir}/pydantic_validation_errs.yaml)"
-                        if r.pydantic_validation_errs
-                        else "0"
+                    gen_pydantic_validation_errs_cell(
+                        r.pydantic_validation_errs,
+                        f"{version_dir}/pydantic_validation_errs.yaml",
                     ),
                     # For the linkml column
                     (
