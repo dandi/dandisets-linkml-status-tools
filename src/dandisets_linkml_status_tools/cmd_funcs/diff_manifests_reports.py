@@ -32,7 +32,7 @@ class _DandiValidationDiffReport(DandiBaseReport):
     pydantic_validation_errs2: Annotated[
         PydanticValidationErrsType, Field(default_factory=list)
     ]
-    pydantic_validation_errs_diff: Any
+    pydantic_validation_errs_diff: dict
 
 
 class _DandisetValidationDiffReport(_DandiValidationDiffReport):
