@@ -124,14 +124,24 @@ def linkml_translation(
     logger.info("Success!")
 
 
+# Subdirectory for reports on manifests
+MANIFESTS_REPORTS_SUBDIR = Path("manifests")
+
 # metadata file names
 DANDISET_FILE_NAME = "dandiset.jsonld"  # File with dandiset metadata
 ASSETS_FILE_NAME = "assets.jsonld"  # File with assets metadata
 
-DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = (
-    "dandiset_pydantic_validation_reports.json"
+DANDISET_VALIDATION_REPORTS_FILE_NAME = "dandiset_validation_reports.json"
+ASSET_VALIDATION_REPORTS_FILE_NAME = "asset_validation_reports.json"
+
+# Relative path to the dandiset validation reports file
+DANDISET_VALIDATION_REPORTS_FILE: Path = (
+    MANIFESTS_REPORTS_SUBDIR / DANDISET_VALIDATION_REPORTS_FILE_NAME
 )
-ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME = "asset_pydantic_validation_reports.json"
+# Relative path to the asset validation reports file
+ASSET_VALIDATION_REPORTS_FILE: Path = (
+    MANIFESTS_REPORTS_SUBDIR / ASSET_VALIDATION_REPORTS_FILE_NAME
+)
 
 
 @app.command()
@@ -146,18 +156,21 @@ def manifests(
     """
 
     # Directory and file paths for reports
-    reports_dir_path = config["output_dir_path"] / "manifests"
-    dandiset_pydantic_validation_reports_file_path = (
-        reports_dir_path / DANDISET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
+    output_dir: Path = config["output_dir_path"]
+    reports_dir_path = output_dir / MANIFESTS_REPORTS_SUBDIR
+    dandiset_validation_reports_file_path = (
+        output_dir / DANDISET_VALIDATION_REPORTS_FILE
     )
-    asset_pydantic_validation_reports_file_path = (
-        reports_dir_path / ASSET_PYDANTIC_VALIDATION_REPORTS_FILE_NAME
-    )
+    asset_validation_reports_file_path = output_dir / ASSET_VALIDATION_REPORTS_FILE
 
-    def add_dandiset_validation_report() -> None:
+    def add_dandiset_validation_report_if_err() -> None:
         """
         Add a `DandisetValidationReport` object to `dandiset_validation_reports`
-        if the current dandiset version directory contains a dandiset metadata file.
+        if the current dandiset version directory contains a dandiset metadata file
+        and a validation of the dandiset metadata produces an error.
+
+        Note: A validation report is only added if the dandiset metadata fails
+            validation
         """
         dandiset_metadata_file_path = version_dir / DANDISET_FILE_NAME
 
@@ -175,25 +188,35 @@ def manifests(
         dandiset_metadata = dandiset_metadata_file_path.read_text()
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
 
-        # noinspection PyTypeChecker
-        dandiset_validation_reports[dandiset_identifier][dandiset_version] = (
-            DandisetValidationReport(
-                dandiset_identifier=dandiset_identifier,
-                dandiset_version=dandiset_version,
-                pydantic_validation_errs=pydantic_validation_errs,
+        if any([pydantic_validation_errs]):
+            dandiset_validation_reports[dandiset_identifier][dandiset_version] = (
+                DandisetValidationReport(
+                    dandiset_identifier=dandiset_identifier,
+                    dandiset_version=dandiset_version,
+                    pydantic_validation_errs=pydantic_validation_errs,
+                )
             )
-        )
 
-        logger.info(
-            "Dandiset %s:%s: Generated and added a dandiset validation report",
-            dandiset_identifier,
-            dandiset_version,
-        )
+            logger.info(
+                "Dandiset %s:%s: Generated and added a dandiset validation report",
+                dandiset_identifier,
+                dandiset_version,
+            )
+        else:
+            logger.info(
+                "Dandiset %s:%s: dandiset metadata is valid",
+                dandiset_identifier,
+                dandiset_version,
+            )
 
-    def add_asset_validation_reports() -> None:
+    def add_asset_validation_reports_if_err() -> None:
         """
         Add `AssetValidationReport` objects to `asset_validation_reports` if the
-        current dandiset version directory contains an assets metadata file.
+        current dandiset version directory contains an assets metadata file and
+        a validation of some instance of asset metadata produces an error.
+
+        Note: Validation reports are only added for instances of asset metadata that
+            fail a validation
         """
         assets_metadata_file_path = version_dir / ASSETS_FILE_NAME
 
@@ -228,28 +251,36 @@ def manifests(
             asset_id = asset_metadata.get("id")
             asset_path = asset_metadata.get("path")
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
-            # noinspection PyTypeChecker
-            reports_of_specific_dandiset_version.append(
-                AssetValidationReport(
-                    dandiset_identifier=dandiset_identifier,
-                    dandiset_version=dandiset_version,
-                    asset_id=asset_id,
-                    asset_path=asset_path,
-                    pydantic_validation_errs=pydantic_validation_errs,
+
+            if any([pydantic_validation_errs]):
+                reports_of_specific_dandiset_version.append(
+                    AssetValidationReport(
+                        dandiset_identifier=dandiset_identifier,
+                        dandiset_version=dandiset_version,
+                        asset_id=asset_id,
+                        asset_path=asset_path,
+                        pydantic_validation_errs=pydantic_validation_errs,
+                    )
                 )
-            )
 
         # Add the asset validation reports of the current dandiset version to
-        # the asset_validation_reports dictionary
-        asset_validation_reports[dandiset_identifier][
-            dandiset_version
-        ] = reports_of_specific_dandiset_version
+        # the asset_validation_reports dictionary if there is any
+        if reports_of_specific_dandiset_version:
+            asset_validation_reports[dandiset_identifier][
+                dandiset_version
+            ] = reports_of_specific_dandiset_version
 
-        logger.info(
-            "Dandiset %s:%s: Generated and added asset validation reports",
-            dandiset_identifier,
-            dandiset_version,
-        )
+            logger.info(
+                "Dandiset %s:%s: Generated and added asset validation reports",
+                dandiset_identifier,
+                dandiset_version,
+            )
+        else:
+            logger.info(
+                "Dandiset %s:%s: All asset metadata instances are valid",
+                dandiset_identifier,
+                dandiset_version,
+            )
 
     dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
     asset_validation_reports: AssetValidationReportsType = defaultdict(dict)
@@ -261,31 +292,60 @@ def manifests(
             # === In a dandiset version directory ===
             dandiset_version = version_dir.name
 
-            add_dandiset_validation_report()
-            add_asset_validation_reports()
+            add_dandiset_validation_report_if_err()
+            add_asset_validation_reports_if_err()
 
     # Ensure directory for reports exists
     logger.info("Creating report directory: %s", reports_dir_path)
     create_or_replace_dir(reports_dir_path)
 
-    # Write the dandiset Pydantic validation reports to a file
+    # Write the dandiset validation reports to a file
     write_reports(
-        dandiset_pydantic_validation_reports_file_path,
+        dandiset_validation_reports_file_path,
         dandiset_validation_reports,
         DANDISET_VALIDATION_REPORTS_ADAPTER,
     )
     logger.info(
         "Wrote dandiset validation reports to %s",
-        dandiset_pydantic_validation_reports_file_path,
+        dandiset_validation_reports_file_path,
     )
 
-    # Write the asset Pydantic validation reports to a file
+    # Write the asset validation reports to a file
     write_reports(
-        asset_pydantic_validation_reports_file_path,
+        asset_validation_reports_file_path,
         asset_validation_reports,
         ASSET_VALIDATION_REPORTS_ADAPTER,
     )
     logger.info(
         "Wrote asset validation reports to %s",
-        asset_pydantic_validation_reports_file_path,
+        asset_validation_reports_file_path,
+    )
+
+
+@app.command("diff-manifests-reports")
+def diff_manifests_reports_(
+    reports_dir1_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path of the directory containing the first set of reports for "
+            "contrast"
+        ),
+    ],
+    reports_dir2_path: Annotated[
+        Path,
+        typer.Argument(
+            help="Path of the directory containing the second set of reports for "
+            "contrast"
+        ),
+    ],
+):
+    """
+    Generate a report of differences between two sets of reports on the same manifests
+    """
+    from dandisets_linkml_status_tools.cmd_funcs.diff_manifests_reports import (
+        diff_manifests_reports,
+    )
+
+    diff_manifests_reports(
+        reports_dir1_path, reports_dir2_path, config["output_dir_path"]
     )

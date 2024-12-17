@@ -11,7 +11,6 @@ from pydantic import (
     AfterValidator,
     BaseModel,
     Field,
-    Json,
     PlainSerializer,
     TypeAdapter,
 )
@@ -115,7 +114,6 @@ def polish_validation_results(
 
         # Include the `source` field as a `JsonValidationErrorView` object
         result_source = result.source
-        # noinspection PyTypeChecker
         result_as_dict["source"] = JsonValidationErrorView(
             message=result_source.message,
             absolute_path=result_source.absolute_path,
@@ -152,7 +150,7 @@ class ValidationReport(DandiBaseReport):
 
     # Error encountered in validation against a Pydantic model
     pydantic_validation_errs: Annotated[
-        Json[PydanticValidationErrsType], Field(default_factory=list)
+        PydanticValidationErrsType, Field(default_factory=list)
     ]
 
 
@@ -236,7 +234,7 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 
     # Error encountered in validation against the Pydantic dandiset metadata model
     pydantic_validation_errs: Annotated[
-        Json[PydanticValidationErrsType], Field(default_factory=list)
+        PydanticValidationErrsType, Field(default_factory=list)
     ]
 
     # Errors encountered in validation against the dandiset metadata model in LinkML

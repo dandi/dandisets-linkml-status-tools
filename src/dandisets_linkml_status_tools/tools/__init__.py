@@ -20,7 +20,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic2linkml.gen_linkml import translate_defs
 from yaml import dump as yaml_dump
 
-from .models import (
+from dandisets_linkml_status_tools.models import (
     DANDI_METADATA_ADAPTER,
     LINKML_VALIDATION_ERRS_ADAPTER,
     PYDANTIC_VALIDATION_ERRS_ADAPTER,
@@ -30,6 +30,11 @@ from .models import (
     LinkmlValidationErrsType,
     PydanticValidationErrsType,
     ValidationReportsType,
+)
+from dandisets_linkml_status_tools.tools.md import (
+    gen_header_and_alignment_rows,
+    gen_pydantic_validation_errs_cell,
+    gen_row,
 )
 
 try:
@@ -74,16 +79,16 @@ def get_direct_subdirs(dir_path: Path) -> list[Path]:
     return sorted(iter_direct_subdirs(dir_path), key=lambda p: p.name)
 
 
-def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
+def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> list:
     """
     Validate the given data against a Pydantic model
 
     :param data: The data, as a `DandiMetadata` instance or JSON string, to be validated
     :param model: The Pydantic model to validate the data against
-    :return: A JSON string that specifies an array of errors encountered in
-        the validation (The JSON string returned in a case of any validation failure
-        is one returned by the Pydantic `ValidationError.json()` method. In the case
-        of no validation error, the empty array JSON expression, `"[]"`, is returned.)
+    :return: A list of errors encountered in the validation.
+        In the case of validation failure, this is the deserialization of the JSON
+        string returned by the Pydantic `ValidationError.json()` method.
+        In the case of validation success, this is an empty list.
     """
     if isinstance(data, str):
         validate_method = model.model_validate_json
@@ -93,9 +98,9 @@ def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> str:
     try:
         validate_method(data)
     except ValidationError as e:
-        return e.json()
+        return json.loads(e.json())
 
-    return "[]"
+    return []
 
 
 def write_reports(
@@ -110,6 +115,18 @@ def write_reports(
         reports
     """
     file_path.write_bytes(type_adapter.dump_json(reports, indent=2))
+
+
+def read_reports(file: Path, type_adapter: TypeAdapter) -> ValidationReportsType:
+    """
+    Read a collection of validation reports from a specified file
+
+    :param file: The path of the file to read the reports from
+    :param type_adapter: The type adapter to use for deserializing the collection of
+        reports
+    :return: The collection of validation reports read from the file
+    """
+    return type_adapter.validate_json(file.read_bytes())
 
 
 class DandiModelLinkmlValidator:
@@ -229,7 +246,7 @@ def compile_dandiset_linkml_translation_report(
     pydantic_validation_errs = pydantic_validate(
         raw_metadata, pydantic_validation_target
     )
-    if pydantic_validation_errs != "[]":
+    if pydantic_validation_errs:
         logger.info(
             "Captured Pydantic validation errors for dandiset %s @ %s",
             dandiset_id,
@@ -247,7 +264,6 @@ def compile_dandiset_linkml_translation_report(
             dandiset_version,
         )
 
-    # noinspection PyTypeChecker
     return DandisetLinkmlTranslationReport(
         dandiset_identifier=dandiset_id,
         dandiset_version=dandiset_version,
@@ -398,31 +414,31 @@ def output_reports(
         # Write line break before the start of the summary table
         summary_f.write("\n")
 
-        # === Write the headers of the summary table ===
-        header_row = _gen_row(f" {h} " for h in summary_headers)
-        alignment_row = _gen_row("-" * (len(h) + 2) for h in summary_headers)
-        summary_f.write(header_row + alignment_row)
+        # Write the header and alignment rows of the summary table
+        summary_f.write(gen_header_and_alignment_rows(summary_headers))
 
         # Output the individual dandiset validation reports
         for r in reports:
             report_dir = output_path / r.dandiset_identifier / r.dandiset_version
             report_dir.mkdir(parents=True)
 
-            _write_data(
-                r.dandiset_metadata, DANDI_METADATA_ADAPTER, "metadata", report_dir
+            write_data(
+                r.dandiset_metadata, report_dir, "metadata", DANDI_METADATA_ADAPTER
             )
-            _write_data(
-                r.pydantic_validation_errs,
-                PYDANTIC_VALIDATION_ERRS_ADAPTER,
-                "pydantic_validation_errs",
-                report_dir,
-            )
-            _write_data(
-                r.linkml_validation_errs,
-                LINKML_VALIDATION_ERRS_ADAPTER,
-                "linkml_validation_errs",
-                report_dir,
-            )
+            if r.pydantic_validation_errs:
+                write_data(
+                    r.pydantic_validation_errs,
+                    report_dir,
+                    "pydantic_validation_errs",
+                    PYDANTIC_VALIDATION_ERRS_ADAPTER,
+                )
+            if r.linkml_validation_errs:
+                write_data(
+                    r.linkml_validation_errs,
+                    report_dir,
+                    "linkml_validation_errs",
+                    LINKML_VALIDATION_ERRS_ADAPTER,
+                )
 
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
 
@@ -433,7 +449,6 @@ def output_reports(
             # at a particular version
             version_dir = f"{dandiset_dir}/{r.dandiset_version}"
 
-            pydantic_err_counts = get_pydantic_err_counts(r.pydantic_validation_errs)
             linkml_err_counts = get_linkml_err_counts(r.linkml_validation_errs)
 
             row_cells = (
@@ -444,12 +459,9 @@ def output_reports(
                     # For the version column
                     f"[{r.dandiset_version}]({version_dir}/metadata.yaml)",
                     # For the pydantic column
-                    (
-                        f"[{len(r.pydantic_validation_errs)} "
-                        f"({', '.join(f'{v} {k}' for k, v in pydantic_err_counts.items())})]"
-                        f"({version_dir}/pydantic_validation_errs.yaml)"
-                        if r.pydantic_validation_errs
-                        else "0"
+                    gen_pydantic_validation_errs_cell(
+                        r.pydantic_validation_errs,
+                        f"{version_dir}/pydantic_validation_errs.yaml",
                     ),
                     # For the linkml column
                     (
@@ -467,7 +479,7 @@ def output_reports(
                     r.dandiset_schema_version,
                 ]
             )
-            summary_f.write(_gen_row(row_cells))
+            summary_f.write(gen_row(row_cells))
 
     logger.info("Output of dandiset validation reports completed")
 
@@ -493,18 +505,25 @@ def create_or_replace_dir(dir_path: Path):
     logger.info("Created directory: %s", dir_path)
 
 
-def _write_data(
-    data: Any, data_adapter: TypeAdapter, base_file_name: str, output_dir: Path
+def write_data(
+    data: Any,
+    output_dir: Path,
+    base_file_name: str,
+    data_adapter: TypeAdapter | None = None,
 ) -> None:
     """
     Output given data to a JSON file and a YAML file in a given output directory
 
     :param data: The data to be output
-    :param data_adapter: The type adapter used to serialize the data
-    :param base_file_name: The base file name for the output files
     :param output_dir: The output directory to write the files to
+    :param base_file_name: The base file name for the output files
+    :param data_adapter: The type adapter used to serialize the data.
+        If `None`, the data is considered to be a JSON-serializable Python object.
     """
-    serializable_data = data_adapter.dump_python(data, mode="json")
+    if data_adapter is None:
+        serializable_data = data
+    else:
+        serializable_data = data_adapter.dump_python(data, mode="json")
 
     # Output data to a JSON file
     json_file_path = output_dir / (base_file_name + ".json")
@@ -517,12 +536,18 @@ def _write_data(
         yaml_dump(serializable_data, f, Dumper=SafeDumper)
 
 
-def _gen_row(cell_str_values: Iterable[str]) -> str:
+def get_validation_reports_entries(
+    reports: ValidationReportsType,
+) -> set[tuple[str, str]]:
     """
-    Construct a row of a Markdown table with given cell string values
-    :param cell_str_values: The given iterable of cell string values
-    :return: The constructed row of a Markdown table
+    Obtain the entries of a collection of validation reports
 
-    Note: The given iterable of cell string values are `str` values
+    :param reports: The collection of validation reports
+    :return: The entries of the collection of validation reports as a set of tuples
+        where each tuple contains the dandiset identifier and the dandiset version
     """
-    return f'|{"|".join(cell_str_values)}|\n'
+    entries = set()
+    for dandiset_id, reports_of_specific_dandiset_id in reports.items():
+        for dandiset_version in reports_of_specific_dandiset_id:
+            entries.add((dandiset_id, dandiset_version))
+    return entries
