@@ -425,18 +425,20 @@ def output_reports(
             write_data(
                 r.dandiset_metadata, report_dir, "metadata", DANDI_METADATA_ADAPTER
             )
-            write_data(
-                r.pydantic_validation_errs,
-                report_dir,
-                "pydantic_validation_errs",
-                PYDANTIC_VALIDATION_ERRS_ADAPTER,
-            )
-            write_data(
-                r.linkml_validation_errs,
-                report_dir,
-                "linkml_validation_errs",
-                LINKML_VALIDATION_ERRS_ADAPTER,
-            )
+            if r.pydantic_validation_errs:
+                write_data(
+                    r.pydantic_validation_errs,
+                    report_dir,
+                    "pydantic_validation_errs",
+                    PYDANTIC_VALIDATION_ERRS_ADAPTER,
+                )
+            if r.linkml_validation_errs:
+                write_data(
+                    r.linkml_validation_errs,
+                    report_dir,
+                    "linkml_validation_errs",
+                    LINKML_VALIDATION_ERRS_ADAPTER,
+                )
 
             logger.info("Output dandiset %s validation report", r.dandiset_identifier)
 
