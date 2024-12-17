@@ -25,6 +25,7 @@ dependencies = [
   "dandi~=0.63",
   "dandischema>=0.10.2",
   "eval-type-backport>=0.2.0",
+  "jsondiff",
   "pydantic2linkml @ git+https://github.com/dandi/pydantic2linkml.git",
   "pyyaml>=6.0.2",
   "typer",

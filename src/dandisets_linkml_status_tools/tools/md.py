@@ -1,4 +1,5 @@
 # This file contains helpers for generating Markdown files
+
 from collections.abc import Iterable
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
@@ -48,3 +49,15 @@ def gen_pydantic_validation_errs_cell(
         if errs
         else "0"
     )
+
+
+def gen_diff_cell(diff: dict | list, diff_file: str) -> str:
+    """
+    Generate the content of a cell representing a diff in a table in a Markdown file
+
+    :param diff: The diff to be represented
+    :param diff_file: The relative path, from the Markdown file, to the file containing
+        the diff
+    :return: The content of the cell
+    """
+    return f"[**DIFFERENT**]({diff_file})" if diff else "same"
