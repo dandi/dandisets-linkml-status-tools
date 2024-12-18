@@ -52,7 +52,7 @@ def gen_pydantic_validation_errs_cell(
     )
 
 
-def gen_diff_cell(diff: dict | list, diff_file: str) -> str:
+def gen_diff_cell(diff: dict | list, diff_file: str | Path) -> str:
     """
     Generate the content of a cell representing a diff in a table in a Markdown file
 
