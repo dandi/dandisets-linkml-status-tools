@@ -13,6 +13,7 @@ from dandisets_linkml_status_tools.models import (
     ASSET_VALIDATION_REPORTS_ADAPTER,
     DANDI_METADATA_LIST_ADAPTER,
     DANDISET_VALIDATION_REPORTS_ADAPTER,
+    AssetManifestsPath,
     AssetValidationReport,
     AssetValidationReportsType,
     Config,
@@ -246,44 +247,32 @@ def manifests(
             )
             raise RuntimeError(msg) from e
 
-        reports_of_specific_dandiset_version: list[AssetValidationReport] = []
-        for asset_metadata in assets_metadata_python:
+        for idx, asset_metadata in enumerate(assets_metadata_python):
             asset_id = asset_metadata.get("id")
             asset_path = asset_metadata.get("path")
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
 
             if any([pydantic_validation_errs]):
-                reports_of_specific_dandiset_version.append(
-                    AssetValidationReport(
-                        dandiset_identifier=dandiset_identifier,
-                        dandiset_version=dandiset_version,
-                        asset_id=asset_id,
-                        asset_path=asset_path,
-                        pydantic_validation_errs=pydantic_validation_errs,
-                    )
+                asset_validation_reports[
+                    AssetManifestsPath(dandiset_identifier, dandiset_version, idx)
+                ] = AssetValidationReport(
+                    dandiset_identifier=dandiset_identifier,
+                    dandiset_version=dandiset_version,
+                    asset_id=asset_id,
+                    asset_path=asset_path,
+                    pydantic_validation_errs=pydantic_validation_errs,
                 )
 
-        # Add the asset validation reports of the current dandiset version to
-        # the asset_validation_reports dictionary if there is any
-        if reports_of_specific_dandiset_version:
-            asset_validation_reports[dandiset_identifier][
-                dandiset_version
-            ] = reports_of_specific_dandiset_version
-
-            logger.info(
-                "Dandiset %s:%s: Generated and added asset validation reports",
-                dandiset_identifier,
-                dandiset_version,
-            )
-        else:
-            logger.info(
-                "Dandiset %s:%s: All asset metadata instances are valid",
-                dandiset_identifier,
-                dandiset_version,
-            )
+                asset_log_exp = str(asset_id) if asset_id else f"at index {idx}"
+                logger.info(
+                    "Dandiset %s:%s: Add validation report for asset %s",
+                    dandiset_identifier,
+                    dandiset_version,
+                    asset_log_exp,
+                )
 
     dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
-    asset_validation_reports: AssetValidationReportsType = defaultdict(dict)
+    asset_validation_reports = AssetValidationReportsType()
     for dandiset_dir in get_direct_subdirs(manifest_path):
         # === In a dandiset directory ===
         dandiset_identifier = dandiset_dir.name
