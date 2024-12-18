@@ -13,7 +13,6 @@ from dandisets_linkml_status_tools.models import (
     ASSET_VALIDATION_REPORTS_ADAPTER,
     DANDI_METADATA_LIST_ADAPTER,
     DANDISET_VALIDATION_REPORTS_ADAPTER,
-    AssetManifestsPath,
     AssetValidationReport,
     AssetValidationReportsType,
     Config,
@@ -254,7 +253,7 @@ def manifests(
 
             if any([pydantic_validation_errs]):
                 asset_validation_reports[
-                    AssetManifestsPath(dandiset_identifier, dandiset_version, idx)
+                    Path(dandiset_identifier, dandiset_version, str(idx))
                 ] = AssetValidationReport(
                     dandiset_identifier=dandiset_identifier,
                     dandiset_version=dandiset_version,

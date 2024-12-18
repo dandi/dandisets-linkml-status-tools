@@ -256,7 +256,7 @@ class AssetManifestsPath(NamedTuple):
 DandisetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
 ]
-AssetValidationReportsType: TypeAlias = dict[AssetManifestsPath, AssetValidationReport]
+AssetValidationReportsType: TypeAlias = dict[Path, AssetValidationReport]
 ValidationReportsType: TypeAlias = (
     DandisetValidationReportsType | AssetValidationReportsType
 )
