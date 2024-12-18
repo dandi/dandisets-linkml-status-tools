@@ -192,12 +192,15 @@ def _asset_validation_diff_reports_iter(
         if not any([pydantic_errs1, pydantic_errs2]):
             continue
 
+        asset_id = r1.asset_id if r1 is not None else r2.asset_id
+        asset_path = r1.asset_path if r1 is not None else r2.asset_path
+
         dandiset_id, dandiset_ver, asset_idx_str = entry.parts
         yield _AssetValidationDiffReport(
             dandiset_identifier=dandiset_id,
             dandiset_version=dandiset_ver,
-            asset_id=r1.asset_id,
-            asset_path=r1.asset_path,
+            asset_id=asset_id,
+            asset_path=asset_path,
             asset_idx=int(asset_idx_str),
             pydantic_validation_errs1=pydantic_errs1,
             pydantic_validation_errs2=pydantic_errs2,
