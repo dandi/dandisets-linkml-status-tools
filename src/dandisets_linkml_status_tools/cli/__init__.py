@@ -252,22 +252,23 @@ def manifests(
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
 
             if any([pydantic_validation_errs]):
-                asset_validation_reports[
-                    Path(dandiset_identifier, dandiset_version, str(idx))
-                ] = AssetValidationReport(
+                r = AssetValidationReport(
                     dandiset_identifier=dandiset_identifier,
                     dandiset_version=dandiset_version,
                     asset_id=asset_id,
                     asset_path=asset_path,
                     pydantic_validation_errs=pydantic_validation_errs,
                 )
+                asset_validation_reports[
+                    Path(dandiset_identifier, dandiset_version, str(idx))
+                ] = r
 
-                asset_log_exp = str(asset_id) if asset_id else f"at index {idx}"
                 logger.info(
-                    "Dandiset %s:%s: Add validation report for asset %s",
+                    "Dandiset %s:%s: Added validation report for asset %sat index %d",
                     dandiset_identifier,
                     dandiset_version,
-                    asset_log_exp,
+                    f"{r.asset_id} " if r.asset_id else "",
+                    idx,
                 )
 
     dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
