@@ -1,6 +1,7 @@
 # This file contains helpers for generating Markdown files
 
 from collections.abc import Iterable
+from pathlib import Path
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 
@@ -29,7 +30,7 @@ def gen_header_and_alignment_rows(headers: Iterable[str]) -> str:
 
 
 def gen_pydantic_validation_errs_cell(
-    errs: PydanticValidationErrsType, errs_file: str
+    errs: PydanticValidationErrsType, errs_file: str | Path
 ) -> str:
     """
     Generate the content of a cell representing Pydantic validation errors in a table
