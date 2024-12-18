@@ -171,9 +171,36 @@ def _asset_validation_diff_reports_iter(
 
     :param reports1: The first collection of asset validation reports
     :param reports2: The second collection of asset validation reports
-    :return: A list of asset validation diff reports of the given two collections
+    :return: The iterator of asset validation diff reports of the given two collections
     """
-    # TODO: complete this
+
+    # Get all entries involved in the two collections of validation reports
+    entries = sorted(reports1.keys() | reports2.keys())
+
+    for entry in entries:
+        # Get reports at the same entry from the two collections respectively
+        r1 = reports1.get(entry)
+        r2 = reports2.get(entry)
+
+        pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
+        pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
+
+        # If all errs are empty, skip this entry
+        if not any([pydantic_errs1, pydantic_errs2]):
+            continue
+
+        dandiset_id, dandiset_ver, _ = entry.parts
+        yield _AssetValidationDiffReport(
+            dandiset_identifier=dandiset_id,
+            dandiset_version=dandiset_ver,
+            asset_id=r1.asset_id,
+            asset_path=r1.asset_path,
+            pydantic_validation_errs1=pydantic_errs1,
+            pydantic_validation_errs2=pydantic_errs2,
+            pydantic_validation_errs_diff=diff(
+                pydantic_errs1, pydantic_errs2, marshal=True
+            ),
+        )
 
 
 def _output_validation_diff_reports(
