@@ -241,9 +241,8 @@ def _output_dandiset_validation_diff_reports(
     """
     Output dandiset validation diff reports
 
-    :param reports: The list of dandiset validation diff reports to be output
-    :param output_dir: Path of the directory to write the dandiset validation diff
-        reports to
+    :param reports: The reports to be output
+    :param output_dir: Path of the directory to write the reports to
     """
     summary_file_name = "summary.md"
 
