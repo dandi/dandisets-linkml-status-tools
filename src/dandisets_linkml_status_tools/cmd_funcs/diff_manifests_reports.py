@@ -13,10 +13,13 @@ from dandisets_linkml_status_tools.cli import (
 from dandisets_linkml_status_tools.models import (
     ASSET_VALIDATION_REPORTS_ADAPTER,
     DANDISET_VALIDATION_REPORTS_ADAPTER,
+    AssetValidationReport,
     AssetValidationReportsType,
     DandiBaseReport,
+    DandisetValidationReport,
     DandisetValidationReportsType,
     PydanticValidationErrsType,
+    ValidationReportsType,
 )
 from dandisets_linkml_status_tools.tools import (
     create_or_replace_dir,
@@ -176,14 +179,16 @@ def _asset_validation_diff_reports_iter(
     :param reports2: The second collection of asset validation reports
     :return: The iterator of asset validation diff reports of the given two collections
     """
+    rs1 = _key_reports(reports1)
+    rs2 = _key_reports(reports2)
 
     # Get all entries involved in the two collections of validation reports
-    entries = sorted(reports1.keys() | reports2.keys())
+    entries = sorted(rs1.keys() | rs2.keys())
 
     for entry in entries:
         # Get reports at the same entry from the two collections respectively
-        r1 = reports1.get(entry)
-        r2 = reports2.get(entry)
+        r1 = rs1.get(entry)
+        r2 = rs2.get(entry)
 
         pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
         pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
@@ -208,6 +213,36 @@ def _asset_validation_diff_reports_iter(
                 pydantic_errs1, pydantic_errs2, marshal=True
             ),
         )
+
+
+def _key_reports(
+    reports: ValidationReportsType,
+) -> dict[Path, DandisetValidationReport | AssetValidationReport]:
+    """
+    Key each validation report in a given collection by the path of the corresponding
+    metadata instance consisting of the dandiset ID, version, and, in the case of a
+    `AssetValidationReport`, the index of the corresponding asset in the containing JSON
+    array in `assets.jsonld`
+
+    :param reports: The given collection of validation reports to be keyed
+    :return: The collection of validation reports keyed by the corresponding paths as
+        a dictionary
+    :raises ValueError: If the given collection of reports contains a report that is not
+        an instance of `DandisetValidationReport` or `AssetValidationReport`
+    """
+    if reports:
+        r0 = reports[0]
+        if isinstance(r0, DandisetValidationReport):
+            parts = ["dandiset_identifier", "dandiset_version"]
+        elif isinstance(r0, AssetValidationReport):
+            parts = ["dandiset_identifier", "dandiset_version", "asset_idx"]
+        else:
+            msg = f"Unsupported report type: {type(r0)}"
+            raise ValueError(msg)
+
+        return {Path(*(str(getattr(r, p)) for p in parts)): r for r in reports}
+
+    return {}
 
 
 def _output_validation_diff_reports(
