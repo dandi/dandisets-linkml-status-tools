@@ -171,6 +171,7 @@ class AssetValidationReport(ValidationReport):
 
     asset_id: str | None
     asset_path: str | None
+    asset_idx: int  # Index of the asset in the array in the `assets.jsonld` file
 
 
 class JsonschemaValidationErrorType(NamedTuple):
@@ -246,7 +247,7 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
 DandisetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
 ]
-AssetValidationReportsType: TypeAlias = dict[Path, AssetValidationReport]
+AssetValidationReportsType: TypeAlias = list[AssetValidationReport]
 ValidationReportsType: TypeAlias = (
     DandisetValidationReportsType | AssetValidationReportsType
 )
