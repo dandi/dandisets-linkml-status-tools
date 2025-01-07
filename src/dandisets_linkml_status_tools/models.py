@@ -171,6 +171,7 @@ class AssetValidationReport(ValidationReport):
 
     asset_id: str | None
     asset_path: str | None
+    asset_idx: int  # Index of the asset in the array in the `assets.jsonld` file
 
 
 class JsonschemaValidationErrorType(NamedTuple):
@@ -243,20 +244,10 @@ class DandisetLinkmlTranslationReport(DandiBaseReport):
     ]
 
 
-class AssetManifestsPath(NamedTuple):
-    """
-    The path of an asset metadata instance located in a manifests directory
-    """
-
-    dandiset_id: str  # Identify the 1st level subdir
-    dandiset_ver: str  # Identify the 2nd level subdir
-    array_idx: int  # Index of the instance in the array in the `assets.jsonld` file
-
-
 DandisetValidationReportsType: TypeAlias = defaultdict[
     str, Annotated[dict[str, DandisetValidationReport], Field(default_factory=dict)]
 ]
-AssetValidationReportsType: TypeAlias = dict[Path, AssetValidationReport]
+AssetValidationReportsType: TypeAlias = list[AssetValidationReport]
 ValidationReportsType: TypeAlias = (
     DandisetValidationReportsType | AssetValidationReportsType
 )

@@ -257,18 +257,17 @@ def manifests(
                     dandiset_version=dandiset_version,
                     asset_id=asset_id,
                     asset_path=asset_path,
+                    asset_idx=idx,
                     pydantic_validation_errs=pydantic_validation_errs,
                 )
-                asset_validation_reports[
-                    Path(dandiset_identifier, dandiset_version, str(idx))
-                ] = r
+                asset_validation_reports.append(r)
 
                 logger.info(
                     "Dandiset %s:%s: Added validation report for asset %sat index %d",
-                    dandiset_identifier,
-                    dandiset_version,
+                    r.dandiset_identifier,
+                    r.dandiset_version,
                     f"{r.asset_id} " if r.asset_id else "",
-                    idx,
+                    r.asset_idx,
                 )
 
     dandiset_validation_reports: DandisetValidationReportsType = defaultdict(dict)
