@@ -551,3 +551,18 @@ def get_validation_reports_entries(
         for dandiset_version in reports_of_specific_dandiset_id:
             entries.add((dandiset_id, dandiset_version))
     return entries
+
+
+def count_pydantic_validation_errs(
+    errs: Iterable[dict[str, Any]]
+) -> Counter[tuple[str, str, tuple[int | str, ...]]]:
+    """
+    Count an iterable of Pydantic validation errors each represented as a dictionary
+
+    :param errs: The iterable of Pydantic validation errors
+    :return: The `Counter` object that counts the errors by categories identified by
+        the error type, message, and location. I.e., each key in the counter is a tuple,
+        consisting of the error type ("type"), message ("msg"),
+        and location ("loc" as a tuple) of the errors counted in that category.
+    """
+    return Counter((err["type"], err["msg"], tuple(err["loc"])) for err in errs)
