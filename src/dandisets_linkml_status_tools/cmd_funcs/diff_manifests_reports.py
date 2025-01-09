@@ -114,7 +114,7 @@ def diff_manifests_reports(
         )
 
     _output_validation_diff_reports(
-        _dandiset_validation_diff_reports_iter(*dandiset_validation_reports_lst),
+        _dandiset_validation_diff_reports(*dandiset_validation_reports_lst),
         _asset_validation_diff_reports_iter(*asset_validation_reports_lst),
         diff_reports_dir,
     )
@@ -122,16 +122,16 @@ def diff_manifests_reports(
     logger.info("Success!")
 
 
-def _dandiset_validation_diff_reports_iter(
+def _dandiset_validation_diff_reports(
     reports1: DandisetValidationReportsType, reports2: DandisetValidationReportsType
-) -> Iterable[_DandisetValidationDiffReport]:
+) -> list[_DandisetValidationDiffReport]:
     """
-    Get the iterator of the dandiset validation diff reports of two given collections of
+    Get the list of the dandiset validation diff reports of two given collections of
     dandiset validation reports
 
     :param reports1: The first collection of dandiset validation reports
     :param reports2: The second collection of dandiset validation reports
-    :return: The iterator of dandiset validation diff reports of the given two
+    :return: The list of dandiset validation diff reports of the given two
         collections
     """
 
@@ -141,6 +141,8 @@ def _dandiset_validation_diff_reports_iter(
         | get_validation_reports_entries(reports2)
     )
 
+    # The list of dandiset validation diff reports to be returned
+    rs = []
     for id_, ver in entries:  # Each entry can be break down to dandiset ID and version
         # Get reports at the same entry from the two collections respectively
         r1 = reports1.get(id_, {}).get(ver, None)
@@ -157,15 +159,19 @@ def _dandiset_validation_diff_reports_iter(
         if not any([pydantic_errs1, pydantic_errs2]):
             continue
 
-        yield _DandisetValidationDiffReport(
-            dandiset_identifier=id_,
-            dandiset_version=ver,
-            pydantic_validation_errs1=pydantic_errs1,
-            pydantic_validation_errs2=pydantic_errs2,
-            pydantic_validation_errs_diff=(
-                diff(pydantic_errs1, pydantic_errs2, marshal=True)
-            ),
+        rs.append(
+            _DandisetValidationDiffReport(
+                dandiset_identifier=id_,
+                dandiset_version=ver,
+                pydantic_validation_errs1=pydantic_errs1,
+                pydantic_validation_errs2=pydantic_errs2,
+                pydantic_validation_errs_diff=(
+                    diff(pydantic_errs1, pydantic_errs2, marshal=True)
+                ),
+            )
         )
+
+    return rs
 
 
 def _asset_validation_diff_reports_iter(
