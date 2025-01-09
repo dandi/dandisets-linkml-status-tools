@@ -557,7 +557,7 @@ def count_pydantic_validation_errs(
     errs: Iterable[dict[str, Any]]
 ) -> Counter[tuple[str, str, tuple[int | str, ...]]]:
     """
-    Count an iterable of Pydantic validation errors each represented as a dictionary
+    Count an iterable of Pydantic validation errors each represented by a dictionary
 
     :param errs: The iterable of Pydantic validation errors
     :return: The `Counter` object that counts the errors by categories identified by
