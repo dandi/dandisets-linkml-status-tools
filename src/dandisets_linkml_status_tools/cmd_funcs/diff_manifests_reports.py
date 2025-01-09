@@ -258,8 +258,8 @@ def _key_reports(
 
 
 def _output_validation_diff_reports(
-    dandiset_validation_diff_reports: Iterable[_DandisetValidationDiffReport],
-    asset_validation_diff_reports: Iterable[_AssetValidationDiffReport],
+    dandiset_validation_diff_reports: list[_DandisetValidationDiffReport],
+    asset_validation_diff_reports: list[_AssetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
