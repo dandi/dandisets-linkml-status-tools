@@ -289,7 +289,7 @@ def _output_validation_diff_reports(
 
 
 def _output_dandiset_validation_diff_reports(
-    reports: Iterable[_DandisetValidationDiffReport],
+    reports: list[_DandisetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
