@@ -115,7 +115,7 @@ def diff_manifests_reports(
 
     _output_validation_diff_reports(
         _dandiset_validation_diff_reports(*dandiset_validation_reports_lst),
-        _asset_validation_diff_reports_iter(*asset_validation_reports_lst),
+        _asset_validation_diff_reports(*asset_validation_reports_lst),
         diff_reports_dir,
     )
 
@@ -174,16 +174,16 @@ def _dandiset_validation_diff_reports(
     return rs
 
 
-def _asset_validation_diff_reports_iter(
+def _asset_validation_diff_reports(
     reports1: AssetValidationReportsType, reports2: AssetValidationReportsType
-) -> Iterable[_AssetValidationDiffReport]:
+) -> list[_AssetValidationDiffReport]:
     """
-    Get the iterator of asset validation diff reports of two given collections of asset
+    Get the list of asset validation diff reports of two given collections of asset
     validation reports
 
     :param reports1: The first collection of asset validation reports
     :param reports2: The second collection of asset validation reports
-    :return: The iterator of asset validation diff reports of the given two collections
+    :return: The list of asset validation diff reports of the given two collections
     """
     rs1 = _key_reports(reports1)
     rs2 = _key_reports(reports2)
@@ -191,6 +191,8 @@ def _asset_validation_diff_reports_iter(
     # Get all entries involved in the two collections of validation reports
     entries = sorted(rs1.keys() | rs2.keys())
 
+    # The list of asset validation diff reports to be returned
+    rs = []
     for entry in entries:
         # Get reports at the same entry from the two collections respectively
         r1 = rs1.get(entry)
@@ -207,18 +209,22 @@ def _asset_validation_diff_reports_iter(
         asset_path = r1.asset_path if r1 is not None else r2.asset_path
 
         dandiset_id, dandiset_ver, asset_idx_str = entry.parts
-        yield _AssetValidationDiffReport(
-            dandiset_identifier=dandiset_id,
-            dandiset_version=dandiset_ver,
-            asset_id=asset_id,
-            asset_path=asset_path,
-            asset_idx=int(asset_idx_str),
-            pydantic_validation_errs1=pydantic_errs1,
-            pydantic_validation_errs2=pydantic_errs2,
-            pydantic_validation_errs_diff=diff(
-                pydantic_errs1, pydantic_errs2, marshal=True
-            ),
+        rs.append(
+            _AssetValidationDiffReport(
+                dandiset_identifier=dandiset_id,
+                dandiset_version=dandiset_ver,
+                asset_id=asset_id,
+                asset_path=asset_path,
+                asset_idx=int(asset_idx_str),
+                pydantic_validation_errs1=pydantic_errs1,
+                pydantic_validation_errs2=pydantic_errs2,
+                pydantic_validation_errs_diff=diff(
+                    pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+            )
         )
+
+    return rs
 
 
 def _key_reports(
