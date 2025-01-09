@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated
 
@@ -382,7 +381,7 @@ def _output_dandiset_validation_diff_reports(
 
 
 def _output_asset_validation_diff_reports(
-    reports: Iterable[_AssetValidationDiffReport],
+    reports: list[_AssetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
