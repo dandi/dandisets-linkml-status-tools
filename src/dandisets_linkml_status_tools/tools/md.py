@@ -81,7 +81,7 @@ def validation_err_count_table(c: Counter[tuple]) -> str:
         gen_header_and_alignment_rows(["Error category", "Count"])
         +
         # The content rows
-        "".join([gen_row(i) for i in c.items()])
+        "".join([gen_row((escape(str(k)), v)) for k, v in c.items()])
     )
 
 
@@ -96,3 +96,36 @@ def pydantic_validation_err_count_table(errs: Iterable[dict[str, Any]]) -> str:
     from dandisets_linkml_status_tools.tools import count_pydantic_validation_errs
 
     return validation_err_count_table(count_pydantic_validation_errs(errs))
+
+
+# The set of special Markdown characters that need to be escaped
+# This set doesn't include (<, >, |) because they are HTML-sensitive characters
+BASE_SPECIAL_CHARS = set(r"\`*_{}[]()#+-.!")
+
+
+def escape(text: str) -> str:
+    r"""
+    Escape the given text for Markdown.
+
+    The function escapes special Markdown characters (\`*_{}[]()#+-.!) and
+    HTML-sensitive characters (<, >, |) by adding the necessary escape sequences.
+
+    :param text: The input text to be escaped.
+    :return: The escaped text.
+    """
+
+    escaped_substrs = []
+    for c in text:
+        if c in BASE_SPECIAL_CHARS:
+            escaped = f"\\{c}"
+        elif c == "<":
+            escaped = "&lt;"
+        elif c == ">":
+            escaped = "&gt;"
+        elif c == "|":
+            escaped = "&#124;"
+        else:
+            escaped = c
+        escaped_substrs.append(escaped)
+
+    return "".join(escaped_substrs)
