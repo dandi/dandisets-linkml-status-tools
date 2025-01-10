@@ -1,7 +1,9 @@
 # This file contains helpers for generating Markdown files
 
+from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 from dandisets_linkml_status_tools.tools.typing import Stringable
@@ -64,3 +66,33 @@ def gen_diff_cell(diff: dict | list, diff_file: str | Path) -> str:
     :return: The content of the cell
     """
     return f"[**DIFFERENT**]({diff_file})" if diff else "same"
+
+
+def validation_err_count_table(c: Counter[tuple]) -> str:
+    """
+    Generate a table of validation error counts from a Counter object which has tuples
+    as keys that represent the types of validation errors
+
+    :param c: The Counter object
+    :return: The string presenting the table in Markdown format
+    """
+    return (
+        # The header row and the alignment row
+        gen_header_and_alignment_rows(["Error category", "Count"])
+        +
+        # The content rows
+        "".join([gen_row(i) for i in c.items()])
+    )
+
+
+def pydantic_validation_err_count_table(errs: Iterable[dict[str, Any]]) -> str:
+    """
+    Generate a table of Pydantic validation error counts from an iterable of Pydantic
+    validation errors each represented by a dictionary
+
+    :param errs: The iterable of Pydantic validation errors
+    :return: The string presenting the table in Markdown format
+    """
+    from dandisets_linkml_status_tools.tools import count_pydantic_validation_errs
+
+    return validation_err_count_table(count_pydantic_validation_errs(errs))

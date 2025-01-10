@@ -1,4 +1,5 @@
 import logging
+from itertools import chain
 from pathlib import Path
 from typing import Annotated
 
@@ -31,6 +32,7 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_diff_cell,
     gen_pydantic_validation_errs_cell,
     gen_row,
+    pydantic_validation_err_count_table,
 )
 
 logger = logging.getLogger(__name__)
@@ -311,7 +313,25 @@ def _output_dandiset_validation_diff_reports(
     output_dir.mkdir(parents=True)
 
     with (output_dir / summary_file_name).open("w") as summary_f:
+        # === Output counts of different categories of Pydantic validation errors for
+        # validations done with separate schemas ===
+        summary_f.write("### Pydantic errs 1 counts\n\n")
+        summary_f.write(
+            pydantic_validation_err_count_table(
+                chain.from_iterable(r.pydantic_validation_errs1 for r in reports)
+            )
+        )
+
+        summary_f.write("\n")
+        summary_f.write("### Pydantic errs 2 counts\n\n")
+        summary_f.write(
+            pydantic_validation_err_count_table(
+                chain.from_iterable(r.pydantic_validation_errs2 for r in reports)
+            )
+        )
+
         # Write the header and alignment rows of the summary table
+        summary_f.write("\n")
         summary_f.write(gen_header_and_alignment_rows(summary_headers))
 
         # Output individual dandiset validation diff reports by writing the supporting
