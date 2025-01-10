@@ -9,16 +9,16 @@ from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 from dandisets_linkml_status_tools.tools.typing import Stringable
 
 
-def gen_row(cell_str_values: Iterable[Stringable]) -> str:
+def gen_row(cell_values: Iterable[Stringable]) -> str:
     """
     Construct a row of a Markdown table with given stringable cell values
 
-    :param cell_str_values: The given iterable of stringable cell values
+    :param cell_values: The given iterable of stringable cell values
     :return: The constructed row of a Markdown table
 
     Note: The given iterable of cell string values are `str` values
     """
-    return f'|{"|".join(str(cell_str_values))}|\n'
+    return f'|{"|".join(str(v) for v in cell_values)}|\n'
 
 
 def gen_header_and_alignment_rows(headers: Iterable[str]) -> str:
