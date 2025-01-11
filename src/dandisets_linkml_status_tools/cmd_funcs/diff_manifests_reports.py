@@ -318,7 +318,8 @@ def _output_dandiset_validation_diff_reports(
         summary_f.write("### Pydantic errs 1 counts\n\n")
         summary_f.write(
             pydantic_validation_err_count_table(
-                chain.from_iterable(r.pydantic_validation_errs1 for r in reports)
+                chain.from_iterable(r.pydantic_validation_errs1 for r in reports),
+                compress=True,
             )
         )
 
@@ -326,7 +327,8 @@ def _output_dandiset_validation_diff_reports(
         summary_f.write("### Pydantic errs 2 counts\n\n")
         summary_f.write(
             pydantic_validation_err_count_table(
-                chain.from_iterable(r.pydantic_validation_errs2 for r in reports)
+                chain.from_iterable(r.pydantic_validation_errs2 for r in reports),
+                compress=True,
             )
         )
 

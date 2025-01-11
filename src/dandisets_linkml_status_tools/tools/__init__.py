@@ -554,15 +554,30 @@ def get_validation_reports_entries(
 
 
 def count_pydantic_validation_errs(
-    errs: Iterable[dict[str, Any]]
+    errs: Iterable[dict[str, Any]], *, compress: bool = False
 ) -> Counter[tuple[str, str, tuple[int | str, ...]]]:
     """
     Count an iterable of Pydantic validation errors each represented by a dictionary
 
     :param errs: The iterable of Pydantic validation errors
+    :param compress: A boolean indicating whether to compress the counts by considering
+        all index values in the location of the errors the same. These values are to be
+        represented by the string "[*]" in the keys of the returning counter.
     :return: The `Counter` object that counts the errors by categories identified by
         the error type, message, and location. I.e., each key in the counter is a tuple,
         consisting of the error type ("type"), message ("msg"),
         and location ("loc" as a tuple) of the errors counted in that category.
     """
-    return Counter((err["type"], err["msg"], tuple(err["loc"])) for err in errs)
+    if not compress:
+        c = Counter((err["type"], err["msg"], tuple(err["loc"])) for err in errs)
+    else:
+        c = Counter(
+            (
+                err["type"],
+                err["msg"],
+                tuple("[*]" if isinstance(v, int) else v for v in err["loc"]),
+            )
+            for err in errs
+        )
+
+    return c
