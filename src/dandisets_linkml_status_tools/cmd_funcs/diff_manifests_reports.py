@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Iterable
+from itertools import chain
 from pathlib import Path
 from typing import Annotated
 
@@ -32,6 +32,7 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_diff_cell,
     gen_pydantic_validation_errs_cell,
     gen_row,
+    pydantic_validation_err_count_table,
 )
 
 logger = logging.getLogger(__name__)
@@ -114,24 +115,24 @@ def diff_manifests_reports(
         )
 
     _output_validation_diff_reports(
-        _dandiset_validation_diff_reports_iter(*dandiset_validation_reports_lst),
-        _asset_validation_diff_reports_iter(*asset_validation_reports_lst),
+        _dandiset_validation_diff_reports(*dandiset_validation_reports_lst),
+        _asset_validation_diff_reports(*asset_validation_reports_lst),
         diff_reports_dir,
     )
 
     logger.info("Success!")
 
 
-def _dandiset_validation_diff_reports_iter(
+def _dandiset_validation_diff_reports(
     reports1: DandisetValidationReportsType, reports2: DandisetValidationReportsType
-) -> Iterable[_DandisetValidationDiffReport]:
+) -> list[_DandisetValidationDiffReport]:
     """
-    Get the iterator of the dandiset validation diff reports of two given collections of
+    Get the list of the dandiset validation diff reports of two given collections of
     dandiset validation reports
 
     :param reports1: The first collection of dandiset validation reports
     :param reports2: The second collection of dandiset validation reports
-    :return: The iterator of dandiset validation diff reports of the given two
+    :return: The list of dandiset validation diff reports of the given two
         collections
     """
 
@@ -141,6 +142,8 @@ def _dandiset_validation_diff_reports_iter(
         | get_validation_reports_entries(reports2)
     )
 
+    # The list of dandiset validation diff reports to be returned
+    rs = []
     for id_, ver in entries:  # Each entry can be break down to dandiset ID and version
         # Get reports at the same entry from the two collections respectively
         r1 = reports1.get(id_, {}).get(ver, None)
@@ -157,27 +160,31 @@ def _dandiset_validation_diff_reports_iter(
         if not any([pydantic_errs1, pydantic_errs2]):
             continue
 
-        yield _DandisetValidationDiffReport(
-            dandiset_identifier=id_,
-            dandiset_version=ver,
-            pydantic_validation_errs1=pydantic_errs1,
-            pydantic_validation_errs2=pydantic_errs2,
-            pydantic_validation_errs_diff=(
-                diff(pydantic_errs1, pydantic_errs2, marshal=True)
-            ),
+        rs.append(
+            _DandisetValidationDiffReport(
+                dandiset_identifier=id_,
+                dandiset_version=ver,
+                pydantic_validation_errs1=pydantic_errs1,
+                pydantic_validation_errs2=pydantic_errs2,
+                pydantic_validation_errs_diff=(
+                    diff(pydantic_errs1, pydantic_errs2, marshal=True)
+                ),
+            )
         )
 
+    return rs
 
-def _asset_validation_diff_reports_iter(
+
+def _asset_validation_diff_reports(
     reports1: AssetValidationReportsType, reports2: AssetValidationReportsType
-) -> Iterable[_AssetValidationDiffReport]:
+) -> list[_AssetValidationDiffReport]:
     """
-    Get the iterator of asset validation diff reports of two given collections of asset
+    Get the list of asset validation diff reports of two given collections of asset
     validation reports
 
     :param reports1: The first collection of asset validation reports
     :param reports2: The second collection of asset validation reports
-    :return: The iterator of asset validation diff reports of the given two collections
+    :return: The list of asset validation diff reports of the given two collections
     """
     rs1 = _key_reports(reports1)
     rs2 = _key_reports(reports2)
@@ -185,6 +192,8 @@ def _asset_validation_diff_reports_iter(
     # Get all entries involved in the two collections of validation reports
     entries = sorted(rs1.keys() | rs2.keys())
 
+    # The list of asset validation diff reports to be returned
+    rs = []
     for entry in entries:
         # Get reports at the same entry from the two collections respectively
         r1 = rs1.get(entry)
@@ -201,18 +210,22 @@ def _asset_validation_diff_reports_iter(
         asset_path = r1.asset_path if r1 is not None else r2.asset_path
 
         dandiset_id, dandiset_ver, asset_idx_str = entry.parts
-        yield _AssetValidationDiffReport(
-            dandiset_identifier=dandiset_id,
-            dandiset_version=dandiset_ver,
-            asset_id=asset_id,
-            asset_path=asset_path,
-            asset_idx=int(asset_idx_str),
-            pydantic_validation_errs1=pydantic_errs1,
-            pydantic_validation_errs2=pydantic_errs2,
-            pydantic_validation_errs_diff=diff(
-                pydantic_errs1, pydantic_errs2, marshal=True
-            ),
+        rs.append(
+            _AssetValidationDiffReport(
+                dandiset_identifier=dandiset_id,
+                dandiset_version=dandiset_ver,
+                asset_id=asset_id,
+                asset_path=asset_path,
+                asset_idx=int(asset_idx_str),
+                pydantic_validation_errs1=pydantic_errs1,
+                pydantic_validation_errs2=pydantic_errs2,
+                pydantic_validation_errs_diff=diff(
+                    pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+            )
         )
+
+    return rs
 
 
 def _key_reports(
@@ -246,8 +259,8 @@ def _key_reports(
 
 
 def _output_validation_diff_reports(
-    dandiset_validation_diff_reports: Iterable[_DandisetValidationDiffReport],
-    asset_validation_diff_reports: Iterable[_AssetValidationDiffReport],
+    dandiset_validation_diff_reports: list[_DandisetValidationDiffReport],
+    asset_validation_diff_reports: list[_AssetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
@@ -277,7 +290,7 @@ def _output_validation_diff_reports(
 
 
 def _output_dandiset_validation_diff_reports(
-    reports: Iterable[_DandisetValidationDiffReport],
+    reports: list[_DandisetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
@@ -300,7 +313,27 @@ def _output_dandiset_validation_diff_reports(
     output_dir.mkdir(parents=True)
 
     with (output_dir / summary_file_name).open("w") as summary_f:
+        # === Output counts of different categories of Pydantic validation errors for
+        # validations done with separate schemas ===
+        summary_f.write("### Pydantic errs 1 counts\n\n")
+        summary_f.write(
+            pydantic_validation_err_count_table(
+                chain.from_iterable(r.pydantic_validation_errs1 for r in reports),
+                compress=True,
+            )
+        )
+
+        summary_f.write("\n")
+        summary_f.write("### Pydantic errs 2 counts\n\n")
+        summary_f.write(
+            pydantic_validation_err_count_table(
+                chain.from_iterable(r.pydantic_validation_errs2 for r in reports),
+                compress=True,
+            )
+        )
+
         # Write the header and alignment rows of the summary table
+        summary_f.write("\n")
         summary_f.write(gen_header_and_alignment_rows(summary_headers))
 
         # Output individual dandiset validation diff reports by writing the supporting
@@ -370,7 +403,7 @@ def _output_dandiset_validation_diff_reports(
 
 
 def _output_asset_validation_diff_reports(
-    reports: Iterable[_AssetValidationDiffReport],
+    reports: list[_AssetValidationDiffReport],
     output_dir: Path,
 ) -> None:
     """
