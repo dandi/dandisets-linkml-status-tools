@@ -81,7 +81,7 @@ def validation_err_count_table(c: Counter[tuple]) -> str:
         gen_header_and_alignment_rows(["Error category", "Count"])
         +
         # The content rows
-        "".join([gen_row((escape(str(k)), v)) for k, v in c.items()])
+        "".join([gen_row((escape(str(k)), v)) for k, v in sorted(c.items())])
     )
 
 
