@@ -2,7 +2,6 @@
 
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 from dandisets_linkml_status_tools.tools.typing import Stringable
@@ -82,26 +81,6 @@ def validation_err_count_table(c: dict[tuple, int]) -> str:
         +
         # The content rows
         "".join([gen_row((escape(str(k)), v)) for k, v in sorted(c.items())])
-    )
-
-
-def pydantic_validation_err_count_table(
-    errs: Iterable[dict[str, Any]], *, compress: bool = False
-) -> str:
-    """
-    Generate a table of Pydantic validation error counts from an iterable of Pydantic
-    validation errors each represented by a dictionary
-
-    :param errs: The iterable of Pydantic validation errors
-    :param compress: A boolean indicating whether to compress the counts by considering
-        all index values in the location of the errors the same. These values are to be
-        represented by the string "[*]" in the categories of the errors.
-    :return: The string presenting the table in Markdown format
-    """
-    from dandisets_linkml_status_tools.tools import count_pydantic_validation_errs
-
-    return validation_err_count_table(
-        count_pydantic_validation_errs(errs, compress=compress)
     )
 
 
