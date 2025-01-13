@@ -1,6 +1,5 @@
 # This file contains helpers for generating Markdown files
 
-from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -68,12 +67,13 @@ def gen_diff_cell(diff: dict | list, diff_file: str | Path) -> str:
     return f"[**DIFFERENT**]({diff_file})" if diff else "same"
 
 
-def validation_err_count_table(c: Counter[tuple]) -> str:
+def validation_err_count_table(c: dict[tuple, int]) -> str:
     """
-    Generate a table of validation error counts from a Counter object which has tuples
-    as keys that represent the types of validation errors
+    Generate a table of validation error counts from a `dict` object which has tuples
+    as keys that represent the types of validation errors and values as integers that
+    represent the counts of the errors of the corresponding types
 
-    :param c: The Counter object
+    :param c: The `dict` object
     :return: The string presenting the table in Markdown format
     """
     return (
