@@ -69,3 +69,32 @@ class ValidationErrCounter:
         """
 
         return [(cat, ctr.copy()) for cat, ctr in self._err_ctrs_by_cat.items()]
+
+
+def validation_err_diff(
+    c1: ValidationErrCounter, c2: ValidationErrCounter
+) -> dict[tuple, tuple[Counter[tuple], Counter[tuple]]]:
+    """
+    Get the diff between two `ValidationErrCounter` objects
+
+    :param c1: The first `ValidationErrCounter` object
+    :param c2: The second `ValidationErrCounter` object
+    :return: A dictionary presenting the diff between the two objects. The keys are the
+        keys in `c1` or `c2` that represent a category of validation errors in which
+        there is a difference `c1` and `c2`. The values are a tuple consisting of a
+        `Counter` object representing the validation errors removed from `c1` when
+        compared to `c2` in the corresponding error category and a `Counter` object
+        representing the validation errors gained in `c2` when compared to `c1` in the
+        corresponding error category
+    """
+    cats = c1.cats().union(c2.cats())
+
+    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]] = {}
+    for cat in cats:
+        removed = c1[cat] - c2[cat]
+        gained = c2[cat] - c1[cat]
+
+        if removed or gained:
+            diff[cat] = (removed, gained)
+
+    return diff

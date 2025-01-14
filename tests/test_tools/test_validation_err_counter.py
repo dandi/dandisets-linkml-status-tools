@@ -4,6 +4,7 @@ import pytest
 
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
     ValidationErrCounter,
+    validation_err_diff,
 )
 
 
@@ -169,3 +170,139 @@ def test_items(err_counter):
     for _, counter in items:
         for counter_original in err_counter._err_ctrs_by_cat.values():
             assert counter is not counter_original
+
+
+class TestValidationErrDiff:
+    @pytest.mark.parametrize(
+        (
+            "c1_errors",
+            "c2_errors",
+            "expected_diff_keys",
+            "expected_removed",
+            "expected_gained",
+        ),
+        [
+            # 1) Both counters empty => no differences
+            (
+                [],
+                [],
+                set(),
+                {},
+                {},
+            ),
+            # 2) Identical errors => no diff
+            (
+                [("TypeError", "MsgA"), ("ValueError", "MsgB")],
+                [("TypeError", "MsgA"), ("ValueError", "MsgB")],
+                set(),
+                {},
+                {},
+            ),
+            # 3) Different errors in a single category
+            (
+                [("X", "x1"), ("X", "x2"), ("X", "x2")],
+                [("X", "x2"), ("X", "x3")],
+                {("X",)},
+                {("X",): Counter([("X", "x1"), ("X", "x2")])},
+                {("X",): Counter([("X", "x3")])},
+            ),
+            # 4) Multiple categories, partial overlap
+            (
+                # c1
+                [("A", "a1"), ("A", "a2"), ("B", "b1")],
+                # c2
+                [("A", "a2"), ("A", "a3"), ("B", "b1"), ("C", "c1")],
+                # expected keys that should differ
+                {("A",), ("C",)},
+                # expected_removed
+                {
+                    ("A",): Counter([("A", "a1")]),
+                    ("C",): Counter(),
+                },
+                # expected_gained
+                {
+                    ("A",): Counter([("A", "a3")]),
+                    ("C",): Counter([("C", "c1")]),
+                },
+            ),
+            # 5) Category only in c1
+            (
+                [("TypeError", "T1")],
+                [],
+                {("TypeError",)},
+                {("TypeError",): Counter([("TypeError", "T1")])},
+                {("TypeError",): Counter()},
+            ),
+            # 6) Category only in c2
+            (
+                [],
+                [("ValueError", "V1")],
+                {("ValueError",)},
+                {("ValueError",): Counter()},
+                {("ValueError",): Counter([("ValueError", "V1")])},
+            ),
+            # 7) Complex scenario with overlapping, partially matching categories
+            (
+                [
+                    ("A", "a1"),
+                    ("A", "a2"),
+                    ("A", "a2"),
+                    ("B", "b1"),
+                    ("C", "c1"),
+                    ("C", "c2"),
+                ],
+                [
+                    ("A", "a2"),
+                    ("A", "a2"),
+                    ("A", "a3"),
+                    ("B", "b1"),
+                    ("C", "c2"),
+                    ("C", "c2"),
+                    ("D", "d1"),
+                ],
+                # We expect differences in categories: A, C, D
+                {("A",), ("C",), ("D",)},
+                {
+                    ("A",): Counter([("A", "a1")]),
+                    ("C",): Counter([("C", "c1")]),
+                    ("D",): Counter(),
+                },
+                {
+                    ("A",): Counter([("A", "a3")]),
+                    ("C",): Counter([("C", "c2")]),
+                    ("D",): Counter([("D", "d1")]),
+                },
+            ),
+        ],
+    )
+    def test_validation_err_diff(
+        self,
+        c1_errors,
+        c2_errors,
+        expected_diff_keys,
+        expected_removed,
+        expected_gained,
+    ):
+        # Create and populate the counters
+        c1 = ValidationErrCounter(err_categorizer=simple_categorizer)
+        c2 = ValidationErrCounter(err_categorizer=simple_categorizer)
+        c1.count(c1_errors)
+        c2.count(c2_errors)
+
+        # Perform the diff
+        diff_result = validation_err_diff(c1, c2)
+
+        # Check the diff keys
+        assert (
+            set(diff_result.keys()) == expected_diff_keys
+        ), f"Expected diff keys {expected_diff_keys}, got {set(diff_result.keys())}"
+
+        # Check removed/gained for each category in the expected diff
+        for cat in expected_diff_keys:
+            removed_ctr, gained_ctr = diff_result[cat]
+            assert (
+                removed_ctr == expected_removed[cat]
+            ), f"For category {cat}, expected removed {expected_removed[cat]}, got {removed_ctr}"
+            assert (
+                gained_ctr == expected_gained[cat]
+            ), f"For category {cat}, expected gained {expected_gained[cat]}, got {gained_ctr}"
