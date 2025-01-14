@@ -148,3 +148,55 @@ def validation_err_diff_table(
             for cat, (removed, gained) in sorted(diff.items())
         )
     )
+
+
+def validation_err_diff_detailed_tables(
+    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]]
+) -> str:
+    """
+    Generate a sequence of tables detailing the differences in two sets of validation
+    errors by categories. Each table details the validation errors removed or gained in
+    a specific category
+
+    :param diff: This parameter is the same as the `diff` parameter in the
+        `validation_err_diff_table` function
+    :return: The string presenting the tables in Markdown format
+    :raises ValueError: If the removed and gained validation errors are not mutually
+        exclusive for any category
+    """
+    tables: list[str] = []
+
+    for cat, (removed, gained) in sorted(diff.items()):
+        # === Generate one table for each category ===
+
+        if not removed and not gained:
+            # There is no difference in this category
+            continue
+        if removed and gained:
+            # This is not possible, there must have been an error in the diff
+            msg = (
+                f"The removed and gained validation errors should be mutually exclusive"
+                f" for the category {cat!r}"
+            )
+            raise ValueError(msg)
+
+        if removed:
+            # Header of the count column
+            count_col_header = "Removed"
+            content = removed
+        else:
+            # Header of the count column
+            count_col_header = "Gained"
+            content = gained
+
+        header_and_alignment_rows = gen_header_and_alignment_rows(
+            (escape(str(cat)), count_col_header)
+        )
+        rows = "".join(
+            gen_row((escape(str(err_rep)), f"[{count}]({err_rep[3]})"))
+            for err_rep, count in sorted(content.items())
+        )
+
+        tables.append(header_and_alignment_rows + rows)
+
+    return "\n".join(tables)
