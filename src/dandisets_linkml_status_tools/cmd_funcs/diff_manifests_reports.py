@@ -1,7 +1,10 @@
 import logging
 from itertools import chain
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, cast
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from jsondiff import diff
 from pydantic import Field
@@ -32,7 +35,12 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_diff_cell,
     gen_pydantic_validation_errs_cell,
     gen_row,
-    pydantic_validation_err_count_table,
+    validation_err_count_table,
+    validation_err_diff_table,
+)
+from dandisets_linkml_status_tools.tools.validation_err_counter import (
+    ValidationErrCounter,
+    validation_err_diff,
 )
 
 logger = logging.getLogger(__name__)
@@ -312,25 +320,77 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
+    err1_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
+    err2_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
+    for r in reports:
+        p = Path(r.dandiset_identifier, r.dandiset_version)
+
+        # Tuple representation of the Pydantic validation errors
+        err1_rep_iters.append(
+            (e["type"], e["msg"], tuple(e["loc"]), p)
+            for e in r.pydantic_validation_errs1
+        )
+        err2_rep_iters.append(
+            (e["type"], e["msg"], tuple(e["loc"]), p)
+            for e in r.pydantic_validation_errs2
+        )
+
+    err1_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
+        chain.from_iterable(err1_rep_iters)
+    )
+    err2_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
+        chain.from_iterable(err2_rep_iters)
+    )
+
+    def err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
+        """
+        Categorize a Pydantic validation error represented as a tuple using the same
+        tuple without the path component to the dandiset at a particular version and
+        with a generalized "loc" with all array indices replaced by "[*]"
+
+        :param err: The tuple representing the Pydantic validation error
+        :return: The tuple representing the category that the error belongs to
+        """
+        err = cast(tuple[str, str, tuple[str | int, ...], Path], err)
+        type_, msg = err[0], err[1]
+
+        # Generalize the "loc" by replacing all array indices with "[*]"
+        loc = cast(
+            tuple[str, ...], tuple("[*]" if isinstance(v, int) else v for v in err[2])
+        )
+
+        return type_, msg, loc
+
+    pydantic_validation_errs1_ctr = ValidationErrCounter(err_categorizer)
+    pydantic_validation_errs2_ctr = ValidationErrCounter(err_categorizer)
+
+    pydantic_validation_errs1_ctr.count(err1_reps)
+    pydantic_validation_errs2_ctr.count(err2_reps)
+
+    pydantic_validation_err_diff = validation_err_diff(
+        pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+    )
+
     with (output_dir / summary_file_name).open("w") as summary_f:
         # === Output counts of different categories of Pydantic validation errors for
         # validations done with separate schemas ===
         summary_f.write("### Pydantic errs 1 counts\n\n")
         summary_f.write(
-            pydantic_validation_err_count_table(
-                chain.from_iterable(r.pydantic_validation_errs1 for r in reports),
-                compress=True,
-            )
+            validation_err_count_table(pydantic_validation_errs1_ctr.counts_by_cat)
         )
 
         summary_f.write("\n")
         summary_f.write("### Pydantic errs 2 counts\n\n")
         summary_f.write(
-            pydantic_validation_err_count_table(
-                chain.from_iterable(r.pydantic_validation_errs2 for r in reports),
-                compress=True,
-            )
+            validation_err_count_table(pydantic_validation_errs2_ctr.counts_by_cat)
         )
+
+        # Output a table of the differences in the different categories of
+        # Pydantic validation errors between the two sets of validation results where
+        # each set is represented, and counted, by a `ValidationErrCounter` object
+        summary_f.write("\n")
+        summary_f.write("### Pydantic errs diff\n\n")
+        summary_f.write(validation_err_diff_table(pydantic_validation_err_diff))
 
         # Write the header and alignment rows of the summary table
         summary_f.write("\n")
