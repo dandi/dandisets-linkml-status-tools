@@ -36,9 +36,11 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_pydantic_validation_errs_cell,
     gen_row,
     validation_err_count_table,
+    validation_err_diff_table,
 )
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
     ValidationErrCounter,
+    validation_err_diff,
 )
 
 logger = logging.getLogger(__name__)
@@ -365,6 +367,10 @@ def _output_dandiset_validation_diff_reports(
     pydantic_validation_errs1_ctr.count(err1_reps)
     pydantic_validation_errs2_ctr.count(err2_reps)
 
+    pydantic_validation_err_diff = validation_err_diff(
+        pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+    )
+
     with (output_dir / summary_file_name).open("w") as summary_f:
         # === Output counts of different categories of Pydantic validation errors for
         # validations done with separate schemas ===
@@ -378,6 +384,13 @@ def _output_dandiset_validation_diff_reports(
         summary_f.write(
             validation_err_count_table(pydantic_validation_errs2_ctr.counts_by_cat)
         )
+
+        # Output a table of the differences in the different categories of
+        # Pydantic validation errors between the two sets of validation results where
+        # each set is represented, and counted, by a `ValidationErrCounter` object
+        summary_f.write("\n")
+        summary_f.write("### Pydantic errs diff\n\n")
+        summary_f.write(validation_err_diff_table(pydantic_validation_err_diff))
 
         # Write the header and alignment rows of the summary table
         summary_f.write("\n")

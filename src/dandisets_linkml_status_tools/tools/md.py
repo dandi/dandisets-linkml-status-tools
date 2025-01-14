@@ -1,5 +1,6 @@
 # This file contains helpers for generating Markdown files
 
+from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -115,3 +116,35 @@ def escape(text: str) -> str:
         escaped_substrs.append(escaped)
 
     return "".join(escaped_substrs)
+
+
+def validation_err_diff_table(
+    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]]
+) -> str:
+    """
+    Generate a table displaying the differences in two sets of validation errors by
+    categories
+
+    :param diff: The differences represented in a dictionary where the keys are tuples
+        representing the categories and the values are tuples consisting of a `Counter`
+        representing the validation errors removed and a `Counter` representing the
+        validation errors gained from the first set of validation errors to the second
+        set of validation errors in the corresponding categories
+    :return: The string presenting the table in Markdown format
+    """
+    return (
+        # The header row and the alignment row
+        gen_header_and_alignment_rows(["Error category", "Removed", "Gained"])
+        +
+        # The content rows
+        "".join(
+            gen_row(
+                (
+                    escape(str(cat)),
+                    removed.total(),
+                    gained.total(),
+                )
+            )
+            for cat, (removed, gained) in sorted(diff.items())
+        )
+    )
