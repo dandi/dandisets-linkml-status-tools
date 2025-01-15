@@ -424,17 +424,6 @@ def _output_asset_validation_diff_reports(
     """
     summary_file_name = "summary.md"
 
-    summary_headers = [
-        "dandiset",
-        "version",
-        "asset id",
-        "asset path",
-        "asset index",
-        "pydantic errs 1",
-        "pydantic errs 2",
-        "pydantic errs diff",
-    ]
-
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
@@ -465,11 +454,8 @@ def _output_asset_validation_diff_reports(
             )
         )
 
-        # Write the header and alignment rows of the summary table
-        summary_f.write(gen_header_and_alignment_rows(summary_headers))
-
-        # Output individual asset validation diff reports by writing the supporting
-        # files and the summary table row
+        # Output individual asset validation diff reports by writing the constituting
+        # files
         for r in reports:
             report_dir = (
                 output_dir
@@ -493,54 +479,13 @@ def _output_asset_validation_diff_reports(
 
             logger.info(
                 "Dandiset %s:%s - asset %sat index %d: "
-                "Wrote asset validation diff report supporting files to %s",
+                "Wrote asset validation diff report constituting files to %s",
                 r.dandiset_identifier,
                 r.dandiset_version,
                 f"{r.asset_id} " if r.asset_id else "",
                 r.asset_idx,
                 report_dir,
             )
-
-            # === Write the summary table row for the validation diff report ===
-            # Relative directory for storing all validation diff reports of the dandiset
-            dandiset_dir = Path(r.dandiset_identifier)
-            # Relative directory for storing all validation diff reports of the dandiset
-            # at a particular version
-            version_dir = dandiset_dir / r.dandiset_version
-            # Relative directory for storing all validation diff reports of the asset
-            asset_dir = version_dir / str(r.asset_idx)
-
-            row_cells = (
-                f" {c} "  # Add spaces around the cell content for better readability
-                for c in [
-                    # For the dandiset column
-                    f"[{r.dandiset_identifier}]({dandiset_dir})",
-                    # For the version column
-                    f"[{r.dandiset_version}]({version_dir})",
-                    # For the asset id column
-                    f"{r.asset_id}",
-                    # For the asset path column
-                    f"{r.asset_path}",
-                    # For the asset index column
-                    f"[{r.asset_idx}]({asset_dir})",
-                    # For the pydantic errs 1 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs1,
-                        asset_dir / f"{pydantic_errs1_base_fname}.json",
-                    ),
-                    # For the pydantic errs 2 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs2,
-                        asset_dir / f"{pydantic_errs2_base_fname}.json",
-                    ),
-                    # For the pydantic errs diff column
-                    gen_diff_cell(
-                        r.pydantic_validation_errs_diff,
-                        asset_dir / f"{pydantic_errs_diff_base_fname}.json",
-                    ),
-                ]
-            )
-            summary_f.write(gen_row(row_cells))
 
     logger.info("Output of asset validation diff reports is complete")
 
