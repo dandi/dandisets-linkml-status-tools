@@ -7,6 +7,10 @@ from typing import Protocol
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 from dandisets_linkml_status_tools.tools.typing import Stringable
+from dandisets_linkml_status_tools.tools.validation_err_counter import (
+    ValidationErrCounter,
+    validation_err_diff,
+)
 
 
 def gen_row(cell_values: Iterable[Stringable]) -> str:
@@ -247,3 +251,48 @@ def pydantic_validation_err_diff_detailed_table(
     )
 
     return f"{heading}{header_and_alignment_rows}{rows}"
+
+
+def pydantic_validation_err_diff_summary(
+    c1: ValidationErrCounter, c2: ValidationErrCounter
+) -> str:
+    """
+    Generate a summary of the differences between two sets of Pydantic validation errors
+
+    :param c1: A `ValidationErrCounter` that has counted the first set of Pydantic
+        validation errors
+    :param c2: A `ValidationErrCounter` that has counted the second set of Pydantic
+        validation errors
+    :return: The string presenting the summary in Markdown format
+    """
+
+    # The differences in the different categories of
+    # Pydantic validation errors between the two sets of validation results where
+    # each set is represented, and counted, by a `ValidationErrCounter` object
+    pydantic_validation_err_diff = validation_err_diff(c1, c2)
+
+    count_table1 = validation_err_count_table(c1.counts_by_cat)
+    count_table2 = validation_err_count_table(c2.counts_by_cat)
+
+    # A table of the differences in the different categories of Pydantic validation
+    # errors
+    diff_table = validation_err_diff_table(pydantic_validation_err_diff)
+
+    # A sequence of tables detailing the differences in Pydantic validation
+    # errors between the two sets of validation results
+    # noinspection PyTypeChecker
+    diff_detailed_tables = validation_err_diff_detailed_tables(
+        pydantic_validation_err_diff,
+        pydantic_validation_err_diff_detailed_table,
+    )
+
+    return (
+        f"### Pydantic errs 1 counts\n\n"
+        f"{count_table1}"
+        f"\n### Pydantic errs 2 counts\n\n"
+        f"{count_table2}"
+        f"\n### Pydantic errs diff\n\n"
+        f"{diff_table}"
+        f"\n## Pydantic errs diff detailed tables\n\n"
+        f"{diff_detailed_tables}"
+    )
