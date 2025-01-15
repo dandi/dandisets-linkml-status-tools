@@ -224,14 +224,19 @@ def pydantic_validation_err_diff_detailed_table(
     # Header of the count column
     count_col_header = "Removed" if is_removed else "Gained"
 
+    heading = f"### {escape(str(cat))}\n\n"
     header_and_alignment_rows = gen_header_and_alignment_rows(
-        (escape(str(cat)), "Data instance path", count_col_header)
+        ("type", "msg", "loc", "Data instance path", count_col_header)
     )
     rows = "".join(
         gen_row(
             (
-                # The error representation without the path of the data instance
-                escape(str(err_rep[:-1])),
+                # The "type" attribute of the Pydantic validation error
+                err_rep[0],
+                # The "msg" attribute of the Pydantic validation error
+                err_rep[1],
+                # The "loc" attribute of the Pydantic validation error
+                escape(str(err_rep[2])),
                 # The path of the data instance
                 f"[{err_rep[3]}]({err_rep[3]})",
                 # The count of removed or gained of the represented error
@@ -241,4 +246,4 @@ def pydantic_validation_err_diff_detailed_table(
         for err_rep, count in sorted(diff.items())
     )
 
-    return header_and_alignment_rows + rows
+    return f"{heading}{header_and_alignment_rows}{rows}"
