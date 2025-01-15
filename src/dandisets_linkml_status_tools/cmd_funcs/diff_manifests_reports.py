@@ -322,26 +322,30 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    err1_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
-    err2_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
+    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int], Path]]] = []
+    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int], Path]]] = []
     for r in reports:
         p = Path(r.dandiset_identifier, r.dandiset_version)
 
         # Tuple representation of the Pydantic validation errors
-        err1_rep_iters.append(
-            (e["type"], e["msg"], tuple(e["loc"]), p)
-            for e in r.pydantic_validation_errs1
+        err1_rep_lsts.append(
+            [
+                (e["type"], e["msg"], tuple(e["loc"]), p)
+                for e in r.pydantic_validation_errs1
+            ]
         )
-        err2_rep_iters.append(
-            (e["type"], e["msg"], tuple(e["loc"]), p)
-            for e in r.pydantic_validation_errs2
+        err2_rep_lsts.append(
+            [
+                (e["type"], e["msg"], tuple(e["loc"]), p)
+                for e in r.pydantic_validation_errs2
+            ]
         )
 
     err1_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
-        chain.from_iterable(err1_rep_iters)
+        chain.from_iterable(err1_rep_lsts)
     )
     err2_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
-        chain.from_iterable(err2_rep_iters)
+        chain.from_iterable(err2_rep_lsts)
     )
 
     def err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
