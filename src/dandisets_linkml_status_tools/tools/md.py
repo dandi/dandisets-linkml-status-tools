@@ -3,6 +3,7 @@
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Protocol
 
 from dandisets_linkml_status_tools.models import PydanticValidationErrsType
 from dandisets_linkml_status_tools.tools.typing import Stringable
@@ -150,8 +151,19 @@ def validation_err_diff_table(
     )
 
 
+class TableGenerator(Protocol):
+    """
+    Protocol of generators of tables for a specific category of validation errors
+    """
+
+    def __call__(
+        self, cat: tuple, diff: Counter[tuple], *, is_removed: bool
+    ) -> str: ...
+
+
 def validation_err_diff_detailed_tables(
-    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]]
+    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]],
+    table_gen_func: TableGenerator,
 ) -> str:
     """
     Generate a sequence of tables detailing the differences in two sets of validation
@@ -160,6 +172,11 @@ def validation_err_diff_detailed_tables(
 
     :param diff: This parameter is the same as the `diff` parameter in the
         `validation_err_diff_table` function
+    :param table_gen_func: The function that generates a table detailing the differences
+        in a specific category of validation errors. The function should take three
+        parameters: the category of the validation errors, the differences represented
+        as a `Counter` object, and a boolean value, as a keyword argument, indicating
+        whether the differences represent the validation errors removed or gained
     :return: The string presenting the tables in Markdown format
     :raises ValueError: If the removed and gained validation errors are not mutually
         exclusive for any category
@@ -181,22 +198,47 @@ def validation_err_diff_detailed_tables(
             raise ValueError(msg)
 
         if removed:
-            # Header of the count column
-            count_col_header = "Removed"
-            content = removed
+            table = table_gen_func(cat, removed, is_removed=True)
+
         else:
-            # Header of the count column
-            count_col_header = "Gained"
-            content = gained
+            table = table_gen_func(cat, gained, is_removed=False)
 
-        header_and_alignment_rows = gen_header_and_alignment_rows(
-            (escape(str(cat)), count_col_header)
-        )
-        rows = "".join(
-            gen_row((escape(str(err_rep)), f"[{count}]({err_rep[3]})"))
-            for err_rep, count in sorted(content.items())
-        )
-
-        tables.append(header_and_alignment_rows + rows)
+        tables.append(table)
 
     return "\n".join(tables)
+
+
+def pydantic_validation_err_diff_detailed_table(
+    cat: tuple, diff: Counter[tuple], *, is_removed: bool
+) -> str:
+    """
+    Generate a table for a specific category of Pydantic validation errors
+
+    :param cat: The category of the Pydantic validation errors
+    :param diff: The differences of Pydantic validation errors in the given category
+        represented as a `Counter` object
+    :param is_removed: A boolean value indicating whether `diff` represents the
+        validation errors removed or gained
+    :return: The string presenting the table in Markdown format
+    """
+    # Header of the count column
+    count_col_header = "Removed" if is_removed else "Gained"
+
+    header_and_alignment_rows = gen_header_and_alignment_rows(
+        (escape(str(cat)), "Data instance path", count_col_header)
+    )
+    rows = "".join(
+        gen_row(
+            (
+                # The error representation without the path of the data instance
+                escape(str(err_rep[:-1])),
+                # The path of the data instance
+                f"[{err_rep[3]}]({err_rep[3]})",
+                # The count of removed or gained of the represented error
+                count,
+            )
+        )
+        for err_rep, count in sorted(diff.items())
+    )
+
+    return header_and_alignment_rows + rows

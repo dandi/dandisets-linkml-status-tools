@@ -35,6 +35,7 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_diff_cell,
     gen_pydantic_validation_errs_cell,
     gen_row,
+    pydantic_validation_err_diff_detailed_table,
     validation_err_count_table,
     validation_err_diff_detailed_tables,
     validation_err_diff_table,
@@ -397,8 +398,12 @@ def _output_dandiset_validation_diff_reports(
         # errors between the two sets of validation results
         summary_f.write("\n")
         summary_f.write("## Pydantic errs diff detailed tables\n\n")
+        # noinspection PyTypeChecker
         summary_f.write(
-            validation_err_diff_detailed_tables(pydantic_validation_err_diff)
+            validation_err_diff_detailed_tables(
+                pydantic_validation_err_diff,
+                pydantic_validation_err_diff_detailed_table,
+            )
         )
 
         # Write the header and alignment rows of the summary table
