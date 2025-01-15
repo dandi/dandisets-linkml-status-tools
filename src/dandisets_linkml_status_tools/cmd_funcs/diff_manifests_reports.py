@@ -35,7 +35,9 @@ from dandisets_linkml_status_tools.tools.md import (
     gen_diff_cell,
     gen_pydantic_validation_errs_cell,
     gen_row,
+    pydantic_validation_err_diff_detailed_table,
     validation_err_count_table,
+    validation_err_diff_detailed_tables,
     validation_err_diff_table,
 )
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
@@ -320,26 +322,30 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    err1_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
-    err2_rep_iters: list[Iterable[tuple[str, str, tuple[str | int], Path]]] = []
+    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int], Path]]] = []
+    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int], Path]]] = []
     for r in reports:
         p = Path(r.dandiset_identifier, r.dandiset_version)
 
         # Tuple representation of the Pydantic validation errors
-        err1_rep_iters.append(
-            (e["type"], e["msg"], tuple(e["loc"]), p)
-            for e in r.pydantic_validation_errs1
+        err1_rep_lsts.append(
+            [
+                (e["type"], e["msg"], tuple(e["loc"]), p)
+                for e in r.pydantic_validation_errs1
+            ]
         )
-        err2_rep_iters.append(
-            (e["type"], e["msg"], tuple(e["loc"]), p)
-            for e in r.pydantic_validation_errs2
+        err2_rep_lsts.append(
+            [
+                (e["type"], e["msg"], tuple(e["loc"]), p)
+                for e in r.pydantic_validation_errs2
+            ]
         )
 
     err1_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
-        chain.from_iterable(err1_rep_iters)
+        chain.from_iterable(err1_rep_lsts)
     )
     err2_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]] = (
-        chain.from_iterable(err2_rep_iters)
+        chain.from_iterable(err2_rep_lsts)
     )
 
     def err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
@@ -391,6 +397,18 @@ def _output_dandiset_validation_diff_reports(
         summary_f.write("\n")
         summary_f.write("### Pydantic errs diff\n\n")
         summary_f.write(validation_err_diff_table(pydantic_validation_err_diff))
+
+        # Write a sequence of tables detailing the differences in Pydantic validation
+        # errors between the two sets of validation results
+        summary_f.write("\n")
+        summary_f.write("## Pydantic errs diff detailed tables\n\n")
+        # noinspection PyTypeChecker
+        summary_f.write(
+            validation_err_diff_detailed_tables(
+                pydantic_validation_err_diff,
+                pydantic_validation_err_diff_detailed_table,
+            )
+        )
 
         # Write the header and alignment rows of the summary table
         summary_f.write("\n")
