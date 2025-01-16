@@ -57,7 +57,11 @@ class ValidationErrCounter:
         :param cat: The category of the validation errors
         :return: The `Counter` object
         """
-        return self._err_ctrs_by_cat[cat].copy()
+        return (
+            self._err_ctrs_by_cat[cat].copy()
+            if cat in self._err_ctrs_by_cat
+            else Counter()
+        )
 
     def items(self) -> list[tuple[tuple, Counter[tuple]]]:
         """
