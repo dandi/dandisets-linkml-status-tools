@@ -155,7 +155,7 @@ def validation_err_diff_table(
     )
 
 
-class TableGenerator(Protocol):
+class DetailedTableGenerator(Protocol):
     """
     Protocol of generators of tables for a specific category of validation errors
     """
@@ -167,7 +167,7 @@ class TableGenerator(Protocol):
 
 def validation_err_diff_detailed_tables(
     diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]],
-    table_gen_func: TableGenerator,
+    table_gen_func: DetailedTableGenerator,
 ) -> str:
     """
     Generate a sequence of tables detailing the differences in two sets of validation
