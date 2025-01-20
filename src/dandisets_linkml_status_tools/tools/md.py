@@ -124,7 +124,8 @@ def escape(text: str) -> str:
 
 
 def validation_err_diff_table(
-    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]]
+    diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]],
+    detailed_tb_anchors: dict[tuple, str] | None = None,
 ) -> str:
     """
     Generate a table displaying the differences in two sets of validation errors by
@@ -135,8 +136,23 @@ def validation_err_diff_table(
         representing the validation errors removed and a `Counter` representing the
         validation errors gained from the first set of validation errors to the second
         set of validation errors in the corresponding categories
+    :param detailed_tb_anchors: A dictionary that maps the categories to the anchors of
+        the detailed tables of the categories. If this parameter is not `None`, link
+        each category expression in the table to the corresponding detailed table.
     :return: The string presenting the table in Markdown format
     """
+
+    def gen_cat_expr_base(cat_) -> str:
+        return escape(str(cat_))
+
+    if detailed_tb_anchors is None:
+        gen_cat_expr = gen_cat_expr_base
+
+    else:
+
+        def gen_cat_expr(cat_: tuple) -> str:
+            return f"[{gen_cat_expr_base(cat_)}](#{detailed_tb_anchors[cat_]})"
+
     return (
         # The header row and the alignment row
         gen_header_and_alignment_rows(["Error category", "Removed", "Gained"])
@@ -145,7 +161,7 @@ def validation_err_diff_table(
         "".join(
             gen_row(
                 (
-                    escape(str(cat)),
+                    gen_cat_expr(cat),
                     removed.total(),
                     gained.total(),
                 )
@@ -155,19 +171,28 @@ def validation_err_diff_table(
     )
 
 
-class TableGenerator(Protocol):
+class DetailedTableGenerator(Protocol):
     """
     Protocol of generators of tables for a specific category of validation errors
     """
 
-    def __call__(
-        self, cat: tuple, diff: Counter[tuple], *, is_removed: bool
-    ) -> str: ...
+    def __call__(self, cat: tuple, diff: Counter[tuple], *, is_removed: bool) -> str:
+        """
+        Generate a table for a specific category of validation errors
+
+        :param cat: The category of the validation errors
+        :param diff: The differences of validation errors in the given category
+            represented as a `Counter` object
+        :param is_removed: A boolean value indicating whether `diff` represents the
+            validation errors removed or gained
+        :return: The string presenting the table in Markdown format
+        """
 
 
 def validation_err_diff_detailed_tables(
     diff: dict[tuple, tuple[Counter[tuple], Counter[tuple]]],
-    table_gen_func: TableGenerator,
+    table_gen_func: DetailedTableGenerator,
+    detailed_tb_anchors: dict[tuple, str] | None = None,
 ) -> str:
     """
     Generate a sequence of tables detailing the differences in two sets of validation
@@ -181,6 +206,9 @@ def validation_err_diff_detailed_tables(
         parameters: the category of the validation errors, the differences represented
         as a `Counter` object, and a boolean value, as a keyword argument, indicating
         whether the differences represent the validation errors removed or gained
+    :param detailed_tb_anchors: A dictionary that maps the categories to the anchors of
+        the detailed tables of the categories. If this parameter is not `None`, anchor
+        the table with the corresponding anchor
     :return: The string presenting the tables in Markdown format
     :raises ValueError: If the removed and gained validation errors are not mutually
         exclusive for any category
@@ -206,6 +234,9 @@ def validation_err_diff_detailed_tables(
 
         else:
             table = table_gen_func(cat, gained, is_removed=False)
+
+        if detailed_tb_anchors is not None:
+            table = f'<a id="{detailed_tb_anchors[cat]}"></a>\n{table}'
 
         tables.append(table)
 
@@ -266,17 +297,27 @@ def pydantic_validation_err_diff_summary(
     :return: The string presenting the summary in Markdown format
     """
 
+    # The base name of the anchor of the detailed tables of categories of Pydantic
+    # validation errors
+    detailed_tb_base_anchor = "cat"
+
     # The differences in the different categories of
     # Pydantic validation errors between the two sets of validation results where
     # each set is represented, and counted, by a `ValidationErrCounter` object
     pydantic_validation_err_diff = validation_err_diff(c1, c2)
+    detailed_tb_anchors = {
+        cat: f"{detailed_tb_base_anchor}-{i}"
+        for i, cat in enumerate(sorted(pydantic_validation_err_diff))
+    }
 
     count_table1 = validation_err_count_table(c1.counts_by_cat)
     count_table2 = validation_err_count_table(c2.counts_by_cat)
 
     # A table of the differences in the different categories of Pydantic validation
     # errors
-    diff_table = validation_err_diff_table(pydantic_validation_err_diff)
+    diff_table = validation_err_diff_table(
+        pydantic_validation_err_diff, detailed_tb_anchors
+    )
 
     # A sequence of tables detailing the differences in Pydantic validation
     # errors between the two sets of validation results
@@ -284,6 +325,7 @@ def pydantic_validation_err_diff_summary(
     diff_detailed_tables = validation_err_diff_detailed_tables(
         pydantic_validation_err_diff,
         pydantic_validation_err_diff_detailed_table,
+        detailed_tb_anchors,
     )
 
     return (
