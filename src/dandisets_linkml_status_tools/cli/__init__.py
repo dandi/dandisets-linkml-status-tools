@@ -1,3 +1,4 @@
+import json
 import logging
 from collections import defaultdict
 from pathlib import Path
@@ -185,7 +186,7 @@ def manifests(
         else:
             model = PublishedDandiset
 
-        dandiset_metadata = dandiset_metadata_file_path.read_text()
+        dandiset_metadata = json.loads(dandiset_metadata_file_path.read_text())
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
 
         if any([pydantic_validation_errs]):
