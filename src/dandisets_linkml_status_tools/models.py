@@ -10,6 +10,7 @@ from linkml.validator.report import ValidationResult
 from pydantic import (
     AfterValidator,
     BaseModel,
+    ConfigDict,
     Field,
     PlainSerializer,
     TypeAdapter,
@@ -142,15 +143,33 @@ class DandiBaseReport(BaseModel):
     dandiset_version: str  # The version of the dandiset being validated
 
 
+class JsonschemaValidationErrorModel(BaseModel):
+    """
+    An immutable Pydantic model for representing a
+    `jsonschema.exceptions.ValidationError`
+    """
+
+    message: str
+    absolute_schema_path: tuple
+    absolute_path: tuple
+
+    model_config = ConfigDict(frozen=True)
+
+
 class ValidationReport(DandiBaseReport):
     """
     A report of validation results of a data instance against a Pydantic model and
     the JSON schema generated from the model.
     """
 
-    # Error encountered in validation against a Pydantic model
+    # Errors encountered in validation against a Pydantic model
     pydantic_validation_errs: Annotated[
         PydanticValidationErrsType, Field(default_factory=list)
+    ]
+    # Errors encountered in validation against the JSON schema generated from the
+    # Pydantic model
+    jsonschema_validation_errs: Annotated[
+        list[JsonschemaValidationErrorModel], Field(default_factory=list)
     ]
 
 

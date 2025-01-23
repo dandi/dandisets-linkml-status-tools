@@ -1,6 +1,7 @@
 import json
 import logging
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -29,6 +30,7 @@ from dandisets_linkml_status_tools.tools import (
     pydantic_validate,
     write_reports,
 )
+from dandisets_linkml_status_tools.tools.jsonschema import err_lst, jsonschema_validator
 
 if TYPE_CHECKING:
     from dandisets_linkml_status_tools.models import DandisetLinkmlTranslationReport
@@ -164,6 +166,20 @@ def manifests(
     )
     asset_validation_reports_file_path = output_dir / ASSET_VALIDATION_REPORTS_FILE
 
+    jsonschema_validator_with_format = partial(jsonschema_validator, check_format=True)
+    dandiset_jsonschema_validator = jsonschema_validator_with_format(
+        Dandiset.model_json_schema()
+    )
+    published_dandiset_jsonschema_validator = jsonschema_validator_with_format(
+        PublishedDandiset.model_json_schema()
+    )
+    asset_jsonschema_validator = jsonschema_validator_with_format(
+        Asset.model_json_schema()
+    )
+    published_asset_jsonschema_validator = jsonschema_validator_with_format(
+        PublishedAsset.model_json_schema()
+    )
+
     def add_dandiset_validation_report_if_err() -> None:
         """
         Add a `DandisetValidationReport` object to `dandiset_validation_reports`
@@ -183,18 +199,22 @@ def manifests(
         # Get the Pydantic model to validate against
         if dandiset_version == "draft":
             model = Dandiset
+            j_validator = dandiset_jsonschema_validator
         else:
             model = PublishedDandiset
+            j_validator = published_dandiset_jsonschema_validator
 
         dandiset_metadata = json.loads(dandiset_metadata_file_path.read_text())
         pydantic_validation_errs = pydantic_validate(dandiset_metadata, model)
+        jsonschema_validation_errs = err_lst(j_validator, dandiset_metadata)
 
-        if any([pydantic_validation_errs]):
+        if any((pydantic_validation_errs, jsonschema_validation_errs)):
             dandiset_validation_reports[dandiset_identifier][dandiset_version] = (
                 DandisetValidationReport(
                     dandiset_identifier=dandiset_identifier,
                     dandiset_version=dandiset_version,
                     pydantic_validation_errs=pydantic_validation_errs,
+                    jsonschema_validation_errs=jsonschema_validation_errs,
                 )
             )
 
@@ -229,8 +249,10 @@ def manifests(
         # Get the Pydantic model to validate against
         if dandiset_version == "draft":
             model = Asset
+            j_validator = asset_jsonschema_validator
         else:
             model = PublishedAsset
+            j_validator = published_asset_jsonschema_validator
 
         # JSON string read from the assets metadata file
         assets_metadata_json = assets_metadata_file_path.read_text()
@@ -251,8 +273,9 @@ def manifests(
             asset_id = asset_metadata.get("id")
             asset_path = asset_metadata.get("path")
             pydantic_validation_errs = pydantic_validate(asset_metadata, model)
+            jsonschema_validation_errs = err_lst(j_validator, asset_metadata)
 
-            if any([pydantic_validation_errs]):
+            if any((pydantic_validation_errs, jsonschema_validation_errs)):
                 r = AssetValidationReport(
                     dandiset_identifier=dandiset_identifier,
                     dandiset_version=dandiset_version,
@@ -260,6 +283,7 @@ def manifests(
                     asset_path=asset_path,
                     asset_idx=idx,
                     pydantic_validation_errs=pydantic_validation_errs,
+                    jsonschema_validation_errs=jsonschema_validation_errs,
                 )
                 asset_validation_reports.append(r)
 
