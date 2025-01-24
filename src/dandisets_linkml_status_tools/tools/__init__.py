@@ -79,24 +79,19 @@ def get_direct_subdirs(dir_path: Path) -> list[Path]:
     return sorted(iter_direct_subdirs(dir_path), key=lambda p: p.name)
 
 
-def pydantic_validate(data: DandiMetadata | str, model: type[BaseModel]) -> list:
+def pydantic_validate(data: Any, model: type[BaseModel]) -> list:
     """
-    Validate the given data against a Pydantic model
+    Validate a given data instance against a Pydantic model
 
-    :param data: The data, as a `DandiMetadata` instance or JSON string, to be validated
+    :param data: The data instance to be validated
     :param model: The Pydantic model to validate the data against
     :return: A list of errors encountered in the validation.
         In the case of validation failure, this is the deserialization of the JSON
         string returned by the Pydantic `ValidationError.json()` method.
         In the case of validation success, this is an empty list.
     """
-    if isinstance(data, str):
-        validate_method = model.model_validate_json
-    else:
-        validate_method = model.model_validate
-
     try:
-        validate_method(data)
+        model.model_validate(data)
     except ValidationError as e:
         return json.loads(e.json())
 
