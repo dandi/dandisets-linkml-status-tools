@@ -18,6 +18,7 @@ from dandisets_linkml_status_tools.models import (
     DandiBaseReport,
     DandisetValidationReport,
     DandisetValidationReportsType,
+    JsonschemaValidationErrorModel,
     PydanticValidationErrsType,
     ValidationReportsType,
 )
@@ -46,6 +47,7 @@ class _DandiValidationDiffReport(DandiBaseReport):
     A base class for DANDI validation diff reports
     """
 
+    # Pydantic validation errors and their diff
     pydantic_validation_errs1: Annotated[
         PydanticValidationErrsType, Field(default_factory=list)
     ]
@@ -53,6 +55,15 @@ class _DandiValidationDiffReport(DandiBaseReport):
         PydanticValidationErrsType, Field(default_factory=list)
     ]
     pydantic_validation_errs_diff: dict | list
+
+    # jsonschema validation errors and their diff
+    jsonschema_validation_errs1: Annotated[
+        list[JsonschemaValidationErrorModel], Field(default_factory=list)
+    ]
+    jsonschema_validation_errs2: Annotated[
+        list[JsonschemaValidationErrorModel], Field(default_factory=list)
+    ]
+    jsonschema_validation_errs_diff: dict | list
 
 
 class _DandisetValidationDiffReport(_DandiValidationDiffReport):
