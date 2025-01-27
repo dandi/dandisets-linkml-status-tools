@@ -404,19 +404,13 @@ def _output_dandiset_validation_diff_reports(
             pydantic_errs2_base_fname = "pydantic_validation_errs2"
             pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
 
-            for errs, base_fname in [
+            for data, base_fname in [
                 (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
                 (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
+                (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
             ]:
-                if errs:
-                    write_data(errs, report_dir, base_fname)
-
-            if r.pydantic_validation_errs_diff:
-                write_data(
-                    r.pydantic_validation_errs_diff,
-                    report_dir,
-                    pydantic_errs_diff_base_fname,
-                )
+                if data:
+                    write_data(data, report_dir, base_fname)
 
             logger.info(
                 "Wrote dandiset %s validation diff report supporting files to %s",
