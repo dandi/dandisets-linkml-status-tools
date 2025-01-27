@@ -366,10 +366,21 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    pydantic_err1_reps, pydantic_err2_reps = err_reps(reports)
+    (
+        pydantic_err1_reps,
+        pydantic_err2_reps,
+        jsonschema_err1_reps,
+        jsonschema_err2_reps,
+    ) = err_reps(reports)
 
     pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
     pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
+    jsonschema_validation_errs1_ctr = count_jsonschema_validation_errs(
+        jsonschema_err1_reps
+    )
+    jsonschema_validation_errs2_ctr = count_jsonschema_validation_errs(
+        jsonschema_err2_reps
+    )
 
     with (output_dir / summary_file_name).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
@@ -464,10 +475,21 @@ def _output_asset_validation_diff_reports(
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
-    pydantic_err1_reps, pydantic_err2_reps = err_reps(reports)
+    (
+        pydantic_err1_reps,
+        pydantic_err2_reps,
+        jsonschema_err1_reps,
+        jsonschema_err2_reps,
+    ) = err_reps(reports)
 
     pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
     pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
+    jsonschema_validation_errs1_ctr = count_jsonschema_validation_errs(
+        jsonschema_err1_reps
+    )
+    jsonschema_validation_errs2_ctr = count_jsonschema_validation_errs(
+        jsonschema_err2_reps
+    )
 
     with (output_dir / summary_file_name).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
