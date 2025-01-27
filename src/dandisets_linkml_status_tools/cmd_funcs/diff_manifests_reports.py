@@ -42,7 +42,7 @@ from dandisets_linkml_status_tools.tools.validation_err_counter import (
 
 logger = logging.getLogger(__name__)
 
-PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple[str | int, ...], Path]
+PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple, Path]
 JsonschemaValidationErrRep: TypeAlias = tuple[JsonschemaValidationErrorModel, Path]
 
 
