@@ -163,15 +163,24 @@ def _dandiset_validation_diff_reports(
         r1 = reports1.get(id_, {}).get(ver, None)
         r2 = reports2.get(id_, {}).get(ver, None)
 
-        # If both are None, skip this entry
-        if r1 is None and r2 is None:
-            continue
+        if r1 is not None:
+            pydantic_errs1 = r1.pydantic_validation_errs
+            jsonschema_errs1 = r1.jsonschema_validation_errs
+        else:
+            pydantic_errs1 = []
+            jsonschema_errs1 = []
 
-        pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
-        pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
+        if r2 is not None:
+            pydantic_errs2 = r2.pydantic_validation_errs
+            jsonschema_errs2 = r2.jsonschema_validation_errs
+        else:
+            pydantic_errs2 = []
+            jsonschema_errs2 = []
 
         # If all errs are empty, skip this entry
-        if not any([pydantic_errs1, pydantic_errs2]):
+        if not any(
+            (pydantic_errs1, pydantic_errs2, jsonschema_errs1, jsonschema_errs2)
+        ):
             continue
 
         rs.append(
@@ -180,8 +189,15 @@ def _dandiset_validation_diff_reports(
                 dandiset_version=ver,
                 pydantic_validation_errs1=pydantic_errs1,
                 pydantic_validation_errs2=pydantic_errs2,
-                pydantic_validation_errs_diff=(
-                    diff(pydantic_errs1, pydantic_errs2, marshal=True)
+                pydantic_validation_errs_diff=diff(
+                    pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+                jsonschema_validation_errs1=jsonschema_errs1,
+                jsonschema_validation_errs2=jsonschema_errs2,
+                jsonschema_validation_errs_diff=diff(
+                    [e.model_dump(mode="json") for e in jsonschema_errs1],
+                    [e.model_dump(mode="json") for e in jsonschema_errs2],
+                    marshal=True,
                 ),
             )
         )
@@ -213,11 +229,24 @@ def _asset_validation_diff_reports(
         r1 = rs1.get(entry)
         r2 = rs2.get(entry)
 
-        pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
-        pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
+        if r1 is not None:
+            pydantic_errs1 = r1.pydantic_validation_errs
+            jsonschema_errs1 = r1.jsonschema_validation_errs
+        else:
+            pydantic_errs1 = []
+            jsonschema_errs1 = []
+
+        if r2 is not None:
+            pydantic_errs2 = r2.pydantic_validation_errs
+            jsonschema_errs2 = r2.jsonschema_validation_errs
+        else:
+            pydantic_errs2 = []
+            jsonschema_errs2 = []
 
         # If all errs are empty, skip this entry
-        if not any([pydantic_errs1, pydantic_errs2]):
+        if not any(
+            (pydantic_errs1, pydantic_errs2, jsonschema_errs1, jsonschema_errs2)
+        ):
             continue
 
         asset_id = r1.asset_id if r1 is not None else r2.asset_id
@@ -235,6 +264,13 @@ def _asset_validation_diff_reports(
                 pydantic_validation_errs2=pydantic_errs2,
                 pydantic_validation_errs_diff=diff(
                     pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+                jsonschema_validation_errs1=jsonschema_errs1,
+                jsonschema_validation_errs2=jsonschema_errs2,
+                jsonschema_validation_errs_diff=diff(
+                    [e.model_dump(mode="json") for e in jsonschema_errs1],
+                    [e.model_dump(mode="json") for e in jsonschema_errs2],
+                    marshal=True,
                 ),
             )
         )
