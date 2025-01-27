@@ -538,7 +538,9 @@ def _output_asset_validation_diff_reports(
     logger.info("Output of asset validation diff reports is complete")
 
 
-def pydantic_err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
+def pydantic_err_categorizer(
+    err: tuple[str, str, tuple[str | int, ...], Path]
+) -> tuple[str, str, tuple[str, ...]]:
     """
     Categorize a Pydantic validation error represented as a tuple using the same
     tuple without the path component to the dandiset at a particular version and
@@ -547,7 +549,6 @@ def pydantic_err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
     :param err: The tuple representing the Pydantic validation error
     :return: The tuple representing the category that the error belongs to
     """
-    err = cast(tuple[str, str, tuple[str | int, ...], Path], err)
     type_, msg = err[0], err[1]
 
     # Generalize the "loc" by replacing all array indices with "[*]"
