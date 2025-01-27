@@ -365,24 +365,10 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
-    err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
-    for r in reports:
-        p = Path(r.dandiset_identifier, r.dandiset_version)
+    pydantic_err1_reps, pydantic_err2_reps = err_reps(reports)
 
-        # Tuple representation of the Pydantic validation errors
-        err1_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
-        )
-        err2_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
-        )
-
-    pydantic_validation_errs1_ctr = ValidationErrCounter(pydantic_err_categorizer)
-    pydantic_validation_errs2_ctr = ValidationErrCounter(pydantic_err_categorizer)
-
-    pydantic_validation_errs1_ctr.count(chain.from_iterable(err1_rep_lsts))
-    pydantic_validation_errs2_ctr.count(chain.from_iterable(err2_rep_lsts))
+    pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
+    pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
 
     with (output_dir / summary_file_name).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
@@ -477,24 +463,10 @@ def _output_asset_validation_diff_reports(
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
-    err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
-    err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
-    for r in reports:
-        p = Path(r.dandiset_identifier, r.dandiset_version, str(r.asset_idx))
+    pydantic_err1_reps, pydantic_err2_reps = err_reps(reports)
 
-        # Tuple representation of the Pydantic validation errors
-        err1_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
-        )
-        err2_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
-        )
-
-    pydantic_validation_errs1_ctr = ValidationErrCounter(pydantic_err_categorizer)
-    pydantic_validation_errs2_ctr = ValidationErrCounter(pydantic_err_categorizer)
-
-    pydantic_validation_errs1_ctr.count(chain.from_iterable(err1_rep_lsts))
-    pydantic_validation_errs2_ctr.count(chain.from_iterable(err2_rep_lsts))
+    pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
+    pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
 
     with (output_dir / summary_file_name).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
