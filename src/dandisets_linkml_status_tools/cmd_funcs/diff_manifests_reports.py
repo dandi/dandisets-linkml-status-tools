@@ -574,6 +574,64 @@ def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRe
     return err["type"], err["msg"], tuple(err["loc"]), path
 
 
+def err_reps(
+    rs: list[_DandisetValidationDiffReport] | list[_AssetValidationDiffReport],
+) -> tuple[Iterable[PydanticValidationErrRep], Iterable[PydanticValidationErrRep]]:
+    """
+    Get all validation errors in given reports and return them in tuple presentations
+    suitable for counting
+
+    :param rs: The given reports
+    :return: A tuple of four elements:
+        1. An iterable of representations of all errors in `pydantic_validation_errs1`
+            of all reports
+        2. An iterable of representations of all errors in `pydantic_validation_errs2`
+            of all reports
+        3. An iterable of representations of all errors in `jsonschema_validation_errs1`
+            of all reports
+        4. An iterable of representations of all errors in `jsonschema_validation_errs2`
+            of all reports
+    """
+
+    # todo: expand to include jsonschema errors
+
+    pydantic_err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    pydantic_err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
+
+    if rs:
+        r0 = rs[0]
+        if isinstance(r0, _DandisetValidationDiffReport):
+
+            def instance_path():
+                return Path(r.dandiset_identifier, r.dandiset_version)
+
+        elif isinstance(r0, _AssetValidationDiffReport):
+
+            def instance_path():
+                nonlocal r
+                r = cast(_AssetValidationDiffReport, r)
+                return Path(r.dandiset_identifier, r.dandiset_version, str(r.asset_idx))
+
+        else:
+            msg = f"Unsupported report type: {type(r0)}"
+            raise TypeError(msg)
+
+        for r in rs:
+            p = instance_path()
+
+            # Tuple representation of the Pydantic validation errors
+            pydantic_err1_rep_lsts.append(
+                [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
+            )
+            pydantic_err2_rep_lsts.append(
+                [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
+            )
+
+    return chain.from_iterable(pydantic_err1_rep_lsts), chain.from_iterable(
+        pydantic_err2_rep_lsts
+    )
+
+
 def count_pydantic_validation_errs(
     err_reps_: Iterable[PydanticValidationErrRep],
 ) -> ValidationErrCounter:
