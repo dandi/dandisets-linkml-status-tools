@@ -1,10 +1,11 @@
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable
+from typing import Any
 
 
 class ValidationErrCounter:
 
-    def __init__(self, err_categorizer: Callable[[tuple], tuple]):
+    def __init__(self, err_categorizer: Callable[[Any], tuple]):
         """
         Initialize the validation error counter
 
