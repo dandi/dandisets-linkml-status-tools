@@ -575,16 +575,16 @@ def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRe
 
 
 def count_pydantic_validation_errs(
-    err_reps: Iterable[PydanticValidationErrRep],
+    err_reps_: Iterable[PydanticValidationErrRep],
 ) -> ValidationErrCounter:
     """
     Pydantic validation errors provided by an iterable
 
-    :param err_reps: The iterable of Pydantic validation errors represented as tuples
+    :param err_reps_: The iterable of Pydantic validation errors represented as tuples
         defined by the output of `pydantic_err_rep`
     :return: A `ValidationErrCounter` object representing the counts
     """
     ctr = ValidationErrCounter(pydantic_err_categorizer)
-    ctr.count(err_reps)
+    ctr.count(err_reps_)
 
     return ctr
