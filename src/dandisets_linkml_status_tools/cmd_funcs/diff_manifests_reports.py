@@ -2,7 +2,7 @@ import logging
 from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any, TypeAlias, cast
 
 from jsondiff import diff
 from pydantic import Field
@@ -41,6 +41,8 @@ from dandisets_linkml_status_tools.tools.validation_err_counter import (
 )
 
 logger = logging.getLogger(__name__)
+
+PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple[str | int, ...], Path]
 
 
 class _DandiValidationDiffReport(DandiBaseReport):
@@ -363,8 +365,8 @@ def _output_dandiset_validation_diff_reports(
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
+    err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
     for r in reports:
         p = Path(r.dandiset_identifier, r.dandiset_version)
 
@@ -475,8 +477,8 @@ def _output_asset_validation_diff_reports(
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
-    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
+    err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
     for r in reports:
         p = Path(r.dandiset_identifier, r.dandiset_version, str(r.asset_idx))
 
@@ -539,7 +541,7 @@ def _output_asset_validation_diff_reports(
 
 
 def pydantic_err_categorizer(
-    err: tuple[str, str, tuple[str | int, ...], Path]
+    err: PydanticValidationErrRep,
 ) -> tuple[str, str, tuple[str, ...]]:
     """
     Categorize a Pydantic validation error represented as a tuple using the same
@@ -559,9 +561,7 @@ def pydantic_err_categorizer(
     return type_, msg, loc
 
 
-def pydantic_err_rep(
-    err: dict[str, Any], path: Path
-) -> tuple[str, str, tuple[str | int, ...], Path]:
+def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRep:
     """
     Get a representation of a Pydantic validation error as a tuple
 
@@ -575,7 +575,7 @@ def pydantic_err_rep(
 
 
 def count_pydantic_validation_errs(
-    err_reps: Iterable[tuple[str, str, tuple[str | int, ...], Path]]
+    err_reps: Iterable[PydanticValidationErrRep],
 ) -> ValidationErrCounter:
     """
     Pydantic validation errors provided by an iterable
