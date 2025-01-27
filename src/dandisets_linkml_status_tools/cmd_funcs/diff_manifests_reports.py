@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from itertools import chain
 from pathlib import Path
 from typing import Annotated, Any, TypeAlias, cast
@@ -633,6 +633,23 @@ def err_reps(
     )
 
 
+def count_validation_errs(
+    err_reps_: Iterable[tuple], err_categorizer: Callable[[Any], tuple]
+) -> ValidationErrCounter:
+    """
+    Count validation errors represented by tuples
+
+    :param err_reps_: The validation errors represented as tuples
+    :param err_categorizer: A function that categorizes validation errors, represented
+        by tuples, into categories, also represented by tuples
+    :return: A `ValidationErrCounter` object representing the counts
+    """
+    ctr = ValidationErrCounter(err_categorizer)
+    ctr.count(err_reps_)
+
+    return ctr
+
+
 def count_pydantic_validation_errs(
     err_reps_: Iterable[PydanticValidationErrRep],
 ) -> ValidationErrCounter:
@@ -643,7 +660,4 @@ def count_pydantic_validation_errs(
         defined by the output of `pydantic_err_rep`
     :return: A `ValidationErrCounter` object representing the counts
     """
-    ctr = ValidationErrCounter(pydantic_err_categorizer)
-    ctr.count(err_reps_)
-
-    return ctr
+    return count_validation_errs(err_reps_, pydantic_err_categorizer)
