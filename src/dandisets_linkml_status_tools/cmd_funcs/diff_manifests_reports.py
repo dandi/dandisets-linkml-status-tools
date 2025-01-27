@@ -563,7 +563,12 @@ def jsonschema_err_rep(
 
 def err_reps(
     rs: list[_DandisetValidationDiffReport] | list[_AssetValidationDiffReport],
-) -> tuple[Iterable[PydanticValidationErrRep], Iterable[PydanticValidationErrRep]]:
+) -> tuple[
+    Iterable[PydanticValidationErrRep],
+    Iterable[PydanticValidationErrRep],
+    Iterable[JsonschemaValidationErrRep],
+    Iterable[JsonschemaValidationErrRep],
+]:
     """
     Get all validation errors in given reports and return them in tuple presentations
     suitable for counting
@@ -580,10 +585,10 @@ def err_reps(
             of all reports
     """
 
-    # todo: expand to include jsonschema errors
-
     pydantic_err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
     pydantic_err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    jsonschema_err1_rep_lsts: list[list[JsonschemaValidationErrRep]] = []
+    jsonschema_err2_rep_lsts: list[list[JsonschemaValidationErrRep]] = []
 
     if rs:
         r0 = rs[0]
@@ -613,9 +618,18 @@ def err_reps(
             pydantic_err2_rep_lsts.append(
                 [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
             )
+            jsonschema_err1_rep_lsts.append(
+                [jsonschema_err_rep(e, p) for e in r.jsonschema_validation_errs1]
+            )
+            jsonschema_err2_rep_lsts.append(
+                [jsonschema_err_rep(e, p) for e in r.jsonschema_validation_errs2]
+            )
 
-    return chain.from_iterable(pydantic_err1_rep_lsts), chain.from_iterable(
-        pydantic_err2_rep_lsts
+    return (
+        chain.from_iterable(pydantic_err1_rep_lsts),
+        chain.from_iterable(pydantic_err2_rep_lsts),
+        chain.from_iterable(jsonschema_err1_rep_lsts),
+        chain.from_iterable(jsonschema_err2_rep_lsts),
     )
 
 
