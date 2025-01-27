@@ -43,6 +43,7 @@ from dandisets_linkml_status_tools.tools.validation_err_counter import (
 logger = logging.getLogger(__name__)
 
 PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple[str | int, ...], Path]
+JsonschemaValidationErrRep: TypeAlias = tuple[JsonschemaValidationErrorModel, Path]
 
 
 class _DandiValidationDiffReport(DandiBaseReport):
@@ -544,6 +545,20 @@ def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRe
         Note: The value of the `'loc'` key is converted to a tuple from a list
     """
     return err["type"], err["msg"], tuple(err["loc"]), path
+
+
+def jsonschema_err_rep(
+    err: JsonschemaValidationErrorModel, path: Path
+) -> JsonschemaValidationErrRep:
+    """
+    Get a representation of a JSON schema validation error as a tuple for counting
+
+    :param err: The JSON schema validation error
+    :param path: The path the data instance that the error pertained to
+    :return: The representation of the JSON schema validation error as tuple consisting
+        of the error and `path`
+    """
+    return err, path
 
 
 def err_reps(
