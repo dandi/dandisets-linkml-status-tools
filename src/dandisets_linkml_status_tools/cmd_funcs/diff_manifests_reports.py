@@ -677,3 +677,16 @@ def count_pydantic_validation_errs(
     :return: A `ValidationErrCounter` object representing the counts
     """
     return count_validation_errs(err_reps_, pydantic_err_categorizer)
+
+
+def count_jsonschema_validation_errs(
+    err_reps_: Iterable[JsonschemaValidationErrRep],
+) -> ValidationErrCounter:
+    """
+    Count JSON schema validation errors provided by an iterable
+
+    :param err_reps_: The iterable of JSON schema validation errors represented as
+        tuples defined by the output of `jsonschema_err_rep`
+    :return: A `ValidationErrCounter` object representing the counts
+    """
+    return count_validation_errs(err_reps_, jsonschema_err_categorizer)
