@@ -25,17 +25,11 @@ from dandisets_linkml_status_tools.models import (
 )
 from dandisets_linkml_status_tools.tools import (
     create_or_replace_dir,
-    gen_header_and_alignment_rows,
     get_validation_reports_entries,
     read_reports,
     write_data,
 )
-from dandisets_linkml_status_tools.tools.md import (
-    gen_diff_cell,
-    gen_pydantic_validation_errs_cell,
-    gen_row,
-    pydantic_validation_err_diff_summary,
-)
+from dandisets_linkml_status_tools.tools.md import pydantic_validation_err_diff_summary
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
     ValidationErrCounter,
 )
@@ -355,14 +349,6 @@ def _output_dandiset_validation_diff_reports(
     """
     summary_file_name = "summary.md"
 
-    summary_headers = [
-        "dandiset",
-        "version",
-        "pydantic errs 1",
-        "pydantic errs 2",
-        "pydantic errs diff",
-    ]
-
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
@@ -390,12 +376,8 @@ def _output_dandiset_validation_diff_reports(
             )
         )
 
-        # Write the header and alignment rows of the summary table
-        summary_f.write("\n")
-        summary_f.write(gen_header_and_alignment_rows(summary_headers))
-
         # Output individual dandiset validation diff reports by writing the supporting
-        # files and the summary table row
+        # files
         for r in reports:
             report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
             report_dir.mkdir(parents=True)
@@ -417,39 +399,6 @@ def _output_dandiset_validation_diff_reports(
                 r.dandiset_identifier,
                 report_dir,
             )
-
-            # === Write the summary table row for the validation diff report ===
-            # Directory for storing all validation diff reports of the dandiset
-            dandiset_dir = f"./{r.dandiset_identifier}"
-            # Directory for storing all validation diff reports of the dandiset
-            # at a particular version
-            version_dir = f"{dandiset_dir}/{r.dandiset_version}"
-
-            row_cells = (
-                f" {c} "  # Add spaces around the cell content for better readability
-                for c in [
-                    # For the dandiset column
-                    f"[{r.dandiset_identifier}]({dandiset_dir}/)",
-                    # For the version column
-                    f"[{r.dandiset_version}]({version_dir}/)",
-                    # For the pydantic errs 1 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs1,
-                        f"{version_dir}/{pydantic_errs1_base_fname}.json",
-                    ),
-                    # For the pydantic errs 2 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs2,
-                        f"{version_dir}/{pydantic_errs2_base_fname}.json",
-                    ),
-                    # For the pydantic errs diff column
-                    gen_diff_cell(
-                        r.pydantic_validation_errs_diff,
-                        f"{version_dir}/{pydantic_errs_diff_base_fname}.json",
-                    ),
-                ]
-            )
-            summary_f.write(gen_row(row_cells))
 
     logger.info("Output of dandiset validation diff reports is complete")
 
