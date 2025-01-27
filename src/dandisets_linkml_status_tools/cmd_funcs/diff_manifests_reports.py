@@ -515,7 +515,7 @@ def _output_asset_validation_diff_reports(
 
 def pydantic_err_categorizer(
     err: PydanticValidationErrRep,
-) -> tuple[str, str, tuple[str, ...]]:
+) -> tuple[str, str, tuple]:
     """
     Categorize a Pydantic validation error represented as a tuple using the same
     tuple without the path component to the dandiset at a particular version and
@@ -526,12 +526,10 @@ def pydantic_err_categorizer(
     """
     type_, msg = err[0], err[1]
 
-    # Generalize the "loc" by replacing all array indices with "[*]"
-    loc = cast(
-        tuple[str, ...], tuple("[*]" if isinstance(v, int) else v for v in err[2])
-    )
+    # Categorize the "loc" by replacing all array indices with "[*]"
+    categorized_loc = tuple("[*]" if isinstance(v, int) else v for v in err[2])
 
-    return type_, msg, loc
+    return type_, msg, categorized_loc
 
 
 def jsonschema_err_categorizer(
