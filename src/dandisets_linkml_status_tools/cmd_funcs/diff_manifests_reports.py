@@ -536,7 +536,7 @@ def pydantic_err_categorizer(
 
 def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRep:
     """
-    Get a representation of a Pydantic validation error as a tuple
+    Get a representation of a Pydantic validation error as a tuple for counting
 
     :param err: The Pydantic validation error as a `dict`
     :param path: The path the data instance that the error pertained to
