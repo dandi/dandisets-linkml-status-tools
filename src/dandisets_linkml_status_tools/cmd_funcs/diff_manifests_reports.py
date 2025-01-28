@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple, Path]
 JsonschemaValidationErrRep: TypeAlias = tuple[JsonschemaValidationErrorModel, Path]
 
+PYDANTIC_ERRS_SUMMARY_FNAME = "pydantic_errs_summary.md"
+
 
 class _DandiValidationDiffReport(DandiBaseReport):
     """
@@ -347,8 +349,6 @@ def _output_dandiset_validation_diff_reports(
     :param reports: The reports to be output
     :param output_dir: Path of the directory to write the reports to
     """
-    summary_file_name = "summary.md"
-
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
@@ -368,7 +368,7 @@ def _output_dandiset_validation_diff_reports(
         jsonschema_err2_reps
     )
 
-    with (output_dir / summary_file_name).open("w") as summary_f:
+    with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
         summary_f.write(
             pydantic_validation_err_diff_summary(
@@ -401,8 +401,6 @@ def _output_asset_validation_diff_reports(
     :param reports: The reports to be output
     :param output_dir: Path of the directory to write the reports to
     """
-    summary_file_name = "summary.md"
-
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
@@ -422,7 +420,7 @@ def _output_asset_validation_diff_reports(
         jsonschema_err2_reps
     )
 
-    with (output_dir / summary_file_name).open("w") as summary_f:
+    with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
         summary_f.write(
             pydantic_validation_err_diff_summary(
