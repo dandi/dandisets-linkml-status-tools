@@ -284,57 +284,57 @@ def pydantic_validation_err_diff_detailed_table(
     return f"{heading}{header_and_alignment_rows}{rows}"
 
 
-def pydantic_validation_err_diff_summary(
-    c1: ValidationErrCounter, c2: ValidationErrCounter
+def validation_err_diff_summary(
+    c1: ValidationErrCounter,
+    c2: ValidationErrCounter,
+    detailed_tb_func: DetailedTableGenerator,
 ) -> str:
     """
-    Generate a summary of the differences between two sets of Pydantic validation errors
+    Generate a summary of the differences between two sets of validation errors
 
-    :param c1: A `ValidationErrCounter` that has counted the first set of Pydantic
-        validation errors
-    :param c2: A `ValidationErrCounter` that has counted the second set of Pydantic
-        validation errors
+    :param c1: A `ValidationErrCounter` that has counted the first set of validation
+        errors
+    :param c2: A `ValidationErrCounter` that has counted the second set of validation
+        errors
+    :param detailed_tb_func: The function that generates a table detailing the
+        differences in a specific category of validation errors
     :return: The string presenting the summary in Markdown format
     """
 
-    # The base name of the anchor of the detailed tables of categories of Pydantic
-    # validation errors
+    # The base name of the anchor of the detailed tables of categories of validation
+    # errors
     detailed_tb_base_anchor = "cat"
 
-    # The differences in the different categories of
-    # Pydantic validation errors between the two sets of validation results where
+    # The differences in the different categories of validation errors between the two
+    # sets of validation results where
     # each set is represented, and counted, by a `ValidationErrCounter` object
-    pydantic_validation_err_diff = validation_err_diff(c1, c2)
+    err_diff = validation_err_diff(c1, c2)
     detailed_tb_anchors = {
-        cat: f"{detailed_tb_base_anchor}-{i}"
-        for i, cat in enumerate(sorted(pydantic_validation_err_diff))
+        cat: f"{detailed_tb_base_anchor}-{i}" for i, cat in enumerate(sorted(err_diff))
     }
 
     count_table1 = validation_err_count_table(c1.counts_by_cat)
     count_table2 = validation_err_count_table(c2.counts_by_cat)
 
-    # A table of the differences in the different categories of Pydantic validation
-    # errors
-    diff_table = validation_err_diff_table(
-        pydantic_validation_err_diff, detailed_tb_anchors
-    )
+    # A table of the differences in the different categories of validation errors
+    diff_table = validation_err_diff_table(err_diff, detailed_tb_anchors)
 
-    # A sequence of tables detailing the differences in Pydantic validation
-    # errors between the two sets of validation results
+    # A sequence of tables detailing the differences in validation errors between the
+    # two sets of validation results
     # noinspection PyTypeChecker
     diff_detailed_tables = validation_err_diff_detailed_tables(
-        pydantic_validation_err_diff,
-        pydantic_validation_err_diff_detailed_table,
+        err_diff,
+        detailed_tb_func,
         detailed_tb_anchors,
     )
 
     return (
-        f"### Pydantic errs 1 counts\n\n"
+        f"### errs 1 counts\n\n"
         f"{count_table1}"
-        f"\n### Pydantic errs 2 counts\n\n"
+        f"\n### errs 2 counts\n\n"
         f"{count_table2}"
-        f"\n### Pydantic errs diff\n\n"
+        f"\n### errs diff\n\n"
         f"{diff_table}"
-        f"\n## Pydantic errs diff detailed tables\n\n"
+        f"\n## errs diff detailed tables\n\n"
         f"{diff_detailed_tables}"
     )

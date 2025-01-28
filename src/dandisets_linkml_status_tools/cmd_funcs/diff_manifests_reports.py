@@ -29,7 +29,11 @@ from dandisets_linkml_status_tools.tools import (
     read_reports,
     write_data,
 )
-from dandisets_linkml_status_tools.tools.md import pydantic_validation_err_diff_summary
+from dandisets_linkml_status_tools.tools.md import (
+    jsonschema_validation_err_diff_detailed_table,
+    pydantic_validation_err_diff_detailed_table,
+    validation_err_diff_summary,
+)
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
     ValidationErrCounter,
 )
@@ -370,6 +374,17 @@ def _output_dandiset_validation_diff_reports(
 
     with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
+        # noinspection PyTypeChecker
+        summary_f.write(
+            validation_err_diff_summary(
+                pydantic_validation_errs1_ctr,
+                pydantic_validation_errs2_ctr,
+                pydantic_validation_err_diff_detailed_table,
+            )
+        )
+
+    with (output_dir / JSONSCHEMA_ERRS_SUMMARY_FNAME).open("w") as summary_f:
+        # Write the summary of the JSON schema validation error differences
         summary_f.write(
             pydantic_validation_err_diff_summary(
                 pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
@@ -422,9 +437,14 @@ def _output_asset_validation_diff_reports(
 
     with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
+        # noinspection PyTypeChecker
         summary_f.write(
-            pydantic_validation_err_diff_summary(
-                pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+            validation_err_diff_summary(
+                pydantic_validation_errs1_ctr,
+                pydantic_validation_errs2_ctr,
+                pydantic_validation_err_diff_detailed_table,
+            )
+        )
             )
         )
 
