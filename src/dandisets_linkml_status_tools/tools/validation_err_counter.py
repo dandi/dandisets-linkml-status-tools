@@ -1,10 +1,11 @@
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable
+from typing import Any
 
 
 class ValidationErrCounter:
 
-    def __init__(self, err_categorizer: Callable[[tuple], tuple]):
+    def __init__(self, err_categorizer: Callable[[Any], tuple]):
         """
         Initialize the validation error counter
 
@@ -86,10 +87,9 @@ def validation_err_diff(
     :return: A dictionary presenting the diff between the two objects. The keys are the
         keys in `c1` or `c2` that represent a category of validation errors in which
         there is a difference `c1` and `c2`. The values are a tuple consisting of a
-        `Counter` object representing the validation errors removed from `c1` when
-        compared to `c2` in the corresponding error category and a `Counter` object
-        representing the validation errors gained in `c2` when compared to `c1` in the
-        corresponding error category
+        `Counter` object representing the validation errors removed and a `Counter`
+        object representing the validation errors gained when comparing between `c1` and
+        `c2` in the corresponding error category
     """
     cats = c1.cats().union(c2.cats())
 

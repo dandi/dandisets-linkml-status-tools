@@ -1,7 +1,8 @@
 import logging
+from collections.abc import Callable, Iterable
 from itertools import chain
 from pathlib import Path
-from typing import Annotated, Any, cast
+from typing import Annotated, Any, TypeAlias, cast
 
 from jsondiff import diff
 from pydantic import Field
@@ -18,21 +19,20 @@ from dandisets_linkml_status_tools.models import (
     DandiBaseReport,
     DandisetValidationReport,
     DandisetValidationReportsType,
+    JsonschemaValidationErrorModel,
     PydanticValidationErrsType,
     ValidationReportsType,
 )
 from dandisets_linkml_status_tools.tools import (
     create_or_replace_dir,
-    gen_header_and_alignment_rows,
     get_validation_reports_entries,
     read_reports,
     write_data,
 )
 from dandisets_linkml_status_tools.tools.md import (
-    gen_diff_cell,
-    gen_pydantic_validation_errs_cell,
-    gen_row,
-    pydantic_validation_err_diff_summary,
+    jsonschema_validation_err_diff_detailed_table,
+    pydantic_validation_err_diff_detailed_table,
+    validation_err_diff_summary,
 )
 from dandisets_linkml_status_tools.tools.validation_err_counter import (
     ValidationErrCounter,
@@ -40,12 +40,19 @@ from dandisets_linkml_status_tools.tools.validation_err_counter import (
 
 logger = logging.getLogger(__name__)
 
+PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple, Path]
+JsonschemaValidationErrRep: TypeAlias = tuple[JsonschemaValidationErrorModel, Path]
+
+PYDANTIC_ERRS_SUMMARY_FNAME = "pydantic_errs_summary.md"
+JSONSCHEMA_ERRS_SUMMARY_FNAME = "jsonschema_errs_summary.md"
+
 
 class _DandiValidationDiffReport(DandiBaseReport):
     """
     A base class for DANDI validation diff reports
     """
 
+    # Pydantic validation errors and their diff
     pydantic_validation_errs1: Annotated[
         PydanticValidationErrsType, Field(default_factory=list)
     ]
@@ -53,6 +60,15 @@ class _DandiValidationDiffReport(DandiBaseReport):
         PydanticValidationErrsType, Field(default_factory=list)
     ]
     pydantic_validation_errs_diff: dict | list
+
+    # jsonschema validation errors and their diff
+    jsonschema_validation_errs1: Annotated[
+        list[JsonschemaValidationErrorModel], Field(default_factory=list)
+    ]
+    jsonschema_validation_errs2: Annotated[
+        list[JsonschemaValidationErrorModel], Field(default_factory=list)
+    ]
+    jsonschema_validation_errs_diff: dict | list
 
 
 class _DandisetValidationDiffReport(_DandiValidationDiffReport):
@@ -152,15 +168,24 @@ def _dandiset_validation_diff_reports(
         r1 = reports1.get(id_, {}).get(ver, None)
         r2 = reports2.get(id_, {}).get(ver, None)
 
-        # If both are None, skip this entry
-        if r1 is None and r2 is None:
-            continue
+        if r1 is not None:
+            pydantic_errs1 = r1.pydantic_validation_errs
+            jsonschema_errs1 = r1.jsonschema_validation_errs
+        else:
+            pydantic_errs1 = []
+            jsonschema_errs1 = []
 
-        pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
-        pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
+        if r2 is not None:
+            pydantic_errs2 = r2.pydantic_validation_errs
+            jsonschema_errs2 = r2.jsonschema_validation_errs
+        else:
+            pydantic_errs2 = []
+            jsonschema_errs2 = []
 
         # If all errs are empty, skip this entry
-        if not any([pydantic_errs1, pydantic_errs2]):
+        if not any(
+            (pydantic_errs1, pydantic_errs2, jsonschema_errs1, jsonschema_errs2)
+        ):
             continue
 
         rs.append(
@@ -169,8 +194,15 @@ def _dandiset_validation_diff_reports(
                 dandiset_version=ver,
                 pydantic_validation_errs1=pydantic_errs1,
                 pydantic_validation_errs2=pydantic_errs2,
-                pydantic_validation_errs_diff=(
-                    diff(pydantic_errs1, pydantic_errs2, marshal=True)
+                pydantic_validation_errs_diff=diff(
+                    pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+                jsonschema_validation_errs1=jsonschema_errs1,
+                jsonschema_validation_errs2=jsonschema_errs2,
+                jsonschema_validation_errs_diff=diff(
+                    [e.model_dump(mode="json") for e in jsonschema_errs1],
+                    [e.model_dump(mode="json") for e in jsonschema_errs2],
+                    marshal=True,
                 ),
             )
         )
@@ -202,11 +234,24 @@ def _asset_validation_diff_reports(
         r1 = rs1.get(entry)
         r2 = rs2.get(entry)
 
-        pydantic_errs1 = r1.pydantic_validation_errs if r1 is not None else []
-        pydantic_errs2 = r2.pydantic_validation_errs if r2 is not None else []
+        if r1 is not None:
+            pydantic_errs1 = r1.pydantic_validation_errs
+            jsonschema_errs1 = r1.jsonschema_validation_errs
+        else:
+            pydantic_errs1 = []
+            jsonschema_errs1 = []
+
+        if r2 is not None:
+            pydantic_errs2 = r2.pydantic_validation_errs
+            jsonschema_errs2 = r2.jsonschema_validation_errs
+        else:
+            pydantic_errs2 = []
+            jsonschema_errs2 = []
 
         # If all errs are empty, skip this entry
-        if not any([pydantic_errs1, pydantic_errs2]):
+        if not any(
+            (pydantic_errs1, pydantic_errs2, jsonschema_errs1, jsonschema_errs2)
+        ):
             continue
 
         asset_id = r1.asset_id if r1 is not None else r2.asset_id
@@ -224,6 +269,13 @@ def _asset_validation_diff_reports(
                 pydantic_validation_errs2=pydantic_errs2,
                 pydantic_validation_errs_diff=diff(
                     pydantic_errs1, pydantic_errs2, marshal=True
+                ),
+                jsonschema_validation_errs1=jsonschema_errs1,
+                jsonschema_validation_errs2=jsonschema_errs2,
+                jsonschema_validation_errs_diff=diff(
+                    [e.model_dump(mode="json") for e in jsonschema_errs1],
+                    [e.model_dump(mode="json") for e in jsonschema_errs2],
+                    marshal=True,
                 ),
             )
         )
@@ -302,112 +354,58 @@ def _output_dandiset_validation_diff_reports(
     :param reports: The reports to be output
     :param output_dir: Path of the directory to write the reports to
     """
-    summary_file_name = "summary.md"
-
-    summary_headers = [
-        "dandiset",
-        "version",
-        "pydantic errs 1",
-        "pydantic errs 2",
-        "pydantic errs diff",
-    ]
-
     logger.info("Creating dandiset validation diff report directory %s", output_dir)
     output_dir.mkdir(parents=True)
 
-    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    for r in reports:
-        p = Path(r.dandiset_identifier, r.dandiset_version)
+    (
+        pydantic_err1_reps,
+        pydantic_err2_reps,
+        jsonschema_err1_reps,
+        jsonschema_err2_reps,
+    ) = err_reps(reports)
 
-        # Tuple representation of the Pydantic validation errors
-        err1_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
-        )
-        err2_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
-        )
+    pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
+    pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
+    jsonschema_validation_errs1_ctr = count_jsonschema_validation_errs(
+        jsonschema_err1_reps
+    )
+    jsonschema_validation_errs2_ctr = count_jsonschema_validation_errs(
+        jsonschema_err2_reps
+    )
 
-    pydantic_validation_errs1_ctr = ValidationErrCounter(pydantic_err_categorizer)
-    pydantic_validation_errs2_ctr = ValidationErrCounter(pydantic_err_categorizer)
-
-    pydantic_validation_errs1_ctr.count(chain.from_iterable(err1_rep_lsts))
-    pydantic_validation_errs2_ctr.count(chain.from_iterable(err2_rep_lsts))
-
-    with (output_dir / summary_file_name).open("w") as summary_f:
+    with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
+        # noinspection PyTypeChecker
         summary_f.write(
-            pydantic_validation_err_diff_summary(
-                pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+            validation_err_diff_summary(
+                pydantic_validation_errs1_ctr,
+                pydantic_validation_errs2_ctr,
+                pydantic_validation_err_diff_detailed_table,
             )
         )
 
-        # Write the header and alignment rows of the summary table
-        summary_f.write("\n")
-        summary_f.write(gen_header_and_alignment_rows(summary_headers))
-
-        # Output individual dandiset validation diff reports by writing the supporting
-        # files and the summary table row
-        for r in reports:
-            report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
-            report_dir.mkdir(parents=True)
-
-            pydantic_errs1_base_fname = "pydantic_validation_errs1"
-            pydantic_errs2_base_fname = "pydantic_validation_errs2"
-            pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
-
-            for errs, base_fname in [
-                (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
-                (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
-            ]:
-                if errs:
-                    write_data(errs, report_dir, base_fname)
-
-            if r.pydantic_validation_errs_diff:
-                write_data(
-                    r.pydantic_validation_errs_diff,
-                    report_dir,
-                    pydantic_errs_diff_base_fname,
-                )
-
-            logger.info(
-                "Wrote dandiset %s validation diff report supporting files to %s",
-                r.dandiset_identifier,
-                report_dir,
+    with (output_dir / JSONSCHEMA_ERRS_SUMMARY_FNAME).open("w") as summary_f:
+        # Write the summary of the JSON schema validation error differences
+        # noinspection PyTypeChecker
+        summary_f.write(
+            validation_err_diff_summary(
+                jsonschema_validation_errs1_ctr,
+                jsonschema_validation_errs2_ctr,
+                jsonschema_validation_err_diff_detailed_table,
             )
+        )
 
-            # === Write the summary table row for the validation diff report ===
-            # Directory for storing all validation diff reports of the dandiset
-            dandiset_dir = f"./{r.dandiset_identifier}"
-            # Directory for storing all validation diff reports of the dandiset
-            # at a particular version
-            version_dir = f"{dandiset_dir}/{r.dandiset_version}"
+    # Output individual dandiset validation diff reports by writing the supporting
+    # files
+    for r in reports:
+        report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
+        _output_supporting_files(r, report_dir)
 
-            row_cells = (
-                f" {c} "  # Add spaces around the cell content for better readability
-                for c in [
-                    # For the dandiset column
-                    f"[{r.dandiset_identifier}]({dandiset_dir}/)",
-                    # For the version column
-                    f"[{r.dandiset_version}]({version_dir}/)",
-                    # For the pydantic errs 1 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs1,
-                        f"{version_dir}/{pydantic_errs1_base_fname}.json",
-                    ),
-                    # For the pydantic errs 2 column
-                    gen_pydantic_validation_errs_cell(
-                        r.pydantic_validation_errs2,
-                        f"{version_dir}/{pydantic_errs2_base_fname}.json",
-                    ),
-                    # For the pydantic errs diff column
-                    gen_diff_cell(
-                        r.pydantic_validation_errs_diff,
-                        f"{version_dir}/{pydantic_errs_diff_base_fname}.json",
-                    ),
-                ]
-            )
-            summary_f.write(gen_row(row_cells))
+        logger.info(
+            "Wrote dandiset %s validation diff report supporting files to %s",
+            r.dandiset_identifier,
+            report_dir,
+        )
 
     logger.info("Output of dandiset validation diff reports is complete")
 
@@ -422,75 +420,106 @@ def _output_asset_validation_diff_reports(
     :param reports: The reports to be output
     :param output_dir: Path of the directory to write the reports to
     """
-    summary_file_name = "summary.md"
-
     output_dir.mkdir(parents=True)
     logger.info("Created asset validation diff report directory %s", output_dir)
 
-    err1_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    err2_rep_lsts: list[list[tuple[str, str, tuple[str | int, ...], Path]]] = []
-    for r in reports:
-        p = Path(r.dandiset_identifier, r.dandiset_version, str(r.asset_idx))
+    (
+        pydantic_err1_reps,
+        pydantic_err2_reps,
+        jsonschema_err1_reps,
+        jsonschema_err2_reps,
+    ) = err_reps(reports)
 
-        # Tuple representation of the Pydantic validation errors
-        err1_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
-        )
-        err2_rep_lsts.append(
-            [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
-        )
+    pydantic_validation_errs1_ctr = count_pydantic_validation_errs(pydantic_err1_reps)
+    pydantic_validation_errs2_ctr = count_pydantic_validation_errs(pydantic_err2_reps)
+    jsonschema_validation_errs1_ctr = count_jsonschema_validation_errs(
+        jsonschema_err1_reps
+    )
+    jsonschema_validation_errs2_ctr = count_jsonschema_validation_errs(
+        jsonschema_err2_reps
+    )
 
-    pydantic_validation_errs1_ctr = ValidationErrCounter(pydantic_err_categorizer)
-    pydantic_validation_errs2_ctr = ValidationErrCounter(pydantic_err_categorizer)
-
-    pydantic_validation_errs1_ctr.count(chain.from_iterable(err1_rep_lsts))
-    pydantic_validation_errs2_ctr.count(chain.from_iterable(err2_rep_lsts))
-
-    with (output_dir / summary_file_name).open("w") as summary_f:
+    with (output_dir / PYDANTIC_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the Pydantic validation error differences
+        # noinspection PyTypeChecker
         summary_f.write(
-            pydantic_validation_err_diff_summary(
-                pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+            validation_err_diff_summary(
+                pydantic_validation_errs1_ctr,
+                pydantic_validation_errs2_ctr,
+                pydantic_validation_err_diff_detailed_table,
             )
         )
 
-        # Output individual asset validation diff reports by writing the constituting
-        # files
-        for r in reports:
-            report_dir = (
-                output_dir
-                / r.dandiset_identifier
-                / r.dandiset_version
-                / str(r.asset_idx)
+    with (output_dir / JSONSCHEMA_ERRS_SUMMARY_FNAME).open("w") as summary_f:
+        # Write the summary of the JSON schema validation error differences
+        # noinspection PyTypeChecker
+        summary_f.write(
+            validation_err_diff_summary(
+                jsonschema_validation_errs1_ctr,
+                jsonschema_validation_errs2_ctr,
+                jsonschema_validation_err_diff_detailed_table,
             )
-            report_dir.mkdir(parents=True)
+        )
 
-            pydantic_errs1_base_fname = "pydantic_validation_errs1"
-            pydantic_errs2_base_fname = "pydantic_validation_errs2"
-            pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
+    # Output individual asset validation diff reports by writing the constituting
+    # files
+    for r in reports:
+        report_dir = (
+            output_dir / r.dandiset_identifier / r.dandiset_version / str(r.asset_idx)
+        )
+        _output_supporting_files(r, report_dir)
 
-            for data, base_fname in [
-                (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
-                (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
-                (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
-            ]:
-                if data:
-                    write_data(data, report_dir, base_fname)
-
-            logger.info(
-                "Dandiset %s:%s - asset %sat index %d: "
-                "Wrote asset validation diff report constituting files to %s",
-                r.dandiset_identifier,
-                r.dandiset_version,
-                f"{r.asset_id} " if r.asset_id else "",
-                r.asset_idx,
-                report_dir,
-            )
+        logger.info(
+            "Dandiset %s:%s - asset %sat index %d: "
+            "Wrote asset validation diff report constituting files to %s",
+            r.dandiset_identifier,
+            r.dandiset_version,
+            f"{r.asset_id} " if r.asset_id else "",
+            r.asset_idx,
+            report_dir,
+        )
 
     logger.info("Output of asset validation diff reports is complete")
 
 
-def pydantic_err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
+PYDANTIC_ERRS1_BASE_FNAME = "pydantic_validation_errs1"
+PYDANTIC_ERRS2_BASE_FNAME = "pydantic_validation_errs2"
+PYDANTIC_ERRS_DIFF_BASE_FNAME = "pydantic_validation_errs_diff"
+JSONSCHEMA_ERRS1_BASE_FNAME = "jsonschema_validation_errs1"
+JSONSCHEMA_ERRS2_BASE_FNAME = "jsonschema_validation_errs2"
+JSONSCHEMA_ERRS_DIFF_BASE_FNAME = "jsonschema_validation_errs_diff"
+
+
+def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) -> None:
+    """
+    Output the supporting files of an individual validation diff report
+
+    :param r: The individual validation diff report
+    :param report_dir: The directory to write the supporting files to
+    """
+    report_dir.mkdir(parents=True)
+
+    for data, base_fname in (
+        (r.pydantic_validation_errs1, PYDANTIC_ERRS1_BASE_FNAME),
+        (r.pydantic_validation_errs2, PYDANTIC_ERRS2_BASE_FNAME),
+        (r.pydantic_validation_errs_diff, PYDANTIC_ERRS_DIFF_BASE_FNAME),
+        (
+            [e.model_dump(mode="json") for e in r.jsonschema_validation_errs1],
+            JSONSCHEMA_ERRS1_BASE_FNAME,
+        ),
+        (
+            [e.model_dump(mode="json") for e in r.jsonschema_validation_errs2],
+            JSONSCHEMA_ERRS2_BASE_FNAME,
+        ),
+        (r.jsonschema_validation_errs_diff, JSONSCHEMA_ERRS_DIFF_BASE_FNAME),
+    ):
+        if data:
+            write_data(data, report_dir, base_fname)
+
+
+def pydantic_err_categorizer(
+    err: PydanticValidationErrRep,
+) -> tuple[str, str, tuple]:
     """
     Categorize a Pydantic validation error represented as a tuple using the same
     tuple without the path component to the dandiset at a particular version and
@@ -499,22 +528,35 @@ def pydantic_err_categorizer(err: tuple) -> tuple[str, str, tuple[str, ...]]:
     :param err: The tuple representing the Pydantic validation error
     :return: The tuple representing the category that the error belongs to
     """
-    err = cast(tuple[str, str, tuple[str | int, ...], Path], err)
     type_, msg = err[0], err[1]
 
-    # Generalize the "loc" by replacing all array indices with "[*]"
-    loc = cast(
-        tuple[str, ...], tuple("[*]" if isinstance(v, int) else v for v in err[2])
+    # Categorize the "loc" by replacing all array indices with "[*]"
+    categorized_loc = tuple("[*]" if isinstance(v, int) else v for v in err[2])
+
+    return type_, msg, categorized_loc
+
+
+def jsonschema_err_categorizer(
+    err: JsonschemaValidationErrRep,
+) -> tuple[tuple, tuple]:
+    """
+    Categorize a JSON schema validation error represented as a tuple
+
+    :param err: The tuple representing the JSON schema validation error
+    :return: The tuple representing the category that the error belongs to
+    """
+    err_model = err[0]
+    # Categorize the "absolute_path" by replacing all array indices with "[*]"
+    categorized_absolute_path = tuple(
+        "[*]" if isinstance(v, int) else v for v in err_model.absolute_path
     )
 
-    return type_, msg, loc
+    return err_model.absolute_schema_path, categorized_absolute_path
 
 
-def pydantic_err_rep(
-    err: dict[str, Any], path: Path
-) -> tuple[str, str, tuple[str | int, ...], Path]:
+def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRep:
     """
-    Get a representation of a Pydantic validation error as a tuple
+    Get a representation of a Pydantic validation error as a tuple for counting
 
     :param err: The Pydantic validation error as a `dict`
     :param path: The path the data instance that the error pertained to
@@ -523,3 +565,132 @@ def pydantic_err_rep(
         Note: The value of the `'loc'` key is converted to a tuple from a list
     """
     return err["type"], err["msg"], tuple(err["loc"]), path
+
+
+def jsonschema_err_rep(
+    err: JsonschemaValidationErrorModel, path: Path
+) -> JsonschemaValidationErrRep:
+    """
+    Get a representation of a JSON schema validation error as a tuple for counting
+
+    :param err: The JSON schema validation error
+    :param path: The path the data instance that the error pertained to
+    :return: The representation of the JSON schema validation error as tuple consisting
+        of the error and `path`
+    """
+    return err, path
+
+
+def err_reps(
+    rs: list[_DandisetValidationDiffReport] | list[_AssetValidationDiffReport],
+) -> tuple[
+    Iterable[PydanticValidationErrRep],
+    Iterable[PydanticValidationErrRep],
+    Iterable[JsonschemaValidationErrRep],
+    Iterable[JsonschemaValidationErrRep],
+]:
+    """
+    Get all validation errors in given reports and return them in tuple presentations
+    suitable for counting
+
+    :param rs: The given reports
+    :return: A tuple of four elements:
+        1. An iterable of representations of all errors in `pydantic_validation_errs1`
+            of all reports
+        2. An iterable of representations of all errors in `pydantic_validation_errs2`
+            of all reports
+        3. An iterable of representations of all errors in `jsonschema_validation_errs1`
+            of all reports
+        4. An iterable of representations of all errors in `jsonschema_validation_errs2`
+            of all reports
+    """
+
+    pydantic_err1_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    pydantic_err2_rep_lsts: list[list[PydanticValidationErrRep]] = []
+    jsonschema_err1_rep_lsts: list[list[JsonschemaValidationErrRep]] = []
+    jsonschema_err2_rep_lsts: list[list[JsonschemaValidationErrRep]] = []
+
+    if rs:
+        r0 = rs[0]
+        if isinstance(r0, _DandisetValidationDiffReport):
+
+            def instance_path():
+                return Path(r.dandiset_identifier, r.dandiset_version)
+
+        elif isinstance(r0, _AssetValidationDiffReport):
+
+            def instance_path():
+                nonlocal r
+                r = cast(_AssetValidationDiffReport, r)
+                return Path(r.dandiset_identifier, r.dandiset_version, str(r.asset_idx))
+
+        else:
+            msg = f"Unsupported report type: {type(r0)}"
+            raise TypeError(msg)
+
+        for r in rs:
+            p = instance_path()
+
+            # Tuple representation of the Pydantic validation errors
+            pydantic_err1_rep_lsts.append(
+                [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs1]
+            )
+            pydantic_err2_rep_lsts.append(
+                [pydantic_err_rep(e, p) for e in r.pydantic_validation_errs2]
+            )
+            jsonschema_err1_rep_lsts.append(
+                [jsonschema_err_rep(e, p) for e in r.jsonschema_validation_errs1]
+            )
+            jsonschema_err2_rep_lsts.append(
+                [jsonschema_err_rep(e, p) for e in r.jsonschema_validation_errs2]
+            )
+
+    return (
+        chain.from_iterable(pydantic_err1_rep_lsts),
+        chain.from_iterable(pydantic_err2_rep_lsts),
+        chain.from_iterable(jsonschema_err1_rep_lsts),
+        chain.from_iterable(jsonschema_err2_rep_lsts),
+    )
+
+
+def count_validation_errs(
+    err_reps_: Iterable[tuple], err_categorizer: Callable[[Any], tuple]
+) -> ValidationErrCounter:
+    """
+    Count validation errors represented by tuples
+
+    :param err_reps_: The validation errors represented as tuples
+    :param err_categorizer: A function that categorizes validation errors, represented
+        by tuples, into categories, also represented by tuples
+    :return: A `ValidationErrCounter` object representing the counts
+    """
+    ctr = ValidationErrCounter(err_categorizer)
+    ctr.count(err_reps_)
+
+    return ctr
+
+
+def count_pydantic_validation_errs(
+    err_reps_: Iterable[PydanticValidationErrRep],
+) -> ValidationErrCounter:
+    """
+    Pydantic validation errors provided by an iterable
+
+    :param err_reps_: The iterable of Pydantic validation errors represented as tuples
+        defined by the output of `pydantic_err_rep`
+    :return: A `ValidationErrCounter` object representing the counts
+    """
+    return count_validation_errs(err_reps_, pydantic_err_categorizer)
+
+
+def count_jsonschema_validation_errs(
+    err_reps_: Iterable[JsonschemaValidationErrRep],
+) -> ValidationErrCounter:
+    """
+    Count JSON schema validation errors provided by an iterable
+
+    :param err_reps_: The iterable of JSON schema validation errors represented as
+        tuples defined by the output of `jsonschema_err_rep`
+    :return: A `ValidationErrCounter` object representing the counts
+    """
+    return count_validation_errs(err_reps_, jsonschema_err_categorizer)
