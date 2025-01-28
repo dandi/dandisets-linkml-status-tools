@@ -376,17 +376,17 @@ def _output_dandiset_validation_diff_reports(
             )
         )
 
-        # Output individual dandiset validation diff reports by writing the supporting
-        # files
-        for r in reports:
-            report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
-            _output_supporting_files(r, report_dir)
+    # Output individual dandiset validation diff reports by writing the supporting
+    # files
+    for r in reports:
+        report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
+        _output_supporting_files(r, report_dir)
 
-            logger.info(
-                "Wrote dandiset %s validation diff report supporting files to %s",
-                r.dandiset_identifier,
-                report_dir,
-            )
+        logger.info(
+            "Wrote dandiset %s validation diff report supporting files to %s",
+            r.dandiset_identifier,
+            report_dir,
+        )
 
     logger.info("Output of dandiset validation diff reports is complete")
 
@@ -430,26 +430,23 @@ def _output_asset_validation_diff_reports(
             )
         )
 
-        # Output individual asset validation diff reports by writing the constituting
-        # files
-        for r in reports:
-            report_dir = (
-                output_dir
-                / r.dandiset_identifier
-                / r.dandiset_version
-                / str(r.asset_idx)
-            )
-            _output_supporting_files(r, report_dir)
+    # Output individual asset validation diff reports by writing the constituting
+    # files
+    for r in reports:
+        report_dir = (
+            output_dir / r.dandiset_identifier / r.dandiset_version / str(r.asset_idx)
+        )
+        _output_supporting_files(r, report_dir)
 
-            logger.info(
-                "Dandiset %s:%s - asset %sat index %d: "
-                "Wrote asset validation diff report constituting files to %s",
-                r.dandiset_identifier,
-                r.dandiset_version,
-                f"{r.asset_id} " if r.asset_id else "",
-                r.asset_idx,
-                report_dir,
-            )
+        logger.info(
+            "Dandiset %s:%s - asset %sat index %d: "
+            "Wrote asset validation diff report constituting files to %s",
+            r.dandiset_identifier,
+            r.dandiset_version,
+            f"{r.asset_id} " if r.asset_id else "",
+            r.asset_idx,
+            report_dir,
+        )
 
     logger.info("Output of asset validation diff reports is complete")
 
