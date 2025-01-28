@@ -457,6 +457,9 @@ def _output_asset_validation_diff_reports(
 PYDANTIC_ERRS1_BASE_FNAME = "pydantic_validation_errs1"
 PYDANTIC_ERRS2_BASE_FNAME = "pydantic_validation_errs2"
 PYDANTIC_ERRS_DIFF_BASE_FNAME = "pydantic_validation_errs_diff"
+JSONSCHEMA_ERRS1_BASE_FNAME = "jsonschema_validation_errs1"
+JSONSCHEMA_ERRS2_BASE_FNAME = "jsonschema_validation_errs2"
+JSONSCHEMA_ERRS_DIFF_BASE_FNAME = "jsonschema_validation_errs_diff"
 
 
 def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) -> None:
@@ -468,11 +471,20 @@ def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) ->
     """
     report_dir.mkdir(parents=True)
 
-    for data, base_fname in [
+    for data, base_fname in (
         (r.pydantic_validation_errs1, PYDANTIC_ERRS1_BASE_FNAME),
         (r.pydantic_validation_errs2, PYDANTIC_ERRS2_BASE_FNAME),
         (r.pydantic_validation_errs_diff, PYDANTIC_ERRS_DIFF_BASE_FNAME),
-    ]:
+        (
+            [e.model_dump(mode="json") for e in r.jsonschema_validation_errs1],
+            JSONSCHEMA_ERRS1_BASE_FNAME,
+        ),
+        (
+            [e.model_dump(mode="json") for e in r.jsonschema_validation_errs2],
+            JSONSCHEMA_ERRS2_BASE_FNAME,
+        ),
+        (r.jsonschema_validation_errs_diff, JSONSCHEMA_ERRS_DIFF_BASE_FNAME),
+    ):
         if data:
             write_data(data, report_dir, base_fname)
 
