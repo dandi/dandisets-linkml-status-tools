@@ -505,7 +505,7 @@ def pydantic_err_categorizer(
 
 def jsonschema_err_categorizer(
     err: JsonschemaValidationErrRep,
-) -> tuple[str, tuple, tuple]:
+) -> tuple[tuple, tuple]:
     """
     Categorize a JSON schema validation error represented as a tuple
 
@@ -518,7 +518,7 @@ def jsonschema_err_categorizer(
         "[*]" if isinstance(v, int) else v for v in err_model.absolute_path
     )
 
-    return err_model.message, err_model.absolute_schema_path, categorized_absolute_path
+    return err_model.absolute_schema_path, categorized_absolute_path
 
 
 def pydantic_err_rep(err: dict[str, Any], path: Path) -> PydanticValidationErrRep:
