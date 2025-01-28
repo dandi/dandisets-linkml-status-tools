@@ -44,6 +44,7 @@ PydanticValidationErrRep: TypeAlias = tuple[str, str, tuple, Path]
 JsonschemaValidationErrRep: TypeAlias = tuple[JsonschemaValidationErrorModel, Path]
 
 PYDANTIC_ERRS_SUMMARY_FNAME = "pydantic_errs_summary.md"
+JSONSCHEMA_ERRS_SUMMARY_FNAME = "jsonschema_errs_summary.md"
 
 
 class _DandiValidationDiffReport(DandiBaseReport):
@@ -385,9 +386,12 @@ def _output_dandiset_validation_diff_reports(
 
     with (output_dir / JSONSCHEMA_ERRS_SUMMARY_FNAME).open("w") as summary_f:
         # Write the summary of the JSON schema validation error differences
+        # noinspection PyTypeChecker
         summary_f.write(
-            pydantic_validation_err_diff_summary(
-                pydantic_validation_errs1_ctr, pydantic_validation_errs2_ctr
+            validation_err_diff_summary(
+                jsonschema_validation_errs1_ctr,
+                jsonschema_validation_errs2_ctr,
+                jsonschema_validation_err_diff_detailed_table,
             )
         )
 
@@ -445,6 +449,15 @@ def _output_asset_validation_diff_reports(
                 pydantic_validation_err_diff_detailed_table,
             )
         )
+
+    with (output_dir / JSONSCHEMA_ERRS_SUMMARY_FNAME).open("w") as summary_f:
+        # Write the summary of the JSON schema validation error differences
+        # noinspection PyTypeChecker
+        summary_f.write(
+            validation_err_diff_summary(
+                jsonschema_validation_errs1_ctr,
+                jsonschema_validation_errs2_ctr,
+                jsonschema_validation_err_diff_detailed_table,
             )
         )
 

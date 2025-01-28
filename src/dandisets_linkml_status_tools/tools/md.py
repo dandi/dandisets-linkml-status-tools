@@ -284,6 +284,63 @@ def pydantic_validation_err_diff_detailed_table(
     return f"{heading}{header_and_alignment_rows}{rows}"
 
 
+def jsonschema_validation_err_diff_detailed_table(
+    cat: tuple, diff: Counter[tuple], *, is_removed: bool
+) -> str:
+    """
+    Generate a table for a specific category of JSON schema validation errors
+
+    :param cat: The category of the JSON schema validation errors
+    :param diff: The differences of JSON schema validation errors in the given category
+        represented as a `Counter` object
+    :param is_removed: A boolean value indicating whether `diff` represents the
+        validation errors removed or gained
+    :return: The string presenting the table in Markdown format
+    """
+    # Header of the count column
+    count_col_header = "Removed" if is_removed else "Gained"
+
+    heading = f"### {escape(str(cat))}\n\n"
+    header_and_alignment_rows = gen_header_and_alignment_rows(
+        (
+            "message",
+            "absolute_schema_path",
+            "absolute_path",
+            "Data instance path",
+            count_col_header,
+        )
+    )
+
+    rows = "".join(
+        gen_row(
+            (
+                # The "message" attribute of the JSON schema validation error
+                escape(err_model.message),
+                # The "absolute_schema_path" attribute of the JSON schema validation error
+                escape(str(err_model.absolute_schema_path)),
+                # The "absolute_path" attribute of the JSON schema validation error
+                escape(str(err_model.absolute_path)),
+                # The path of the data instance
+                f"[{instance_path}]({instance_path})",
+                # The count of removed or gained of the represented error
+                count,
+            )
+        )
+        for (err_model, instance_path), count in sorted(
+            diff.items(),
+            key=lambda i: (
+                i[0][0].message,
+                i[0][0].absolute_schema_path,
+                i[0][0].absolute_path,
+                i[0][1],
+                i[1],
+            ),
+        )
+    )
+
+    return f"{heading}{header_and_alignment_rows}{rows}"
+
+
 def validation_err_diff_summary(
     c1: ValidationErrCounter,
     c2: ValidationErrCounter,
