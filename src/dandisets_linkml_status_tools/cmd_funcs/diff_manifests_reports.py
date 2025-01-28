@@ -454,6 +454,11 @@ def _output_asset_validation_diff_reports(
     logger.info("Output of asset validation diff reports is complete")
 
 
+PYDANTIC_ERRS1_BASE_FNAME = "pydantic_validation_errs1"
+PYDANTIC_ERRS2_BASE_FNAME = "pydantic_validation_errs2"
+PYDANTIC_ERRS_DIFF_BASE_FNAME = "pydantic_validation_errs_diff"
+
+
 def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) -> None:
     """
     Output the supporting files of an individual validation diff report
@@ -463,14 +468,10 @@ def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) ->
     """
     report_dir.mkdir(parents=True)
 
-    pydantic_errs1_base_fname = "pydantic_validation_errs1"
-    pydantic_errs2_base_fname = "pydantic_validation_errs2"
-    pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
-
     for data, base_fname in [
-        (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
-        (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
-        (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
+        (r.pydantic_validation_errs1, PYDANTIC_ERRS1_BASE_FNAME),
+        (r.pydantic_validation_errs2, PYDANTIC_ERRS2_BASE_FNAME),
+        (r.pydantic_validation_errs_diff, PYDANTIC_ERRS_DIFF_BASE_FNAME),
     ]:
         if data:
             write_data(data, report_dir, base_fname)
