@@ -514,8 +514,8 @@ def jsonschema_err_categorizer(
     """
     err_model = err[0]
     # Categorize the "absolute_path" by replacing all array indices with "[*]"
-    categorized_absolute_path = (
-        tuple("[*]" if isinstance(v, int) else v for v in err_model.absolute_path),
+    categorized_absolute_path = tuple(
+        "[*]" if isinstance(v, int) else v for v in err_model.absolute_path
     )
 
     return err_model.message, err_model.absolute_schema_path, categorized_absolute_path
