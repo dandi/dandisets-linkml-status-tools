@@ -380,19 +380,7 @@ def _output_dandiset_validation_diff_reports(
         # files
         for r in reports:
             report_dir = output_dir / r.dandiset_identifier / r.dandiset_version
-            report_dir.mkdir(parents=True)
-
-            pydantic_errs1_base_fname = "pydantic_validation_errs1"
-            pydantic_errs2_base_fname = "pydantic_validation_errs2"
-            pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
-
-            for data, base_fname in [
-                (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
-                (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
-                (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
-            ]:
-                if data:
-                    write_data(data, report_dir, base_fname)
+            _output_supporting_files(r, report_dir)
 
             logger.info(
                 "Wrote dandiset %s validation diff report supporting files to %s",
@@ -451,19 +439,7 @@ def _output_asset_validation_diff_reports(
                 / r.dandiset_version
                 / str(r.asset_idx)
             )
-            report_dir.mkdir(parents=True)
-
-            pydantic_errs1_base_fname = "pydantic_validation_errs1"
-            pydantic_errs2_base_fname = "pydantic_validation_errs2"
-            pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
-
-            for data, base_fname in [
-                (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
-                (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
-                (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
-            ]:
-                if data:
-                    write_data(data, report_dir, base_fname)
+            _output_supporting_files(r, report_dir)
 
             logger.info(
                 "Dandiset %s:%s - asset %sat index %d: "
@@ -476,6 +452,28 @@ def _output_asset_validation_diff_reports(
             )
 
     logger.info("Output of asset validation diff reports is complete")
+
+
+def _output_supporting_files(r: _DandiValidationDiffReport, report_dir: Path) -> None:
+    """
+    Output the supporting files of an individual validation diff report
+
+    :param r: The individual validation diff report
+    :param report_dir: The directory to write the supporting files to
+    """
+    report_dir.mkdir(parents=True)
+
+    pydantic_errs1_base_fname = "pydantic_validation_errs1"
+    pydantic_errs2_base_fname = "pydantic_validation_errs2"
+    pydantic_errs_diff_base_fname = "pydantic_validation_errs_diff"
+
+    for data, base_fname in [
+        (r.pydantic_validation_errs1, pydantic_errs1_base_fname),
+        (r.pydantic_validation_errs2, pydantic_errs2_base_fname),
+        (r.pydantic_validation_errs_diff, pydantic_errs_diff_base_fname),
+    ]:
+        if data:
+            write_data(data, report_dir, base_fname)
 
 
 def pydantic_err_categorizer(
