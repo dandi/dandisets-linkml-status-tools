@@ -8,7 +8,7 @@ from jsonschema.validators import validator_for
 from dandisets_linkml_status_tools.models import JsonschemaValidationErrorModel
 
 
-# todo: this function is available through the dandischema package if
+# TODO: this function is available through the dandischema package if
 #  https://github.com/dandi/dandi-schema/pull/278 is accepted
 def jsonschema_validator(
     schema: dict[str, Any],

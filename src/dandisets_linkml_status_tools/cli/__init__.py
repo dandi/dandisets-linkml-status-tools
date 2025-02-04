@@ -362,3 +362,21 @@ def diff_manifests_reports_(
     diff_manifests_reports(
         reports_dir1_path, reports_dir2_path, config["output_dir_path"]
     )
+
+
+@app.command("migrate-manifests-dandisets")
+def migrate_manifests_dandisets_(
+    *,
+    manifest_path: Annotated[
+        Path, typer.Argument(help="Path of the directory containing dandiset manifests")
+    ],
+):
+    """
+    Migrate `Dandiset` metadata in manifests to the latest version of the `Dandiset`
+    model
+    """
+    from dandisets_linkml_status_tools.cmd_funcs.migrate_manifests_dandisets import (
+        migrate_manifests_dandisets,
+    )
+
+    migrate_manifests_dandisets(manifest_path, config["output_dir_path"])
