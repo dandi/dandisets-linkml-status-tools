@@ -384,6 +384,24 @@ def output_dandi_linkml_schema(output_path: Path) -> None:
     logger.info("Output the DANDI LinkML schema to %s", output_path)
 
 
+def output_dandi_linkml_schema_rep(
+    output_path: Path, fmt: Literal["owl", "shacl"]
+) -> None:
+    """
+    Output the DANDI LinkML schema representation, in a specified format, to a file
+
+    :param output_path: The path specifying the location of the file
+    :param fmt: The format of the representation to be output.
+        Must be either `"owl"` or `"shacl"`.
+    """
+    output_path.write_text(gen_dandi_linkml_schema_rep(fmt))
+    logger.info(
+        "Output the DANDI LinkML schema representation in %s format to %s",
+        fmt,
+        output_path,
+    )
+
+
 def output_reports(
     reports: list[DandisetLinkmlTranslationReport], output_path: Path
 ) -> None:
@@ -406,6 +424,9 @@ def output_reports(
 
     dandi_linkml_schema_base_fname = "dandi-linkml-schema"
     dandi_linkml_schema_fname = f"{dandi_linkml_schema_base_fname}.yml"
+    dandi_linkml_schema_owl_rep_fname = f"{dandi_linkml_schema_base_fname}.owl.ttl "
+    dandi_linkml_schema_shacl_rep_fname = f"{dandi_linkml_schema_base_fname}.shacl.ttl"
+
     summary_headers = [
         "dandiset",
         "version",
@@ -420,12 +441,21 @@ def output_reports(
     create_or_replace_dir(output_path)
 
     output_dandi_linkml_schema(output_path / dandi_linkml_schema_fname)
+    # Output the DANDI LinkML schema representations in different formats
+    output_dandi_linkml_schema_rep(
+        output_path / dandi_linkml_schema_owl_rep_fname, "owl"
+    )
+    output_dandi_linkml_schema_rep(
+        output_path / dandi_linkml_schema_shacl_rep_fname, "shacl"
+    )
 
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Provide a reference to the DANDI LinkML schema in the summary ===
         summary_f.write(
             f"[DANDI LinkML schema](./{dandi_linkml_schema_fname}) "
             f"(LinkML schema used in the LinkML validations)\n"
+            f"[DANDI LinkML schema as OWL](./{dandi_linkml_schema_owl_rep_fname})\n"
+            f"[DANDI LinkML schema as SHACL](./{dandi_linkml_schema_shacl_rep_fname})\n"
         )
 
         # Write line break before the start of the summary table
