@@ -452,10 +452,10 @@ def output_reports(
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Provide a reference to the DANDI LinkML schema in the summary ===
         summary_f.write(
-            f"[DANDI LinkML schema](./{dandi_linkml_schema_fname}) "
+            f"- [DANDI LinkML schema](./{dandi_linkml_schema_fname}) "
             f"(LinkML schema used in the LinkML validations)\n"
-            f"[DANDI LinkML schema as OWL](./{dandi_linkml_schema_owl_rep_fname})\n"
-            f"[DANDI LinkML schema as SHACL](./{dandi_linkml_schema_shacl_rep_fname})\n"
+            f"- [DANDI LinkML schema as OWL](./{dandi_linkml_schema_owl_rep_fname})\n"
+            f"- [DANDI LinkML schema as SHACL](./{dandi_linkml_schema_shacl_rep_fname})\n"
         )
 
         # Write line break before the start of the summary table
