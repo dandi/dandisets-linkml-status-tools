@@ -7,7 +7,9 @@ from functools import partial
 from itertools import chain
 from pathlib import Path
 from shutil import rmtree
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Literal
+from linkml.generators.shaclgen import ShaclGenerator
+from linkml.generators.owlgen import OwlSchemaGenerator
 
 from dandi.dandiapi import RemoteDandiset
 from dandischema.models import Dandiset, PublishedDandiset
@@ -182,6 +184,24 @@ class DandiModelLinkmlValidator:
             dandi_metadata, target_class=dandi_metadata_class
         )
         return validation_report.results
+
+
+def gen_dandi_linkml_schema_rep(fmt: Literal["owl", "shacl"]) -> str:
+    """
+    Generate a representation of the DANDI LinkML schema in a specified format
+
+    :param fmt: The format of the representation to be generated.
+        Must be either `"owl"` or `"shacl"`.
+    :return: The generated representation as a string
+    """
+    if fmt == "owl":
+        generator = OwlSchemaGenerator(
+            DandiModelLinkmlValidator.get_dandi_linkml_schema()
+        )
+    else:
+        generator = ShaclGenerator(DandiModelLinkmlValidator.get_dandi_linkml_schema())
+
+    return generator.serialize()
 
 
 def compile_dandiset_linkml_translation_report(
