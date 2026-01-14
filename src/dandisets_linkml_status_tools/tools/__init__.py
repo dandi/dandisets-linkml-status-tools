@@ -424,7 +424,7 @@ def output_reports(
 
     dandi_linkml_schema_base_fname = "dandi-linkml-schema"
     dandi_linkml_schema_fname = f"{dandi_linkml_schema_base_fname}.yml"
-    dandi_linkml_schema_owl_rep_fname = f"{dandi_linkml_schema_base_fname}.owl.ttl "
+    dandi_linkml_schema_owl_rep_fname = f"{dandi_linkml_schema_base_fname}.owl.ttl"
     dandi_linkml_schema_shacl_rep_fname = f"{dandi_linkml_schema_base_fname}.shacl.ttl"
 
     summary_headers = [
