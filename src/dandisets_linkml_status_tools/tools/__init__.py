@@ -383,7 +383,9 @@ def output_reports(
     raises NotADirectoryError: If the given output path points to a non-directory object
     """
     summary_file_name = "summary.md"
-    dandi_linkml_schema_file_name = "dandi-linkml-schema.yml"
+
+    dandi_linkml_schema_base_fname = "dandi-linkml-schema"
+    dandi_linkml_schema_fname = f"{dandi_linkml_schema_base_fname}.yml"
     summary_headers = [
         "dandiset",
         "version",
@@ -397,12 +399,12 @@ def output_reports(
     logger.info("Creating report directory: %s", output_path)
     create_or_replace_dir(output_path)
 
-    output_dandi_linkml_schema(output_path / dandi_linkml_schema_file_name)
+    output_dandi_linkml_schema(output_path / dandi_linkml_schema_fname)
 
     with (output_path / summary_file_name).open("w") as summary_f:
         # === Provide a reference to the DANDI LinkML schema in the summary ===
         summary_f.write(
-            f"[DANDI LinkML schema](./{dandi_linkml_schema_file_name}) "
+            f"[DANDI LinkML schema](./{dandi_linkml_schema_fname}) "
             f"(LinkML schema used in the LinkML validations)\n"
         )
 
